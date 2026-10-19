@@ -18,9 +18,9 @@ def test_cli_stub_and_log(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "LOGS_DIR", tmp_path)
     monkeypatch.setattr(config, "RUNS_LOG", tmp_path / "runs.jsonl")
     r = CliRunner().invoke(app, ["ask", "--stub", "What is blocking Project Atlas?"])
-    assert r.exit_code == 0 and "ATL-212" in r.output and "Status:" in r.output
+    assert r.exit_code == 0 and "ATL-112" in r.output and "Status:" in r.output
     line = json.loads((tmp_path / "runs.jsonl").read_text().splitlines()[0])
-    assert line["citations"] == ["ATL-212"] and line["status"] == "ok"
+    assert line["citations"] == ["ATL-112"] and line["status"] == "ok"
 
 
 def test_observe_run_turns_exceptions_into_error(tmp_path, monkeypatch):

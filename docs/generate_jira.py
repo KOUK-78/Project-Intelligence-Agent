@@ -17,7 +17,7 @@ from datetime import date
 from pathlib import Path
 
 TODAY = "2026-06-30"  # mirror of app/config.py TODAY; used here for self-checks only
-OUT_DIR = Path(__file__).resolve().parent / "synthetic"
+OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "synthetic"
 
 STATUSES = {"To Do", "In Progress", "Blocked", "Done"}
 PRIORITIES = {"Low", "Medium", "High", "Critical"}
