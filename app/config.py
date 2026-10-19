@@ -30,7 +30,7 @@ TODAY = "2026-06-30"
 MAX_AGENT_STEPS = 5
 
 # --- Paths
-DATA_PATH = ROOT / "data" / "synthetic" / "tickets.json"
+DATA_PATH = ROOT / "data" / "synthetic" / "jira_tickets.json"
 LOGS_DIR = ROOT / "logs"
 RUNS_LOG = LOGS_DIR / "runs.jsonl"
 ANSWER_KEY_PATH = ROOT / "evals" / "answer_key.json"
