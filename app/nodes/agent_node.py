@@ -1,11 +1,13 @@
 """AGENT node (decide): call a tool, or declare enough evidence. OWNER: B."""
 import json
+import re
 from typing import Any
 
 from app import config
 from app.nodes import settings
 from app.nodes.llm import LLM, LLMReply
 from app.nodes.state import AgentState
+from app.nodes.verify import evidence_ids
 
 AGENT_SYSTEM = (
     "You answer questions about project tickets by calling tools.\n"
@@ -15,12 +17,30 @@ AGENT_SYSTEM = (
     "To Do, In Progress, Blocked, Done. label is ONE short topic word (e.g. payments); "
     "leave label out unless you are sure of it.\n"
     "For 'what is blocked/blocking', search keyword '*' with status 'Blocked', then get_ticket for details.\n"
-    "If a search returns 0 results, remove filters and retry; never repeat the same search.\n"
+    "keyword is 1-2 distinctive words (e.g. 'launch', 'privacy policy'), never a sentence: every word must match.\n"
+    "If a search returns 0 results, use fewer or different words and fewer filters; never repeat a search.\n"
+    "Search results are short summaries. Reasons, date changes and decisions are in the ticket COMMENTS, "
+    "so call get_ticket on each relevant ticket before answering why/when/what-changed questions.\n"
+    "To find what depends on a ticket, search its ID as the keyword (e.g. 'ATL-112'). "
+    "If a ticket says it waits on another ticket, look that one up too.\n"
     f"Today's date is {config.TODAY}.\n"
     "When you have enough evidence, stop calling tools and reply with the single word DONE."
 )
 
 NUDGE = "You have no evidence yet. Call a tool to look this up."
+DETAIL_NUDGE = (
+    "You only have search summaries. Call get_ticket on the relevant tickets: "
+    "their descriptions and comments hold the reasons."
+)
+# Question types whose answer usually lives in a ticket's comments, not its summary line.
+DETAIL_RE = re.compile(r"\b(why|because|reason|chang\w*|moved|slipp\w*|late|delay\w*|blocking|depend\w*|caused?)\b", re.I)
+
+
+def needs_ticket_details(state: AgentState) -> bool:
+    evidence = state.get("evidence", [])
+    saw_tickets = bool(evidence_ids(evidence))
+    fetched = any(e["tool"] == "get_ticket" and e["ok"] for e in evidence)
+    return saw_tickets and not fetched and bool(DETAIL_RE.search(state.get("question", "")))
 
 
 def loop_cap_message() -> str:
@@ -126,6 +146,16 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                 "messages": [
                     {"role": "assistant", "content": reply.content},
                     {"role": "user", "content": NUDGE},
+                ],
+            }
+        if needs_ticket_details(state) and not state.get("detail_nudged"):
+            return {
+                "route": "agent",
+                "detail_nudged": True,
+                "pending_calls": [],
+                "messages": [
+                    {"role": "assistant", "content": reply.content},
+                    {"role": "user", "content": DETAIL_NUDGE},
                 ],
             }
         return {"route": "synthesizer", "pending_calls": []}

@@ -51,11 +51,17 @@ def drop_bad_label(args: dict[str, Any]) -> dict[str, Any]:
     return args
 
 
+EMPTY_WORDS_HINT = (
+    "No results. Every word must match, so use 1-2 distinctive words (e.g. 'launch'), not a sentence. "
+    "Do not repeat this search."
+)
+
+
 def empty_search_hint(name: str, args: dict[str, Any], data: Any) -> str | None:
+    if name != "search_tickets" or not (isinstance(data, dict) and data.get("count") == 0):
+        return None
     filtered = any(args.get(k) is not None for k in ("label", "status", "overdue"))
-    if name == "search_tickets" and isinstance(data, dict) and data.get("count") == 0 and filtered:
-        return EMPTY_HINT
-    return None
+    return EMPTY_HINT if filtered else EMPTY_WORDS_HINT
 
 
 def make_tool_node(mcp: McpToolClient):

@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from app import config
 from app.nodes.llm import LLM
 from app.nodes.state import AgentState, compact_json
-from app.nodes.verify import evidence_ids, verify_citations
+from app.nodes.verify import bracket_bare_ids, evidence_ids, verify_citations
 
 SYNTH_SYSTEM = (
     "You write the final answer to a question about project tickets.\n"
@@ -14,6 +14,9 @@ SYNTH_SYSTEM = (
     "1. Answer ONLY from the evidence given. Never use outside knowledge.\n"
     "2. Put the ticket ID in brackets after every factual claim, e.g. [ATL-212].\n"
     "3. If the evidence is not enough, say so plainly. Do not guess.\n"
+    "4. Include the specific facts: names, dates, counts, days overdue, and the reason from the comments.\n"
+    "5. If tickets disagree, say they conflict, give each value with its ticket, and do not pick one.\n"
+    "6. If the question's premise is contradicted by a ticket, say so.\n"
     f"Today's date is {config.TODAY}.\n"
     'Reply as JSON: {"answer": "...", "citations": ["ATL-212"]}. '
     '"citations" lists every ticket ID you cited in "answer".'
@@ -89,7 +92,7 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
             return {"route": "end", "status": "invalid_output", "answer": INVALID_ANSWER, "citations": [], "errors": errors}
 
         answer, citations, warnings = verify_citations(
-            output.answer, output.citations, known_ids=known_ids, ev_ids=evidence_ids(evidence)
+            bracket_bare_ids(output.answer), output.citations, known_ids=known_ids, ev_ids=evidence_ids(evidence)
         )
         return {
             "route": "end",

@@ -17,7 +17,7 @@ from app.nodes.agent_node import extract_calls
 from app.nodes.llm import LLMReply
 from app.nodes.mcp_client import McpToolClient
 from app.nodes.tool_node import clean_args, drop_bad_label
-from app.nodes.verify import verify_citations
+from app.nodes.verify import bracket_bare_ids, verify_citations
 from tests.fakes import FakeLLM, synth_reply, text_reply, tool_reply
 
 HERE = Path(__file__).parent
@@ -317,3 +317,38 @@ async def test_zero_results_with_filters_adds_hint_for_the_model():
     await run(llm)
     tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
     assert "Do not repeat this search" in tool_msgs[0]
+
+
+# ---------- fixes from the first eval run (Q4/Q5/Q6/Q9) ----------
+
+def test_bare_ids_are_bracketed_and_existing_brackets_untouched():
+    assert bracket_bare_ids("Blocked: ATL-112, ATL-121 and [ATL-136].") == "Blocked: [ATL-112], [ATL-121] and [ATL-136]."
+    assert bracket_bare_ids("The screen (ATL-118) is late") == "The screen ([ATL-118]) is late"
+
+
+@sync
+async def test_why_question_with_only_summaries_is_nudged_to_read_the_ticket():
+    llm = FakeLLM(
+        agent=[tool_reply("search_tickets", keyword="privacy policy"), text_reply(),
+               tool_reply("get_ticket", ticket_id="ATL-109"), text_reply()],
+        synthesizer=[synth_reply("Waiting on Legal ATL-109.", ["ATL-109"])],
+    )
+    r = await run(llm, question="Is the overdue privacy policy ticket late because of the payments API?")
+    assert [c["name"] for c in r["tool_calls"]] == ["search_tickets", "get_ticket"]
+    assert r["status"] == "ok" and r["answer"] == "Waiting on Legal [ATL-109]." and r["citations"] == ["ATL-109"]
+
+
+@sync
+async def test_list_question_is_not_nudged_so_simple_questions_stay_fast():
+    llm = FakeLLM(agent=[tool_reply("list_overdue"), text_reply()], synthesizer=[synth_reply("Overdue [ATL-112].", ["ATL-112"])])
+    r = await run(llm, question="Which tickets are overdue?")
+    assert [c["name"] for c in r["tool_calls"]] == ["list_overdue"]
+
+
+@sync
+async def test_sentence_keyword_with_zero_results_gets_a_words_hint():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="when is the public launch"), text_reply()],
+                  synthesizer=[synth_reply("Not found.", [])])
+    await run(llm)
+    tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
+    assert "1-2 distinctive words" in tool_msgs[0]

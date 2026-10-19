@@ -21,6 +21,7 @@ class AgentState(TypedDict, total=False):
     steps: int  # completed tool rounds (agent decision + tool execution)
     consecutive_errors: int  # tool rounds in a row where every call failed
     nudged: bool  # agent was already told once to use a tool
+    detail_nudged: bool  # agent was already told once to read full tickets
     route: str  # next hop: tool | agent | synthesizer | end
     status: str  # "" while running, else ok | loop_cap | invalid_output | error
     answer: str

@@ -15,6 +15,14 @@ from app import config
 ID_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,9}-\d+\b")
 
 
+_BARE_ID_RE = re.compile(r"(?<![\[\w-])([A-Z][A-Z0-9]{1,9}-\d+)(?![\]\w-])")
+
+
+def bracket_bare_ids(answer: str) -> str:
+    """The model often writes 'ATL-112' instead of '[ATL-112]'. Enforce the format in code."""
+    return _BARE_ID_RE.sub(r"[\1]", answer)
+
+
 def load_known_ids(path: str | Path | None = None) -> set[str] | None:
     """All ticket IDs in the data file, or None if it can't be read (stub phase)."""
     try:
