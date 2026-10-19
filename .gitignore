@@ -1,7 +1,7 @@
 # Secrets - keep this at the top
 .env
 .env.*
-!.env.example
+!g.env.example
 
 # Python
 __pycache__/
