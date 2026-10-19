@@ -8,3 +8,7 @@ arize-phoenix-otel==0.17.2
 openinference-instrumentation-langchain==0.1.79
 pytest==9.1.1
 python-dotenv==1.2.4
+# imported directly by the agent (B); previously only transitive
+ollama==0.6.3
+pydantic==2.13.5
+anyio==4.15.1

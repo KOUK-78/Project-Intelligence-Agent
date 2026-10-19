@@ -8,6 +8,7 @@ LangChain/LangGraph model + tool calls are auto-instrumented (OpenInference).
 Tracing failures NEVER break a run; the JSONL log works fully offline.
 """
 import functools
+import inspect
 import json
 import sys
 import time
@@ -57,15 +58,33 @@ def _trace_id_hex(span) -> str | None:
 
 
 def node_span(name: str):
-    """Decorator for graph nodes: one span per node, tagged with the node name."""
+    """Decorator for graph nodes: one span per node, tagged with the node name.
+
+    Works on sync AND async node functions. For async nodes the span must stay open
+    across the awaited work, so they get an async wrapper (a sync wrapper would just
+    return the un-awaited coroutine and LangGraph would reject it).
+    """
+    def _tag(span):
+        span.set_attribute("openinference.span.kind", "CHAIN")
+        span.set_attribute("node.name", name)
+
     def deco(fn):
+        if inspect.iscoroutinefunction(fn):
+            @functools.wraps(fn)
+            async def async_wrapper(*args, **kwargs):
+                if _tracer is None:
+                    return await fn(*args, **kwargs)
+                with _tracer.start_as_current_span(f"node:{name}") as span:
+                    _tag(span)
+                    return await fn(*args, **kwargs)
+            return async_wrapper
+
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             if _tracer is None:
                 return fn(*args, **kwargs)
             with _tracer.start_as_current_span(f"node:{name}") as span:
-                span.set_attribute("openinference.span.kind", "CHAIN")
-                span.set_attribute("node.name", name)
+                _tag(span)
                 return fn(*args, **kwargs)
         return wrapper
     return deco
