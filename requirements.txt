@@ -1,0 +1,10 @@
+# Pinned for Phase 1. Change only via PR + team agreement.
+langgraph==1.2.16
+mcp==2.3.0
+langchain-ollama==1.1.0
+typer==0.27.3
+arize-phoenix==20.23.0
+arize-phoenix-otel==0.17.2
+openinference-instrumentation-langchain==0.1.79
+pytest==9.1.1
+python-dotenv==1.2.4

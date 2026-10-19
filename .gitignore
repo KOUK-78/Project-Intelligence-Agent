@@ -1,0 +1,17 @@
+# Secrets - keep this at the top
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Run artifacts (local only)
+logs/
+.phoenix/
+*.sqlite
+*.db
