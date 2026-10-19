@@ -36,6 +36,28 @@ def clean_args(args: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
+_PROJECT_WORDS = ("atlas", "project")
+EMPTY_HINT = (
+    "No results. Filters may be too narrow: drop label, or use keyword '*' with only status. "
+    "Do not repeat this search."
+)
+
+
+def drop_bad_label(args: dict[str, Any]) -> dict[str, Any]:
+    """Labels are single topic words. A project name or phrase there can only return nothing."""
+    label = args.get("label")
+    if isinstance(label, str) and (len(label.split()) > 1 or any(w in label.lower() for w in _PROJECT_WORDS)):
+        return {k: v for k, v in args.items() if k != "label"}
+    return args
+
+
+def empty_search_hint(name: str, args: dict[str, Any], data: Any) -> str | None:
+    filtered = any(args.get(k) is not None for k in ("label", "status", "overdue"))
+    if name == "search_tickets" and isinstance(data, dict) and data.get("count") == 0 and filtered:
+        return EMPTY_HINT
+    return None
+
+
 def make_tool_node(mcp: McpToolClient):
     specs = {t["name"]: t for t in mcp.tools}
 
@@ -56,7 +78,7 @@ def make_tool_node(mcp: McpToolClient):
                 ok, data, latency = False, None, 0
                 error = f"unknown_tool: {name!r}. Available tools: {available}"
             else:
-                raw_args = clean_args(raw_args, specs[name]["input_schema"])
+                raw_args = drop_bad_label(clean_args(raw_args, specs[name]["input_schema"]))
                 outcome = await mcp.call(name, raw_args)
                 ok, data, error, latency = outcome.ok, outcome.data, outcome.error, outcome.latency_ms
 
@@ -65,9 +87,11 @@ def make_tool_node(mcp: McpToolClient):
             if error:
                 errors.append(f"{name}: {error}")
             payload = data if ok else {"error": error}
-            tool_messages.append(
-                {"role": "tool", "tool_name": name, "content": compact_json(payload, settings.get("MAX_TOOL_CHARS"))}
-            )
+            content = compact_json(payload, settings.get("MAX_TOOL_CHARS"))
+            hint = empty_search_hint(name, raw_args, data) if ok else None
+            if hint:
+                content += "\n" + hint  # guidance for the model only; evidence stays untouched
+            tool_messages.append({"role": "tool", "tool_name": name, "content": content})
 
         round_failed = bool(evidence) and not any(e["ok"] for e in evidence)
         consecutive = state.get("consecutive_errors", 0) + 1 if round_failed else 0

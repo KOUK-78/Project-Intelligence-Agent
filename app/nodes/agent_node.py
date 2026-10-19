@@ -10,7 +10,12 @@ from app.nodes.state import AgentState
 AGENT_SYSTEM = (
     "You answer questions about project tickets by calling tools.\n"
     "Look facts up with tools; never answer from memory.\n"
-    "Search by keyword or label, and use get_ticket for details and comments.\n"
+    "Every ticket is in Project Atlas, so never use 'Atlas' or 'Project Atlas' as a keyword or label.\n"
+    "search_tickets: keyword '*' matches everything. status must be exactly one of "
+    "To Do, In Progress, Blocked, Done. label is ONE short topic word (e.g. payments); "
+    "leave label out unless you are sure of it.\n"
+    "For 'what is blocked/blocking', search keyword '*' with status 'Blocked', then get_ticket for details.\n"
+    "If a search returns 0 results, remove filters and retry; never repeat the same search.\n"
     f"Today's date is {config.TODAY}.\n"
     "When you have enough evidence, stop calling tools and reply with the single word DONE."
 )

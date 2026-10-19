@@ -16,7 +16,7 @@ from app.agent import arun_agent
 from app.nodes.agent_node import extract_calls
 from app.nodes.llm import LLMReply
 from app.nodes.mcp_client import McpToolClient
-from app.nodes.tool_node import clean_args
+from app.nodes.tool_node import clean_args, drop_bad_label
 from app.nodes.verify import verify_citations
 from tests.fakes import FakeLLM, synth_reply, text_reply, tool_reply
 
@@ -286,3 +286,34 @@ async def test_full_dataset_overdue_matches_answer_key():
                                            sorted(expected))])
     r = await arun_agent("Which tickets are overdue?", llm=llm, mcp=McpToolClient(), known_ids=ids)
     assert r["status"] == "ok" and set(r["citations"]) == expected
+
+
+# ---------- small-model guardrails (found on the first real qwen3:8b run) ----------
+
+def test_project_name_or_phrase_is_dropped_from_label():
+    assert drop_bad_label({"keyword": "*", "label": "Project Atlas"}) == {"keyword": "*"}
+    assert drop_bad_label({"keyword": "*", "label": "atlas"}) == {"keyword": "*"}
+    assert drop_bad_label({"keyword": "*", "label": "payments"}) == {"keyword": "*", "label": "payments"}
+
+
+@sync
+async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent():
+    llm = FakeLLM(
+        agent=[tool_reply("search_tickets", keyword="x", label="Project Atlas", status="Exploded"),
+               tool_reply("search_tickets", keyword="*", status="Blocked"), text_reply()],
+        synthesizer=[synth_reply("Blocked [ATL-112].", ["ATL-112"])],
+    )
+    r = await run(llm)
+    assert r["status"] == "ok" and r["citations"] == ["ATL-112"]
+    assert "label" not in r["tool_calls"][0]["args"]
+    tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
+    assert tool_msgs and "invalid_input" in tool_msgs[0]  # server error passed through untouched
+
+
+@sync
+async def test_zero_results_with_filters_adds_hint_for_the_model():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="*", label="nosuchlabel"), text_reply()],
+                  synthesizer=[synth_reply("None found.", [])])
+    await run(llm)
+    tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
+    assert "Do not repeat this search" in tool_msgs[0]
