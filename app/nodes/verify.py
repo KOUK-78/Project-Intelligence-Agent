@@ -2,8 +2,10 @@
 
 Seed of the Phase 5 citation verifier. A cited ID survives only if it
   1. exists in the data (when the data file is readable), and
-  2. was actually returned by a tool in THIS run (answers come from evidence only).
+  2. is grounded in THIS run's tool output: returned as a ticket record, or named inside
+     the text of a ticket that was returned (e.g. "waiting on ATL-112").
 Anything else is dropped from `citations` and flagged in the answer text.
+`citations` is derived from the answer text, so it can never list an ID the answer doesn't use.
 """
 import json
 import re
@@ -57,34 +59,65 @@ def evidence_ids(evidence: list[dict[str, Any]]) -> set[str]:
     return found
 
 
+def mentioned_ids(evidence: list[dict[str, Any]]) -> list[str]:
+    """IDs named inside the text of successful tool results (descriptions, comments), in order."""
+    found: list[str] = []
+
+    def walk(x: Any) -> None:
+        if isinstance(x, dict):
+            if "error" in x:
+                return
+            for key, value in x.items():
+                if key != "id":
+                    walk(value)
+        elif isinstance(x, list):
+            for item in x:
+                walk(item)
+        elif isinstance(x, str):
+            for cid in ID_RE.findall(x):
+                if cid not in found:
+                    found.append(cid)
+
+    for e in evidence:
+        if e.get("ok"):
+            walk(e.get("data"))
+    return found
+
+
 def verify_citations(
     answer: str,
     citations: list[str],
     *,
     known_ids: set[str] | None,
     ev_ids: set[str],
+    mentioned: set[str] | None = None,
 ) -> tuple[str, list[str], list[str]]:
-    """Returns (answer, verified_citations, warnings)."""
+    """Returns (answer, verified_citations, warnings). Citations come from the answer text."""
     warnings: list[str] = []
-    claimed: list[str] = []
-    for raw in [*citations, *ID_RE.findall(answer)]:
+    mentioned = mentioned or set()
+    in_answer: list[str] = []
+    for cid in ID_RE.findall(answer):
+        if cid not in in_answer:
+            in_answer.append(cid)
+    for raw in citations:
         cid = str(raw).strip().strip("[]").upper()
-        if cid and cid not in claimed:
-            claimed.append(cid)
+        if cid and cid not in in_answer:
+            warnings.append(f"citation_not_in_answer:{cid}")
 
     if known_ids is None:
         warnings.append("data_file_unavailable: citations checked against tool evidence only")
 
     valid: list[str] = []
-    for cid in claimed:
-        if not ID_RE.fullmatch(cid):
-            warnings.append(f"malformed_citation:{cid}")
-        elif known_ids is not None and cid not in known_ids:
+    for cid in in_answer:
+        if known_ids is not None and cid not in known_ids:
             warnings.append(f"unknown_ticket_id:{cid}")
             answer = answer.replace(f"[{cid}]", f"[unverified: {cid}]")
-        elif cid not in ev_ids:
+        elif cid in ev_ids:
+            valid.append(cid)
+        elif cid in mentioned:
+            warnings.append(f"cited_from_mention:{cid}")  # real, named in a returned ticket, not itself read
+            valid.append(cid)
+        else:
             warnings.append(f"not_in_evidence:{cid}")
             answer = answer.replace(f"[{cid}]", f"[unverified: {cid}]")
-        else:
-            valid.append(cid)
     return answer, valid, warnings

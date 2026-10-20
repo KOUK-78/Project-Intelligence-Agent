@@ -144,13 +144,13 @@ async def test_bad_json_twice_is_invalid_output_after_exactly_one_retry():
 async def test_hallucinated_and_unretrieved_ids_are_dropped_and_flagged():
     llm = FakeLLM(
         agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
-        synthesizer=[synth_reply("Blocked [ATL-112]; also see [ATL-777] and [ATL-118].",
-                                 ["ATL-112", "ATL-777", "ATL-118"])],
+        synthesizer=[synth_reply("Blocked [ATL-112]; also see [ATL-777] and [ATL-109].",
+                                 ["ATL-112", "ATL-777", "ATL-109"])],
     )
     r = await run(llm)
     assert r["citations"] == ["ATL-112"]
     assert "[unverified: ATL-777]" in r["answer"]  # not in the data
-    assert "[unverified: ATL-118]" in r["answer"]  # real, but never retrieved this run
+    assert "[unverified: ATL-109]" in r["answer"]  # real, but neither read nor named in anything read
 
 
 def test_verify_adds_ids_cited_in_text_but_missing_from_list():
@@ -268,7 +268,7 @@ async def test_node_spans_wrap_the_awaited_node_work(monkeypatch):
     monkeypatch.setattr(tracing, "_tracer", FakeTracer())
     llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
                   synthesizer=[synth_reply("Blocked [ATL-112].", ["ATL-112"])])
-    r = await run(llm)
+    r = await run(llm, question="What is the status of ATL-112?")
     assert r["status"] == "ok"
     assert events == [
         "enter node:agent", "exit node:agent", "enter node:tool_executor", "exit node:tool_executor",
@@ -352,3 +352,46 @@ async def test_sentence_keyword_with_zero_results_gets_a_words_hint():
     await run(llm)
     tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
     assert "1-2 distinctive words" in tool_msgs[0]
+
+
+# ---------- fixes from the second eval run ----------
+
+@sync
+async def test_ticket_named_inside_a_read_ticket_is_a_valid_citation():
+    # ATL-118's comment says "waiting on the payments API (ATL-112)": citing ATL-112 is grounded.
+    llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-118"), text_reply()],
+                  synthesizer=[synth_reply("It waits on the payments API [ATL-112], per [ATL-118].", ["ATL-118", "ATL-112"])])
+    r = await run(llm, question="What is ATL-118 waiting on?")
+    assert r["citations"] == ["ATL-112", "ATL-118"] and "unverified" not in r["answer"]
+
+
+@sync
+async def test_citations_list_cannot_name_ids_the_answer_does_not_use():
+    llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
+                  synthesizer=[synth_reply("There is no ticket about Salesforce.", ["ATL-112", "ATL-109"])])
+    r = await run(llm, question="Status of the Salesforce CRM integration?")
+    assert r["status"] == "ok" and r["citations"] == []
+
+
+@sync
+async def test_dependency_question_follows_references_once():
+    llm = FakeLLM(
+        agent=[tool_reply("search_tickets", keyword="*", status="Blocked"),
+               tool_reply("get_ticket", ticket_id="ATL-112"), text_reply(),
+               tool_reply("get_ticket", ticket_id="ATL-118"), text_reply()],
+        synthesizer=[synth_reply("ATL-112 blocks the checkout screen ATL-118.", [])],
+    )
+    r = await run(llm)
+    assert [c["name"] for c in r["tool_calls"]] == ["search_tickets", "get_ticket", "get_ticket"]
+    nudges = [m["content"] for m in llm.calls["agent"][3] if m.get("role") == "user"]
+    assert any("have not read them yet" in n and "ATL-118" in n for n in nudges)
+    assert r["citations"] == ["ATL-112", "ATL-118"]  # derived from the answer, bracketed in code
+    assert r["answer"] == "[ATL-112] blocks the checkout screen [ATL-118]."
+
+
+@sync
+async def test_no_reference_nudge_for_simple_lookups():
+    llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
+                  synthesizer=[synth_reply("Status Blocked [ATL-112].", ["ATL-112"])])
+    r = await run(llm, question="What is the status of ATL-112?")
+    assert len(r["tool_calls"]) == 1

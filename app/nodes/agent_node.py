@@ -7,7 +7,7 @@ from app import config
 from app.nodes import settings
 from app.nodes.llm import LLM, LLMReply
 from app.nodes.state import AgentState
-from app.nodes.verify import evidence_ids
+from app.nodes.verify import evidence_ids, mentioned_ids
 
 AGENT_SYSTEM = (
     "You answer questions about project tickets by calling tools.\n"
@@ -34,6 +34,21 @@ DETAIL_NUDGE = (
 )
 # Question types whose answer usually lives in a ticket's comments, not its summary line.
 DETAIL_RE = re.compile(r"\b(why|because|reason|chang\w*|moved|slipp\w*|late|delay\w*|blocking|depend\w*|caused?)\b", re.I)
+
+
+# Dependency questions: the answer spans the tickets that a blocker names, so read those too.
+DEP_RE = re.compile(r"\b(block\w*|depend\w*|waiting|holds? up|held up|affect\w*)\b", re.I)
+
+
+def unread_references(state: AgentState) -> list[str]:
+    """Ticket IDs named inside tickets we read (e.g. 'Downstream tickets: ATL-118') but never read."""
+    if not DEP_RE.search(state.get("question", "")):
+        return []
+    evidence = state.get("evidence", [])
+    fetched = {e["data"].get("id") for e in evidence if e["tool"] == "get_ticket" and e["ok"] and isinstance(e["data"], dict)}
+    if not fetched:
+        return []
+    return [i for i in mentioned_ids(evidence) if i not in fetched][:4]
 
 
 def needs_ticket_details(state: AgentState) -> bool:
@@ -148,7 +163,8 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     {"role": "user", "content": NUDGE},
                 ],
             }
-        if needs_ticket_details(state) and not state.get("detail_nudged"):
+        can_continue = state.get("steps", 0) < config.MAX_AGENT_STEPS
+        if can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
             return {
                 "route": "agent",
                 "detail_nudged": True,
@@ -156,6 +172,18 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                 "messages": [
                     {"role": "assistant", "content": reply.content},
                     {"role": "user", "content": DETAIL_NUDGE},
+                ],
+            }
+        refs = unread_references(state) if can_continue and not state.get("ref_nudged") else []
+        if refs:
+            return {
+                "route": "agent",
+                "ref_nudged": True,
+                "pending_calls": [],
+                "messages": [
+                    {"role": "assistant", "content": reply.content},
+                    {"role": "user", "content": "These tickets are named in what you read but you have not read them yet: "
+                     + ", ".join(refs) + ". Call get_ticket on them before answering."},
                 ],
             }
         return {"route": "synthesizer", "pending_calls": []}
