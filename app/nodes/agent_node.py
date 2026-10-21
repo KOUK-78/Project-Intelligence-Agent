@@ -23,6 +23,7 @@ AGENT_SYSTEM = (
     "If a search returns 0 results, use fewer or different words and fewer filters; never repeat a search.\n"
     "Search results are short summaries. Reasons, date changes and decisions are in the ticket COMMENTS, "
     "so call get_ticket on each relevant ticket before answering why/when/what-changed questions.\n"
+    "You may call several tools in one reply, e.g. get_ticket for several IDs at once.\n"
     "If several tickets could answer (e.g. two launch tickets), read each one and compare them.\n"
     "To find what depends on a ticket, search its ID as the keyword (e.g. 'ATL-112'). "
     "If a ticket says it waits on another ticket, look that one up too.\n"
@@ -189,17 +190,15 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     {"role": "user", "content": DETAIL_NUDGE},
                 ],
             }
-        refs = unread_references(state) if can_continue and not state.get("ref_nudged") else []
+        refs = unread_references(state) if "get_ticket" in schemas and not state.get("ref_nudged") else []
         if refs:
+            # The model reads one ticket per turn, which would eat the step cap. Read the ticket IDs it
+            # already saw named in one parallel round instead. System-initiated, runs once, not counted as a step.
             return {
-                "route": "agent",
+                "route": "tool",
                 "ref_nudged": True,
-                "pending_calls": [],
-                "messages": [
-                    {"role": "assistant", "content": reply.content},
-                    {"role": "user", "content": "These tickets are named in what you read but you have not read them yet: "
-                     + ", ".join(refs) + ". Call get_ticket on them before answering."},
-                ],
+                "auto_round": True,
+                "pending_calls": [{"name": "get_ticket", "args": {"ticket_id": i}} for i in refs],
             }
         return {"route": "synthesizer", "pending_calls": []}
 

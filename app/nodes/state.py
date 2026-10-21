@@ -22,7 +22,8 @@ class AgentState(TypedDict, total=False):
     consecutive_errors: int  # tool rounds in a row where every call failed
     nudged: bool  # agent was already told once to use a tool
     detail_nudged: bool  # agent was already told once to read full tickets
-    ref_nudged: bool  # agent was already told once to read referenced tickets
+    ref_nudged: bool  # referenced tickets were already read once (system-initiated round)
+    auto_round: bool  # the pending calls were issued by the graph, not the model
     route: str  # next hop: tool | agent | synthesizer | end
     status: str  # "" while running, else ok | loop_cap | invalid_output | error
     answer: str

@@ -74,7 +74,7 @@ async def test_multi_step_search_then_get_ticket():
                tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
         synthesizer=[synth_reply("It is Blocked [ATL-112].", ["ATL-112"])],
     )
-    r = await run(llm)
+    r = await run(llm, question="What is the status of the payments API ticket?")
     assert r["status"] == "ok" and len(r["tool_calls"]) == 2 and r["citations"] == ["ATL-112"]
 
 
@@ -375,19 +375,30 @@ async def test_citations_list_cannot_name_ids_the_answer_does_not_use():
 
 
 @sync
-async def test_dependency_question_follows_references_once():
+async def test_dependency_question_reads_named_tickets_in_one_extra_round():
     llm = FakeLLM(
         agent=[tool_reply("search_tickets", keyword="*", status="Blocked"),
-               tool_reply("get_ticket", ticket_id="ATL-112"), text_reply(),
-               tool_reply("get_ticket", ticket_id="ATL-118"), text_reply()],
+               tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],  # last reply repeats
         synthesizer=[synth_reply("ATL-112 blocks the checkout screen ATL-118.", [])],
     )
     r = await run(llm)
-    assert [c["name"] for c in r["tool_calls"]] == ["search_tickets", "get_ticket", "get_ticket"]
-    nudges = [m["content"] for m in llm.calls["agent"][3] if m.get("role") == "user"]
-    assert any("have not read them yet" in n and "ATL-118" in n for n in nudges)
-    assert r["citations"] == ["ATL-112", "ATL-118"]  # derived from the answer, bracketed in code
+    names = [(c["name"], c["args"].get("ticket_id")) for c in r["tool_calls"]]
+    assert names[:2] == [("search_tickets", None), ("get_ticket", "ATL-112")]
+    assert ("get_ticket", "ATL-118") in names[2:]          # followed from ATL-112's comment, by the graph
+    assert llm.count("agent") == 4                            # search, get, done -> auto round -> done
+    assert r["status"] == "ok" and r["citations"] == ["ATL-112", "ATL-118"]
     assert r["answer"] == "[ATL-112] blocks the checkout screen [ATL-118]."
+
+
+@sync
+async def test_auto_round_does_not_use_up_the_step_cap():
+    # The model spends 4 of its 5 steps one call at a time; the automatic reference round must still run.
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="a"), tool_reply("get_ticket", ticket_id="ATL-112"),
+                         tool_reply("search_tickets", keyword="b"), tool_reply("search_tickets", keyword="c"), text_reply()],
+                  synthesizer=[synth_reply("Blocked [ATL-112] and [ATL-118].", [])])
+    r = await run(llm)
+    assert r["status"] == "ok" and len(r["tool_calls"]) > config.MAX_AGENT_STEPS - 1
+    assert ("get_ticket", "ATL-118") in [(c["name"], c["args"].get("ticket_id")) for c in r["tool_calls"]]
 
 
 @sync

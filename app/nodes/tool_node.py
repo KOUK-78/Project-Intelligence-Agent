@@ -130,7 +130,8 @@ def make_tool_node(mcp: McpToolClient):
         update: dict[str, Any] = {
             "route": "agent",
             "pending_calls": [],
-            "steps": state.get("steps", 0) + 1,
+            "steps": state.get("steps", 0) + (0 if state.get("auto_round") else 1),
+            "auto_round": False,
             "consecutive_errors": consecutive,
             "tool_calls": tool_calls,
             "evidence": evidence,
