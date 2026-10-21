@@ -23,6 +23,7 @@ AGENT_SYSTEM = (
     "If a search returns 0 results, use fewer or different words and fewer filters; never repeat a search.\n"
     "Search results are short summaries. Reasons, date changes and decisions are in the ticket COMMENTS, "
     "so call get_ticket on each relevant ticket before answering why/when/what-changed questions.\n"
+    "If several tickets could answer (e.g. two launch tickets), read each one and compare them.\n"
     "To find what depends on a ticket, search its ID as the keyword (e.g. 'ATL-112'). "
     "If a ticket says it waits on another ticket, look that one up too.\n"
     f"Today's date is {config.TODAY}.\n"

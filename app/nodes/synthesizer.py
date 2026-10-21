@@ -17,6 +17,7 @@ SYNTH_SYSTEM = (
     "4. Include the specific facts: names, dates, counts, days overdue, and the reason from the comments.\n"
     "5. If tickets disagree, say they conflict, give each value with its ticket, and do not pick one.\n"
     "6. If the question's premise is contradicted by a ticket, say so.\n"
+    "7. If nothing in the evidence answers the question, say that in one sentence and cite nothing.\n"
     f"Today's date is {config.TODAY}.\n"
     'Reply as JSON: {"answer": "...", "citations": ["ATL-212"]}. '
     '"citations" lists every ticket ID you cited in "answer".'
