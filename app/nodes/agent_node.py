@@ -7,12 +7,14 @@ from app import config
 from app.nodes import settings
 from app.nodes.llm import LLM, LLMReply
 from app.nodes.state import AgentState
+from app.nodes.tool_node import normalize_call
 from app.nodes.verify import evidence_ids, mentioned_ids
 
 AGENT_SYSTEM = (
     "You answer questions about project tickets by calling tools.\n"
     "Look facts up with tools; never answer from memory.\n"
     "Every ticket is in Project Atlas, so never use 'Atlas' or 'Project Atlas' as a keyword or label.\n"
+    "Only use status or label filters when the question itself names one.\n"
     "search_tickets: keyword '*' matches everything. status must be exactly one of "
     "To Do, In Progress, Blocked, Done. label is ONE short topic word (e.g. payments); "
     "leave label out unless you are sure of it.\n"
@@ -127,6 +129,7 @@ def extract_calls(reply: LLMReply) -> list[dict[str, Any]]:
 
 def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
     tools = to_ollama_tools(tool_specs)
+    schemas = {t["name"]: t["input_schema"] for t in tool_specs}
 
     async def agent_node(state: AgentState) -> dict[str, Any]:
         messages = [{"role": "system", "content": AGENT_SYSTEM}, *state.get("messages", [])]
@@ -142,6 +145,17 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
             }
 
         calls = extract_calls(reply)
+        if calls:
+            # Same search again adds nothing and burns a step: drop repeats of calls that already succeeded.
+            seen = {(e["tool"], json.dumps(e["args"], sort_keys=True, default=str))
+                    for e in state.get("evidence", []) if e["ok"]}
+            fresh = []
+            for call in (normalize_call(c, schemas, state.get("question", "")) for c in calls):
+                key = (call["name"], json.dumps(call["args"], sort_keys=True, default=str))
+                if key not in seen:
+                    seen.add(key)
+                    fresh.append(call)
+            calls = fresh  # all repeats -> no new calls -> treated as "done" below
         if calls:
             if state.get("steps", 0) >= config.MAX_AGENT_STEPS:
                 return {

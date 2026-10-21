@@ -16,8 +16,8 @@ from app.agent import arun_agent
 from app.nodes.agent_node import extract_calls
 from app.nodes.llm import LLMReply
 from app.nodes.mcp_client import McpToolClient
-from app.nodes.tool_node import clean_args, drop_bad_label
-from app.nodes.verify import bracket_bare_ids, verify_citations
+from app.nodes.tool_node import clean_args, drop_bad_label, guard_filters
+from app.nodes.verify import bracket_bare_ids, tidy_brackets, verify_citations
 from tests.fakes import FakeLLM, synth_reply, text_reply, tool_reply
 
 HERE = Path(__file__).parent
@@ -82,7 +82,8 @@ async def test_multi_step_search_then_get_ticket():
 
 @sync
 async def test_loop_cap_returns_loop_cap_and_stops():
-    llm = FakeLLM(agent=[tool_reply("list_overdue")], synthesizer=[synth_reply("x", [])])
+    # A real loop keeps trying NEW searches (repeats of a successful call are ended as "done").
+    llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
     r = await run(llm)
     assert r["status"] == "loop_cap"
     assert len(r["tool_calls"]) == config.MAX_AGENT_STEPS
@@ -314,7 +315,7 @@ async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent():
 async def test_zero_results_with_filters_adds_hint_for_the_model():
     llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="*", label="nosuchlabel"), text_reply()],
                   synthesizer=[synth_reply("None found.", [])])
-    await run(llm)
+    await run(llm, question="Any tickets labelled nosuchlabel?")
     tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
     assert "Do not repeat this search" in tool_msgs[0]
 
@@ -395,3 +396,45 @@ async def test_no_reference_nudge_for_simple_lookups():
                   synthesizer=[synth_reply("Status Blocked [ATL-112].", ["ATL-112"])])
     r = await run(llm, question="What is the status of ATL-112?")
     assert len(r["tool_calls"]) == 1
+
+
+# ---------- fixes from the third eval run (Q4 loop_cap, Q6 invented filter) ----------
+
+def test_invented_status_and_label_filters_are_dropped_unless_the_question_names_them():
+    q = "When is the Atlas public launch?"
+    assert guard_filters({"keyword": "launch", "status": "To Do"}, q) == {"keyword": "launch"}
+    assert guard_filters({"keyword": "*", "status": "Blocked"}, "Which tickets are currently Blocked?") == {"keyword": "*", "status": "Blocked"}
+    assert guard_filters({"keyword": "*", "label": "payments"}, "Which payments tickets slipped?") == {"keyword": "*", "label": "payments"}
+    assert guard_filters({"keyword": "*", "label": "security"}, "What is late?") == {"keyword": "*"}
+
+
+def test_non_id_brackets_become_parentheses():
+    assert tidy_brackets("[ATL-112] [days_overdue: 20] and [unverified: ATL-9]") == "[ATL-112] (days_overdue: 20) and [unverified: ATL-9]"
+    assert bracket_bare_ids(tidy_brackets("see [ATL-1, ATL-2]")) == "see ([ATL-1], [ATL-2])"
+
+
+@sync
+async def test_invented_status_filter_is_not_sent_to_the_server():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="privacy", status="To Do"), text_reply()],
+                  synthesizer=[synth_reply("Found [ATL-109].", ["ATL-109"])])
+    r = await run(llm, question="When is the privacy policy due?")
+    assert r["tool_calls"][0]["args"] == {"keyword": "privacy"} and r["citations"] == ["ATL-109"]
+
+
+@sync
+async def test_repeating_a_successful_call_ends_the_loop_instead_of_burning_steps():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="privacy")],  # the last reply repeats forever
+                  synthesizer=[synth_reply("Due 2026-06-15 [ATL-109].", ["ATL-109"])])
+    r = await run(llm, question="When is the privacy policy due?")
+    assert r["status"] == "ok" and len(r["tool_calls"]) == 1 and r["citations"] == ["ATL-109"]
+    assert llm.count("agent") == 2
+
+
+def test_mcp_client_does_not_touch_deprecated_aliases():
+    import warnings
+    from app.nodes.mcp_client import parse_tool_result
+    from mcp import types
+    res = types.CallToolResult(content=[types.TextContent(type="text", text='{"count": 0}')])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert parse_tool_result(res)[:2] == (True, {"count": 0})

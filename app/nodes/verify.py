@@ -20,6 +20,19 @@ ID_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,9}-\d+\b")
 _BARE_ID_RE = re.compile(r"(?<![\[\w-])([A-Z][A-Z0-9]{1,9}-\d+)(?![\]\w-])")
 
 
+_BRACKET_RE = re.compile(r"\[([^\[\]]+)\]")
+
+
+def tidy_brackets(answer: str) -> str:
+    """Brackets are reserved for ticket IDs: '[days_overdue: 20]' -> '(days_overdue: 20)'."""
+
+    def fix(m: re.Match) -> str:
+        inner = m.group(1)
+        return m.group(0) if ID_RE.fullmatch(inner.strip()) or inner.startswith("unverified") else f"({inner})"
+
+    return _BRACKET_RE.sub(fix, answer)
+
+
 def bracket_bare_ids(answer: str) -> str:
     """The model often writes 'ATL-112' instead of '[ATL-112]'. Enforce the format in code."""
     return _BARE_ID_RE.sub(r"[\1]", answer)

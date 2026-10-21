@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from app import config
 from app.nodes.llm import LLM
 from app.nodes.state import AgentState, compact_json
-from app.nodes.verify import bracket_bare_ids, evidence_ids, mentioned_ids, verify_citations
+from app.nodes.verify import bracket_bare_ids, evidence_ids, mentioned_ids, tidy_brackets, verify_citations
 
 SYNTH_SYSTEM = (
     "You write the final answer to a question about project tickets.\n"
@@ -92,7 +92,7 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
             return {"route": "end", "status": "invalid_output", "answer": INVALID_ANSWER, "citations": [], "errors": errors}
 
         answer, citations, warnings = verify_citations(
-            bracket_bare_ids(output.answer),
+            bracket_bare_ids(tidy_brackets(output.answer)),
             output.citations,
             known_ids=known_ids,
             ev_ids=evidence_ids(evidence),

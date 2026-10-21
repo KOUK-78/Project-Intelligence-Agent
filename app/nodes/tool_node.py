@@ -1,4 +1,5 @@
 """TOOL EXECUTOR node (act): runs the agent's calls against the MCP server. OWNER: B."""
+import re
 from typing import Any
 
 from app.nodes import settings
@@ -57,6 +58,30 @@ EMPTY_WORDS_HINT = (
 )
 
 
+STATUS_WORDS = re.compile(
+    r"\b(status|blocked|blocker|blockers|blocking|done|complet\w*|finished|in progress|to do|todo|open|stuck)\b", re.I
+)
+
+
+def guard_filters(args: dict[str, Any], question: str) -> dict[str, Any]:
+    """A small model often invents filters. Keep status/label only if the question itself points at them."""
+    out = dict(args)
+    if "status" in out and not STATUS_WORDS.search(question or ""):
+        del out["status"]
+    label = out.get("label")
+    if isinstance(label, str) and label.lower() not in (question or "").lower():
+        del out["label"]
+    return out
+
+
+def normalize_call(call: dict[str, Any], schemas: dict[str, dict], question: str) -> dict[str, Any]:
+    schema = schemas.get(call["name"])
+    if schema is None:
+        return call
+    args = guard_filters(drop_bad_label(clean_args(call.get("args", {}), schema)), question)
+    return {"name": call["name"], "args": args}
+
+
 def empty_search_hint(name: str, args: dict[str, Any], data: Any) -> str | None:
     if name != "search_tickets" or not (isinstance(data, dict) and data.get("count") == 0):
         return None
@@ -84,7 +109,8 @@ def make_tool_node(mcp: McpToolClient):
                 ok, data, latency = False, None, 0
                 error = f"unknown_tool: {name!r}. Available tools: {available}"
             else:
-                raw_args = drop_bad_label(clean_args(raw_args, specs[name]["input_schema"]))
+                raw_args = normalize_call({"name": name, "args": raw_args}, {name: specs[name]["input_schema"]},
+                                          state.get("question", ""))["args"]
                 outcome = await mcp.call(name, raw_args)
                 ok, data, error, latency = outcome.ok, outcome.data, outcome.error, outcome.latency_ms
 
