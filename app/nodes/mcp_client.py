@@ -55,7 +55,8 @@ def _text_of(result: Any) -> str:
 def parse_tool_result(result: Any) -> tuple[bool, Any, str | None]:
     """CallToolResult -> (ok, data, error). Works with mcp 1.x and 2.x attribute names."""
     text = _text_of(result)
-    if getattr(result, "is_error", None) or getattr(result, "isError", None):
+    flag = result.is_error if hasattr(result, "is_error") else getattr(result, "isError", False)  # 1.x name
+    if flag:
         return False, None, f"tool_error: {text[:300] or 'unknown'}"
 
     data: Any = None
@@ -65,7 +66,7 @@ def parse_tool_result(result: Any) -> tuple[bool, Any, str | None]:
         except ValueError:
             data = None
     if data is None:
-        structured = getattr(result, "structured_content", None) or getattr(result, "structuredContent", None)
+        structured = result.structured_content if hasattr(result, "structured_content") else getattr(result, "structuredContent", None)
         if isinstance(structured, dict):
             # Some SDK versions wrap a dict return value as {"result": {...}}.
             data = structured["result"] if list(structured) == ["result"] else structured

@@ -16,8 +16,8 @@ from app.agent import arun_agent
 from app.nodes.agent_node import extract_calls
 from app.nodes.llm import LLMReply
 from app.nodes.mcp_client import McpToolClient
-from app.nodes.tool_node import clean_args, drop_bad_label
-from app.nodes.verify import bracket_bare_ids, verify_citations
+from app.nodes.tool_node import clean_args, drop_bad_label, guard_filters
+from app.nodes.verify import bracket_bare_ids, strip_trailing_id_list, tidy_brackets, trim_not_found_tangent, verify_citations
 from tests.fakes import FakeLLM, synth_reply, text_reply, tool_reply
 
 HERE = Path(__file__).parent
@@ -74,7 +74,7 @@ async def test_multi_step_search_then_get_ticket():
                tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
         synthesizer=[synth_reply("It is Blocked [ATL-112].", ["ATL-112"])],
     )
-    r = await run(llm)
+    r = await run(llm, question="What is the status of the payments API ticket?")
     assert r["status"] == "ok" and len(r["tool_calls"]) == 2 and r["citations"] == ["ATL-112"]
 
 
@@ -82,7 +82,8 @@ async def test_multi_step_search_then_get_ticket():
 
 @sync
 async def test_loop_cap_returns_loop_cap_and_stops():
-    llm = FakeLLM(agent=[tool_reply("list_overdue")], synthesizer=[synth_reply("x", [])])
+    # A real loop keeps trying NEW searches (repeats of a successful call are ended as "done").
+    llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
     r = await run(llm)
     assert r["status"] == "loop_cap"
     assert len(r["tool_calls"]) == config.MAX_AGENT_STEPS
@@ -144,13 +145,13 @@ async def test_bad_json_twice_is_invalid_output_after_exactly_one_retry():
 async def test_hallucinated_and_unretrieved_ids_are_dropped_and_flagged():
     llm = FakeLLM(
         agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
-        synthesizer=[synth_reply("Blocked [ATL-112]; also see [ATL-777] and [ATL-118].",
-                                 ["ATL-112", "ATL-777", "ATL-118"])],
+        synthesizer=[synth_reply("Blocked [ATL-112]; also see [ATL-777] and [ATL-109].",
+                                 ["ATL-112", "ATL-777", "ATL-109"])],
     )
     r = await run(llm)
     assert r["citations"] == ["ATL-112"]
     assert "[unverified: ATL-777]" in r["answer"]  # not in the data
-    assert "[unverified: ATL-118]" in r["answer"]  # real, but never retrieved this run
+    assert "[unverified: ATL-109]" in r["answer"]  # real, but neither read nor named in anything read
 
 
 def test_verify_adds_ids_cited_in_text_but_missing_from_list():
@@ -268,7 +269,7 @@ async def test_node_spans_wrap_the_awaited_node_work(monkeypatch):
     monkeypatch.setattr(tracing, "_tracer", FakeTracer())
     llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
                   synthesizer=[synth_reply("Blocked [ATL-112].", ["ATL-112"])])
-    r = await run(llm)
+    r = await run(llm, question="What is the status of ATL-112?")
     assert r["status"] == "ok"
     assert events == [
         "enter node:agent", "exit node:agent", "enter node:tool_executor", "exit node:tool_executor",
@@ -314,7 +315,7 @@ async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent():
 async def test_zero_results_with_filters_adds_hint_for_the_model():
     llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="*", label="nosuchlabel"), text_reply()],
                   synthesizer=[synth_reply("None found.", [])])
-    await run(llm)
+    await run(llm, question="Any tickets labelled nosuchlabel?")
     tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
     assert "Do not repeat this search" in tool_msgs[0]
 
@@ -352,3 +353,154 @@ async def test_sentence_keyword_with_zero_results_gets_a_words_hint():
     await run(llm)
     tool_msgs = [m["content"] for m in llm.calls["agent"][1] if m.get("role") == "tool"]
     assert "1-2 distinctive words" in tool_msgs[0]
+
+
+# ---------- fixes from the second eval run ----------
+
+@sync
+async def test_ticket_named_inside_a_read_ticket_is_a_valid_citation():
+    # ATL-118's comment says "waiting on the payments API (ATL-112)": citing ATL-112 is grounded.
+    llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-118"), text_reply()],
+                  synthesizer=[synth_reply("It waits on the payments API [ATL-112], per [ATL-118].", ["ATL-118", "ATL-112"])])
+    r = await run(llm, question="What is ATL-118 waiting on?")
+    assert r["citations"] == ["ATL-112", "ATL-118"] and "unverified" not in r["answer"]
+
+
+@sync
+async def test_citations_list_cannot_name_ids_the_answer_does_not_use():
+    llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
+                  synthesizer=[synth_reply("There is no ticket about Salesforce.", ["ATL-112", "ATL-109"])])
+    r = await run(llm, question="Status of the Salesforce CRM integration?")
+    assert r["status"] == "ok" and r["citations"] == []
+
+
+@sync
+async def test_dependency_question_reads_named_tickets_in_one_extra_round():
+    llm = FakeLLM(
+        agent=[tool_reply("search_tickets", keyword="*", status="Blocked"),
+               tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],  # last reply repeats
+        synthesizer=[synth_reply("ATL-112 blocks the checkout screen ATL-118.", [])],
+    )
+    r = await run(llm)
+    names = [(c["name"], c["args"].get("ticket_id")) for c in r["tool_calls"]]
+    assert names[:2] == [("search_tickets", None), ("get_ticket", "ATL-112")]
+    assert ("get_ticket", "ATL-118") in names[2:]          # followed from ATL-112's comment, by the graph
+    assert llm.count("agent") == 4                            # search, get, done -> auto round -> done
+    assert r["status"] == "ok" and r["citations"] == ["ATL-112", "ATL-118"]
+    assert r["answer"] == "[ATL-112] blocks the checkout screen [ATL-118]."
+
+
+@sync
+async def test_auto_round_does_not_use_up_the_step_cap():
+    # The model spends 4 of its 5 steps one call at a time; the automatic reference round must still run.
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="a"), tool_reply("get_ticket", ticket_id="ATL-112"),
+                         tool_reply("search_tickets", keyword="b"), tool_reply("search_tickets", keyword="c"), text_reply()],
+                  synthesizer=[synth_reply("Blocked [ATL-112] and [ATL-118].", [])])
+    r = await run(llm)
+    assert r["status"] == "ok" and len(r["tool_calls"]) > config.MAX_AGENT_STEPS - 1
+    assert ("get_ticket", "ATL-118") in [(c["name"], c["args"].get("ticket_id")) for c in r["tool_calls"]]
+
+
+@sync
+async def test_no_reference_nudge_for_simple_lookups():
+    llm = FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],
+                  synthesizer=[synth_reply("Status Blocked [ATL-112].", ["ATL-112"])])
+    r = await run(llm, question="What is the status of ATL-112?")
+    assert len(r["tool_calls"]) == 1
+
+
+# ---------- fixes from the third eval run (Q4 loop_cap, Q6 invented filter) ----------
+
+def test_invented_status_and_label_filters_are_dropped_unless_the_question_names_them():
+    q = "When is the Atlas public launch?"
+    assert guard_filters({"keyword": "launch", "status": "To Do"}, q) == {"keyword": "launch"}
+    assert guard_filters({"keyword": "*", "status": "Blocked"}, "Which tickets are currently Blocked?") == {"keyword": "*", "status": "Blocked"}
+    assert guard_filters({"keyword": "*", "label": "payments"}, "Which payments tickets slipped?") == {"keyword": "*", "label": "payments"}
+    assert guard_filters({"keyword": "*", "label": "security"}, "What is late?") == {"keyword": "*"}
+
+
+def test_non_id_brackets_become_parentheses():
+    assert tidy_brackets("[ATL-112] [days_overdue: 20] and [unverified: ATL-9]") == "[ATL-112] (days_overdue: 20) and [unverified: ATL-9]"
+    assert bracket_bare_ids(tidy_brackets("see [ATL-1, ATL-2]")) == "see ([ATL-1], [ATL-2])"
+
+
+@sync
+async def test_invented_status_filter_is_not_sent_to_the_server():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="privacy", status="To Do"), text_reply()],
+                  synthesizer=[synth_reply("Found [ATL-109].", ["ATL-109"])])
+    r = await run(llm, question="When is the privacy policy due?")
+    assert r["tool_calls"][0]["args"] == {"keyword": "privacy"} and r["citations"] == ["ATL-109"]
+
+
+@sync
+async def test_repeating_a_successful_call_ends_the_loop_instead_of_burning_steps():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="privacy")],  # the last reply repeats forever
+                  synthesizer=[synth_reply("Due 2026-06-15 [ATL-109].", ["ATL-109"])])
+    r = await run(llm, question="Which ticket covers the privacy policy?")
+    assert r["status"] == "ok" and len(r["tool_calls"]) == 1 and r["citations"] == ["ATL-109"]
+    assert llm.count("agent") == 2
+
+
+def test_mcp_client_does_not_touch_deprecated_aliases():
+    import warnings
+    from app.nodes.mcp_client import parse_tool_result
+    from mcp import types
+    res = types.CallToolResult(content=[types.TextContent(type="text", text='{"count": 0}')])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        assert parse_tool_result(res)[:2] == (True, {"count": 0})
+
+
+# ---------- debug log ----------
+
+def test_agent_debug_log_is_opt_in_and_goes_to_stderr(monkeypatch, capsys):
+    def fresh():  # a scripted LLM is consumed by one run
+        return FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-109"), text_reply()],
+                       synthesizer=[synth_reply("Waiting on Legal [ATL-109].", ["ATL-109"])])
+
+    q = "What is the status of ATL-109?"
+    asyncio.run(run(fresh(), question=q))
+    assert "[agent-debug]" not in capsys.readouterr().err
+    monkeypatch.setenv("AGENT_DEBUG", "1")
+    asyncio.run(run(fresh(), question=q))
+    out = capsys.readouterr()
+    assert "[agent-debug] tool_executor" in out.err and "get_ticket" in out.err and "[agent-debug]" not in out.out
+
+
+def test_trailing_echo_of_the_citation_list_is_removed_only_when_nothing_is_lost():
+    echoed = "[ATL-112] is late. [ATL-121] waits on [ATL-112]. [ATL-112], [ATL-121]"
+    assert strip_trailing_id_list(echoed) == "[ATL-112] is late. [ATL-121] waits on [ATL-112]."
+    only_there = "Both are late. [ATL-112], [ATL-121]"
+    assert strip_trailing_id_list(only_there) == only_there            # IDs not cited earlier: keep them
+    assert strip_trailing_id_list("It is blocked [ATL-121].") == "It is blocked [ATL-121]."
+    assert strip_trailing_id_list("Done. [ATL-1]") == "Done. [ATL-1]"   # a single trailing cite is a real cite
+
+
+# ---------- fixes from the fourth eval run (Q6 conflict, Q7 tangent) ----------
+
+@sync
+async def test_when_question_reads_every_candidate_ticket_in_one_round():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout"), text_reply()],
+                  synthesizer=[synth_reply("Two tickets disagree: [ATL-109] and [ATL-118].", [])])
+    r = await run(llm, question="When is the checkout work due?")
+    ids = [c["args"].get("ticket_id") for c in r["tool_calls"] if c["name"] == "get_ticket"]
+    assert sorted(ids) == ["ATL-109", "ATL-112", "ATL-118"] and r["status"] == "ok"
+    assert llm.count("agent") == 3                          # search; done -> graph reads all; done
+
+
+@sync
+async def test_non_when_question_does_not_trigger_candidate_reading():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout"), text_reply()],
+                  synthesizer=[synth_reply("Checkout tickets: [ATL-109].", ["ATL-109"])])
+    r = await run(llm, question="Which tickets are about checkout?")
+    assert [c["name"] for c in r["tool_calls"]] == ["search_tickets"]
+
+
+def test_not_found_tangent_is_trimmed_only_when_narrow_conditions_all_hold():
+    tangent = ("There are no tickets related to the Salesforce CRM integration. However, there are other "
+               "integration tickets: [ATL-105] is Done and [ATL-119] is Done.")
+    assert trim_not_found_tangent(tangent) == "There are no tickets related to the Salesforce CRM integration."
+    keep1 = "There are no blocked tickets for Atlas. [ATL-9] is at risk."          # no pivot word: keep
+    keep2 = "[ATL-121] is blocked. However, there are other issues [ATL-9]."       # not a not-found opener
+    keep3 = "There are no tickets about Salesforce. However, nothing else relates."  # no IDs in remainder
+    assert [trim_not_found_tangent(x) for x in (keep1, keep2, keep3)] == [keep1, keep2, keep3]

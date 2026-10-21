@@ -6,6 +6,7 @@ decision; if it asks for yet another tool, the run ends with status="loop_cap".
 """
 from langgraph.graph import END, START, StateGraph
 
+from app.nodes import debug
 from app.nodes.agent_node import make_agent_node
 from app.nodes.llm import LLM
 from app.nodes.mcp_client import McpToolClient
@@ -15,11 +16,20 @@ from app.nodes.tool_node import make_tool_node
 from app.tracing import node_span
 
 
+def logged(name, fn):
+    async def wrapper(state):
+        update = await fn(state)
+        debug.log_node(name, dict(state), update)
+        return update
+
+    return wrapper
+
+
 def build_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None):
     graph = StateGraph(AgentState)
-    graph.add_node("agent", node_span("agent")(make_agent_node(llm, mcp.tools)))
-    graph.add_node("tool_executor", node_span("tool_executor")(make_tool_node(mcp)))
-    graph.add_node("synthesizer", node_span("synthesizer")(make_synthesizer_node(llm, known_ids)))
+    graph.add_node("agent", node_span("agent")(logged("agent", make_agent_node(llm, mcp.tools))))
+    graph.add_node("tool_executor", node_span("tool_executor")(logged("tool_executor", make_tool_node(mcp))))
+    graph.add_node("synthesizer", node_span("synthesizer")(logged("synthesizer", make_synthesizer_node(llm, known_ids))))
 
     graph.add_edge(START, "agent")
     graph.add_conditional_edges(
