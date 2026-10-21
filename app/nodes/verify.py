@@ -33,6 +33,19 @@ def tidy_brackets(answer: str) -> str:
     return _BRACKET_RE.sub(fix, answer)
 
 
+_TRAILING_IDS_RE = re.compile(r"(?<=[.!?])\s+((?:\[[A-Z][A-Z0-9]{1,9}-\d+\][,\s]*){2,})$")
+
+
+def strip_trailing_id_list(answer: str) -> str:
+    """Drop a final '[ATL-1], [ATL-2]' the model appends as an echo of its citations list,
+    but only when every ID in it is already cited earlier in the answer (nothing is lost)."""
+    m = _TRAILING_IDS_RE.search(answer)
+    if not m:
+        return answer
+    head = answer[: m.start()]
+    return head.rstrip() if all(i in head for i in ID_RE.findall(m.group(1))) else answer
+
+
 def bracket_bare_ids(answer: str) -> str:
     """The model often writes 'ATL-112' instead of '[ATL-112]'. Enforce the format in code."""
     return _BARE_ID_RE.sub(r"[\1]", answer)

@@ -17,7 +17,7 @@ from app.nodes.agent_node import extract_calls
 from app.nodes.llm import LLMReply
 from app.nodes.mcp_client import McpToolClient
 from app.nodes.tool_node import clean_args, drop_bad_label, guard_filters
-from app.nodes.verify import bracket_bare_ids, tidy_brackets, verify_citations
+from app.nodes.verify import bracket_bare_ids, strip_trailing_id_list, tidy_brackets, verify_citations
 from tests.fakes import FakeLLM, synth_reply, text_reply, tool_reply
 
 HERE = Path(__file__).parent
@@ -465,3 +465,12 @@ def test_agent_debug_log_is_opt_in_and_goes_to_stderr(monkeypatch, capsys):
     asyncio.run(run(fresh(), question=q))
     out = capsys.readouterr()
     assert "[agent-debug] tool_executor" in out.err and "get_ticket" in out.err and "[agent-debug]" not in out.out
+
+
+def test_trailing_echo_of_the_citation_list_is_removed_only_when_nothing_is_lost():
+    echoed = "[ATL-112] is late. [ATL-121] waits on [ATL-112]. [ATL-112], [ATL-121]"
+    assert strip_trailing_id_list(echoed) == "[ATL-112] is late. [ATL-121] waits on [ATL-112]."
+    only_there = "Both are late. [ATL-112], [ATL-121]"
+    assert strip_trailing_id_list(only_there) == only_there            # IDs not cited earlier: keep them
+    assert strip_trailing_id_list("It is blocked [ATL-121].") == "It is blocked [ATL-121]."
+    assert strip_trailing_id_list("Done. [ATL-1]") == "Done. [ATL-1]"   # a single trailing cite is a real cite
