@@ -12,7 +12,7 @@ SYNTH_SYSTEM = (
     "You write the final answer to a question about project tickets.\n"
     "Rules:\n"
     "1. Answer ONLY from the evidence given. Never use outside knowledge.\n"
-    "2. Put the ticket ID in brackets after every factual claim, e.g. [ATL-212]. Use brackets only for ticket IDs.\n"
+    "2. Put the ticket ID in brackets after every factual claim, e.g. [ATL-000]. Use brackets only for ticket IDs.\n"
     "3. If the evidence is not enough, say so plainly. Do not guess.\n"
     "4. Include the specific facts: names, dates, counts, days overdue, and the reason from the comments.\n"
     "5. If tickets disagree, say they conflict, give each value with its ticket, and do not pick one.\n"
@@ -21,15 +21,13 @@ SYNTH_SYSTEM = (
     "it holds up, each with its ID.\n"
     "8. If nothing in the evidence answers the question, say that in one sentence and cite nothing.\n"
     f"Today's date is {config.TODAY}.\n"
-    'Reply as JSON: {"answer": "...", "citations": ["ATL-212"]}. '
+    'Reply as JSON: {"answer": "...", "citations": ["ATL-000"]}. '
     '"citations" lists every ticket ID you cited in "answer".'
 )
 RETRY_NUDGE = 'That was not valid. Reply again with ONLY a JSON object: {"answer": "...", "citations": ["ID"]}'
 NO_EVIDENCE_ANSWER = "I could not find any ticket evidence to answer that, so I can't answer it."
 INVALID_ANSWER = "I could not produce a valid answer."
 
-EVIDENCE_ITEM_CHARS = 2000
-EVIDENCE_TOTAL_CHARS = 9000  # leaves room for the prompt inside num_ctx=8192 tokens
 
 
 class SynthOutput(BaseModel):
@@ -46,9 +44,9 @@ def format_evidence(evidence: list[dict[str, Any]]) -> str:
     used = 0
     for i, e in enumerate(evidence):
         args = compact_json(e["args"], 200)
-        body = compact_json(e["data"], EVIDENCE_ITEM_CHARS) if e["ok"] else f"FAILED: {e['error']}"
+        body = compact_json(e["data"], config.EVIDENCE_ITEM_CHARS) if e["ok"] else f"FAILED: {e['error']}"
         line = f"- {e['tool']}({args}) -> {body}"
-        if used + len(line) > EVIDENCE_TOTAL_CHARS:
+        if used + len(line) > config.EVIDENCE_TOTAL_CHARS:
             lines.append(f"- ({len(evidence) - i} further tool results omitted for length)")
             break
         lines.append(line)
@@ -73,7 +71,7 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
             try:
                 reply = await llm.chat("synthesizer", messages, format=SYNTH_SCHEMA)
             except Exception as exc:  # noqa: BLE001
-                msg = f"llm_unavailable: {type(exc).__name__}: {exc}"[:300]
+                msg = f"llm_unavailable: {type(exc).__name__}: {exc}"[: config.ERROR_TEXT_CHARS]
                 return {
                     "route": "end",
                     "status": "error",
@@ -84,7 +82,7 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
                 output = SynthOutput.model_validate_json(reply.content)
                 break
             except ValidationError:
-                errors.append(f"invalid_output (attempt {attempt}): {reply.content[:120]!r}")
+                errors.append(f"invalid_output (attempt {attempt}): {reply.content[: config.SNIPPET_CHARS]!r}")
                 messages = [
                     *messages,
                     {"role": "assistant", "content": reply.content},

@@ -9,6 +9,7 @@ import asyncio
 import time
 from typing import Any, Literal, TypedDict
 
+from app import config
 from app.graph import build_graph
 from app.nodes.mcp_client import McpStartupError, McpToolClient
 from app.nodes.llm import LLM, OllamaLLM
@@ -26,9 +27,6 @@ class AgentResult(TypedDict):
     trace_id: str | None
     tool_calls: list[dict[str, Any]]  # [{"name": str, "args": dict, "latency_ms": int}]
     latency_ms: int
-
-
-GRAPH_RECURSION_LIMIT = 40  # backstop only; MAX_AGENT_STEPS is the real cap
 
 
 async def arun_agent(
@@ -74,12 +72,12 @@ async def arun_agent(
                     "answer": "",
                     "citations": [],
                 },
-                config={"recursion_limit": GRAPH_RECURSION_LIMIT},
+                config={"recursion_limit": config.GRAPH_RECURSION_LIMIT},
             )
     except McpStartupError as exc:
         result["answer"] = f"I could not start the Jira tool server, so I can't answer. ({exc})"
     except Exception as exc:  # noqa: BLE001 - run_agent must never raise
-        result["answer"] = f"I hit an unexpected error and could not finish. ({type(exc).__name__}: {exc})"[:400]
+        result["answer"] = f"I hit an unexpected error and could not finish. ({type(exc).__name__}: {exc})"[: config.ERROR_TEXT_CHARS]
     else:
         result["answer"] = final.get("answer", "")
         result["citations"] = list(final.get("citations", []))

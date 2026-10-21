@@ -461,7 +461,7 @@ def test_agent_debug_log_is_opt_in_and_goes_to_stderr(monkeypatch, capsys):
     q = "What is the status of ATL-109?"
     asyncio.run(run(fresh(), question=q))
     assert "[agent-debug]" not in capsys.readouterr().err
-    monkeypatch.setenv("AGENT_DEBUG", "1")
+    monkeypatch.setattr(config, "AGENT_DEBUG", True)
     asyncio.run(run(fresh(), question=q))
     out = capsys.readouterr()
     assert "[agent-debug] tool_executor" in out.err and "get_ticket" in out.err and "[agent-debug]" not in out.out

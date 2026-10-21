@@ -25,7 +25,6 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 from app import config
-from app.nodes import settings
 
 
 class McpStartupError(RuntimeError):
@@ -44,7 +43,7 @@ def _describe(exc: BaseException) -> str:
     """One-line description; unwraps anyio ExceptionGroups."""
     if isinstance(exc, BaseExceptionGroup) and exc.exceptions:
         return _describe(exc.exceptions[0])
-    return f"{type(exc).__name__}: {exc}"[:300]
+    return f"{type(exc).__name__}: {exc}"[: config.ERROR_TEXT_CHARS]
 
 
 def _text_of(result: Any) -> str:
@@ -57,7 +56,7 @@ def parse_tool_result(result: Any) -> tuple[bool, Any, str | None]:
     text = _text_of(result)
     flag = result.is_error if hasattr(result, "is_error") else getattr(result, "isError", False)  # 1.x name
     if flag:
-        return False, None, f"tool_error: {text[:300] or 'unknown'}"
+        return False, None, f"tool_error: {text[: config.ERROR_TEXT_CHARS] or 'unknown'}"
 
     data: Any = None
     if text.strip():
@@ -71,7 +70,7 @@ def parse_tool_result(result: Any) -> tuple[bool, Any, str | None]:
             # Some SDK versions wrap a dict return value as {"result": {...}}.
             data = structured["result"] if list(structured) == ["result"] else structured
     if not isinstance(data, dict):
-        return False, None, f"malformed_response: expected a JSON object, got {text[:120]!r}"
+        return False, None, f"malformed_response: expected a JSON object, got {text[: config.SNIPPET_CHARS]!r}"
     return True, data, None
 
 
@@ -88,8 +87,8 @@ class McpToolClient:
     ) -> None:
         self._server_path = str(server_path) if server_path else None
         self._env = env
-        self._call_timeout = call_timeout if call_timeout is not None else settings.get("MCP_CALL_TIMEOUT_S")
-        self._startup_timeout = startup_timeout if startup_timeout is not None else settings.get("MCP_STARTUP_TIMEOUT_S")
+        self._call_timeout = call_timeout if call_timeout is not None else config.MCP_CALL_TIMEOUT_S
+        self._startup_timeout = startup_timeout if startup_timeout is not None else config.MCP_STARTUP_TIMEOUT_S
         self._stack: AsyncExitStack | None = None
         self._session: ClientSession | None = None
         self._tools: list[dict[str, Any]] = []

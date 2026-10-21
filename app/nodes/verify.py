@@ -3,7 +3,7 @@
 Seed of the Phase 5 citation verifier. A cited ID survives only if it
   1. exists in the data (when the data file is readable), and
   2. is grounded in THIS run's tool output: returned as a ticket record, or named inside
-     the text of a ticket that was returned (e.g. "waiting on ATL-112").
+     the text of a ticket that was returned (e.g. "waiting on ATL-000").
 Anything else is dropped from `citations` and flagged in the answer text.
 `citations` is derived from the answer text, so it can never list an ID the answer doesn't use.
 """
@@ -37,7 +37,7 @@ _TRAILING_IDS_RE = re.compile(r"(?<=[.!?])\s+((?:\[[A-Z][A-Z0-9]{1,9}-\d+\][,\s]
 
 
 def strip_trailing_id_list(answer: str) -> str:
-    """Drop a final '[ATL-1], [ATL-2]' the model appends as an echo of its citations list,
+    """Drop a final '[ATL-000], [ATL-001]' the model appends as an echo of its citations list,
     but only when every ID in it is already cited earlier in the answer (nothing is lost)."""
     m = _TRAILING_IDS_RE.search(answer)
     if not m:
@@ -55,7 +55,7 @@ _TANGENT_RE = re.compile(r"^(?:however|but|that said|although|instead|note|other
 
 
 def trim_not_found_tangent(answer: str) -> str:
-    """'There are no tickets about X. However, here are other tickets [ATL-1]...' -> keep only the first
+    """'There are no tickets about X. However, here are other tickets [ATL-000]...' -> keep only the first
     sentence. Narrow on purpose: needs a not-found opener AND a pivot word AND IDs in the remainder."""
     first, sep, rest = answer.partition(". ")
     if sep and _NOT_FOUND_RE.match(first.strip()) and _TANGENT_RE.match(rest.strip()) and ID_RE.search(rest):
@@ -64,7 +64,7 @@ def trim_not_found_tangent(answer: str) -> str:
 
 
 def bracket_bare_ids(answer: str) -> str:
-    """The model often writes 'ATL-112' instead of '[ATL-112]'. Enforce the format in code."""
+    """The model often writes 'ATL-000' instead of '[ATL-000]'. Enforce the format in code."""
     return _BARE_ID_RE.sub(r"[\1]", answer)
 
 

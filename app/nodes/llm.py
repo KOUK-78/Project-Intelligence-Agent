@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from typing import Any, Protocol
 
 from app import config
-from app.nodes import settings
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
@@ -43,7 +42,7 @@ class OllamaLLM:
     ) -> LLMReply:
         import ollama  # imported lazily so tests / tooling don't need a server
 
-        client = ollama.AsyncClient(host=config.OLLAMA_BASE_URL, timeout=settings.get("LLM_TIMEOUT_S"))
+        client = ollama.AsyncClient(host=config.OLLAMA_BASE_URL, timeout=config.LLM_TIMEOUT_S)
         think = getattr(config, "THINKING", {}).get(job, False)
         resp = await client.chat(
             model=config.MODELS[job],

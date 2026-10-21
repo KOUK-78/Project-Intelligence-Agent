@@ -2,7 +2,7 @@
 import re
 from typing import Any
 
-from app.nodes import settings
+from app import config
 from app.nodes.mcp_client import McpToolClient
 from app.nodes.state import AgentState, compact_json
 
@@ -37,7 +37,12 @@ def clean_args(args: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
     return cleaned
 
 
-_PROJECT_WORDS = ("atlas", "project")
+
+
+def _project_words() -> tuple[str, str]:
+    return (config.PROJECT_NAME.lower(), "project")
+
+
 EMPTY_HINT = (
     "No results. Filters may be too narrow: drop label, or use keyword '*' with only status. "
     "Do not repeat this search."
@@ -47,13 +52,13 @@ EMPTY_HINT = (
 def drop_bad_label(args: dict[str, Any]) -> dict[str, Any]:
     """Labels are single topic words. A project name or phrase there can only return nothing."""
     label = args.get("label")
-    if isinstance(label, str) and (len(label.split()) > 1 or any(w in label.lower() for w in _PROJECT_WORDS)):
+    if isinstance(label, str) and (len(label.split()) > 1 or any(w in label.lower() for w in _project_words())):
         return {k: v for k, v in args.items() if k != "label"}
     return args
 
 
 EMPTY_WORDS_HINT = (
-    "No results. Every word must match, so use 1-2 distinctive words (e.g. 'launch'), not a sentence. "
+    "No results. Every word must match, so use 1-2 distinctive words (e.g. 'term-a'), not a sentence. "
     "Do not repeat this search."
 )
 
@@ -119,7 +124,7 @@ def make_tool_node(mcp: McpToolClient):
             if error:
                 errors.append(f"{name}: {error}")
             payload = data if ok else {"error": error}
-            content = compact_json(payload, settings.get("MAX_TOOL_CHARS"))
+            content = compact_json(payload, config.MAX_TOOL_CHARS)
             hint = empty_search_hint(name, raw_args, data) if ok else None
             if hint:
                 content += "\n" + hint  # guidance for the model only; evidence stays untouched

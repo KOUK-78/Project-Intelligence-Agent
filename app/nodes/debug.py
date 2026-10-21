@@ -1,17 +1,18 @@
 """Opt-in decision log for the agent. OWNER: B.
 
-    PowerShell:  $env:AGENT_DEBUG="1"; python -m app ask "..." 2> debug.txt
+    PowerShell:  $env:AGENT_DEBUG="1"; python -m app ask "..." 2> debug.txt   (config.AGENT_DEBUG)
 
 One line per graph node on stderr: step number, where the graph goes next, the tool calls the
 agent asked for / that ran, and any nudge sent to the model. Off by default; never touches stdout.
 """
-import os
 import sys
 from typing import Any
 
+from app import config
+
 
 def enabled() -> bool:
-    return os.getenv("AGENT_DEBUG", "").lower() not in ("", "0", "false", "no")
+    return config.AGENT_DEBUG
 
 
 def _calls(items: list[dict]) -> list[str]:
