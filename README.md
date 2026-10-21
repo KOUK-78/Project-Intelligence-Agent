@@ -1,5 +1,9 @@
 # Project Intelligence Agent
 
+[![tests](https://github.com/KOUK-78/Project-Intelligence-Agent/actions/workflows/test.yml/badge.svg)](https://github.com/KOUK-78/Project-Intelligence-Agent/actions/workflows/test.yml)
+
+**Requires Python 3.12** (CI and the pinned dependencies are tested on 3.12).
+
 Answers multi-step project questions with **verified ticket citations**, every step traced.
 
 **Phase 1 (done):** one vertical slice. A question goes in, the agent calls a Jira tool over MCP, and a cited answer comes out.
@@ -50,7 +54,7 @@ The agent launches the Jira MCP server itself as a subprocess; you do not start 
 
 | Option                  | Use                                             |
 | ----------------------- | ----------------------------------------------- |
-| `--stub`                | Fake agent, no Ollama needed (smoke test)       |
+| `--stub`                | TEST-ONLY fake agent, explicit opt-in (smoke test). There is no silent fallback: if the real agent fails to import, the CLI stops with an error |
 | `AGENT_DEBUG=1`         | Decision log on stderr, one line per graph node |
 | `JIRA_DATA_PATH=<file>` | Point the MCP server at a different ticket file |
 
@@ -61,15 +65,26 @@ $env:AGENT_DEBUG="1"; python -m app ask "..." 2> debug.txt     # PowerShell
 ### 4. Run the answer key
 
 ```bash
-python -m evals.run_evals              # grade each answer by hand: p / f / s
-python -m evals.run_evals --no-grade   # mechanical checks only
+python -m evals.run_evals                       # original key, grade each answer by hand: p / f / s
+python -m evals.run_evals --auto --repeat 3     # no prompts, exit 1 if any question fails
+python -m evals.run_evals --key evals/heldout_key.json --auto --repeat 3
 ```
 
-Each question prints expected vs. actual side by side. You mark pass, fail or skip.
-Output: a summary table, `SCORE: X of N correct`, a failure list, and `evals/results/phase1_baseline.json`.
+| Flag                   | Meaning                                                                 |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `--key <file>`         | Answer file to run (`answer_key.json` or `heldout_key.json`)            |
+| `--auto`               | No prompts. A run passes only if status is `ok`, every expected citation is present, no `forbidden_citations` are cited, and every cited ID exists. Exit code 1 if any question fails |
+| `--repeat N`           | Run each question N times; reports pass rate per question and overall   |
+| `--min-pass-rate 0.67` | Per-question pass rate needed to count as passing (default 1.0)         |
+| `--no-grade`           | Record mechanical checks only                                           |
+| `--require-trace`      | Exit 1 if any run has no `trace_id`                                     |
+| `--stub`               | Plumbing test only; writes `*.stub.json`, never the real result files   |
 
-Per question it records: status, citations returned, whether all expected citations were found, whether any cited ID does not exist in the data, and latency.
-A question also counts as a failure if its status is not `ok`, a citation is missing, or a cited ID is invalid.
+`--auto` is a citation-level check and does not read the answer text. Hand grading still judges wording.
+
+Results go to separate files: `evals/results/phase1_baseline.json` (original key) and `evals/results/phase1_heldout.json` (held-out key).
+The held-out key is never used to tune prompts or code (see `CONTRACTS.md`).
+Per run it records: status, citations, expected citations found, forbidden citations hit, invalid IDs, latency and trace id.
 
 ### 5. View traces
 

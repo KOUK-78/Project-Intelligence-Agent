@@ -1,4 +1,9 @@
-"""Stub run_agent so CLI + evals work before B's real agent lands. Remove on Day 3."""
+"""TEST-ONLY fake agent. Never used implicitly; reachable only via `--stub`.
+
+Purpose: smoke-test the CLI, tracing and eval plumbing without Ollama or a GPU.
+Its answers are fake and must never be reported as results (the eval runner writes
+stub runs to a separate `*.stub.json` file for that reason).
+"""
 import time
 
 
