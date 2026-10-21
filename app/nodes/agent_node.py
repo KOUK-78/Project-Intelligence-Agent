@@ -36,16 +36,16 @@ DETAIL_NUDGE = (
     "You only have search summaries. Call get_ticket on the relevant tickets: "
     "their descriptions and comments hold the reasons."
 )
-# Question types whose answer usually lives in a ticket's comments, not its summary line.
-DETAIL_RE = re.compile(r"\b(why|because|reason|chang\w*|moved|slipp\w*|late|delay\w*|blocking|depend\w*|caused?)\b", re.I)
+# HEURISTIC detail_nudge [general]: why/when/change questions are answered by ticket comments, not search summaries.
+DETAIL_RE = re.compile(r"\b(why|because|reason|chang\w*|late|delay\w*|blocking|depend\w*|caused?)\b", re.I)
 
 
-# Dependency questions: the answer spans the tickets that a blocker names, so read those too.
-DEP_RE = re.compile(r"\b(block\w*|depend\w*|waiting|holds? up|held up|affect\w*)\b", re.I)
+# HEURISTIC ref_round [specific-risk, default OFF]: dependency questions span tickets that a read ticket names.
+DEP_RE = re.compile(r"\b(block\w*|depend\w*|waiting|affect\w*)\b", re.I)
 
 
 def unread_references(state: AgentState) -> list[str]:
-    """Ticket IDs named inside tickets we read (e.g. 'Downstream tickets: ATL-000') but never read."""
+    """Ticket IDs named inside tickets we read (a ticket whose text names ATL-000) but never read."""
     if not DEP_RE.search(state.get("question", "")):
         return []
     evidence = state.get("evidence", [])
@@ -55,12 +55,12 @@ def unread_references(state: AgentState) -> list[str]:
     return [i for i in mentioned_ids(evidence) if i not in fetched][: config.MAX_REF_TICKETS]
 
 
+# HEURISTIC candidate_round [specific-risk, default OFF]: 'when' questions, read every search hit to spot differing dates.
 WHEN_RE = re.compile(r"\bwhen\b", re.I)
 
 
 def unread_candidates(state: AgentState) -> list[str]:
-    """'When' questions: tickets from a search that were never opened (up to 6). Two tickets can give
-    different dates for the same event, and only reading all of them lets the answer flag the conflict."""
+    """'When' questions: tickets from a search that were never opened (capped by config.MAX_CANDIDATE_TICKETS)."""
     if not WHEN_RE.search(state.get("question", "")):
         return []
     evidence = state.get("evidence", [])
@@ -167,8 +167,8 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
             }
 
         calls = extract_calls(reply)
-        if calls:
-            # Same search again adds nothing and burns a step: drop repeats of calls that already succeeded.
+        if calls and config.HEURISTICS["dedupe_repeats"]:
+            # HEURISTIC dedupe_repeats [general]: drop repeats of calls that already succeeded.
             seen = {(e["tool"], json.dumps(e["args"], sort_keys=True, default=str))
                     for e in state.get("evidence", []) if e["ok"]}
             fresh = []
@@ -200,7 +200,7 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                 ],
             }
         can_continue = state.get("steps", 0) < config.MAX_AGENT_STEPS
-        if can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
+        if config.HEURISTICS["detail_nudge"] and can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
             return {
                 "route": "agent",
                 "detail_nudged": True,
@@ -210,9 +210,14 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     {"role": "user", "content": DETAIL_NUDGE},
                 ],
             }
-        refs = (unread_references(state) or unread_candidates(state)) if "get_ticket" in schemas and not state.get("ref_nudged") else []
+        refs: list[str] = []
+        if "get_ticket" in schemas and not state.get("ref_nudged"):
+            if config.HEURISTICS["ref_round"]:
+                refs = unread_references(state)
+            if not refs and config.HEURISTICS["candidate_round"]:
+                refs = unread_candidates(state)
         if refs:
-            # The model reads one ticket per turn, which would eat the step cap. Read the ticket IDs it
+            # MECHANISM for ref_round/candidate_round (general in itself: parallel reads save steps). The model reads one ticket per turn, which would eat the step cap. Read the ticket IDs it
             # already saw named in one parallel round instead. System-initiated, runs once, not counted as a step.
             return {
                 "route": "tool",

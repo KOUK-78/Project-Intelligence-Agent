@@ -83,7 +83,9 @@ def normalize_call(call: dict[str, Any], schemas: dict[str, dict], question: str
     schema = schemas.get(call["name"])
     if schema is None:
         return call
-    args = guard_filters(drop_bad_label(clean_args(call.get("args", {}), schema)), question)
+    args = drop_bad_label(clean_args(call.get("args", {}), schema))
+    if config.HEURISTICS["filter_guard"]:  # HEURISTIC filter_guard [general]: no filter the question did not ask for
+        args = guard_filters(args, question)
     return {"name": call["name"], "args": args}
 
 

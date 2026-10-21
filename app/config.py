@@ -59,3 +59,29 @@ RESULTS_DIR = ROOT / "evals" / "results"
 TRACING_ENABLED = (os.getenv("TRACING_ENABLED") or "1").lower() not in ("0", "false", "no")
 PHOENIX_PROJECT_NAME = os.getenv("PHOENIX_PROJECT_NAME") or "project-intelligence-agent"
 PHOENIX_COLLECTOR_ENDPOINT = os.getenv("PHOENIX_COLLECTOR_ENDPOINT") or "http://localhost:6006/v1/traces"
+
+# --- Heuristics (B2 audit). Graph-side helps for a small model. Each has a one-line note saying why it
+# is general or question-specific. Specific ones default OFF until the held-out score shows they help.
+# Override without editing code: AGENT_HEURISTICS_ON=ref_round,candidate_round  AGENT_HEURISTICS_OFF=filter_guard
+HEURISTIC_DEFAULTS = {
+    "detail_nudge": True,       # general: any why/when/change question lives in comments, so open the tickets
+    "filter_guard": True,       # general: drops status/label filters the question never asked for (invented filters)
+    "dedupe_repeats": True,     # general: an identical successful call adds nothing and wastes a step
+    "ref_round": False,         # specific-risk: reads tickets named inside tickets, tuned on one dependency question
+    "candidate_round": False,   # specific-risk: reads every search hit for 'when' questions, tuned on one conflict question
+    "not_found_trim": False,    # specific-risk: cuts tangents after "not found", tuned on one missing-ticket question
+}
+
+
+def resolve_heuristics(env=None) -> dict[str, bool]:
+    env = os.environ if env is None else env
+    flags = dict(HEURISTIC_DEFAULTS)
+    for var, value in (("AGENT_HEURISTICS_ON", True), ("AGENT_HEURISTICS_OFF", False)):
+        for name in (n.strip() for n in (env.get(var) or "").split(",") if n.strip()):
+            if name not in flags:
+                raise ValueError(f"{var}: unknown heuristic {name!r}; known: {sorted(flags)}")
+            flags[name] = value
+    return flags
+
+
+HEURISTICS = resolve_heuristics()

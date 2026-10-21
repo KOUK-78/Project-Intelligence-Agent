@@ -32,7 +32,7 @@ def log_node(name: str, state: dict[str, Any], update: dict[str, Any]) -> None:
         parts.append(f"ran={_calls(update['tool_calls'])} results={results}")
     nudges = [m["content"] for m in update.get("messages", []) if m.get("role") == "user"]
     if nudges:
-        parts.append(f"nudge={nudges[-1][:90]!r}")
+        parts.append(f"nudge={nudges[-1][: config.SNIPPET_CHARS]!r}")
     if update.get("errors"):
         parts.append(f"errors={update['errors']}")
     print(" | ".join(parts), file=sys.stderr, flush=True)
