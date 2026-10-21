@@ -46,6 +46,23 @@ def strip_trailing_id_list(answer: str) -> str:
     return head.rstrip() if all(i in head for i in ID_RE.findall(m.group(1))) else answer
 
 
+_NOT_FOUND_RE = re.compile(
+    r"^(?:there (?:is|are) no\b|no (?:matching |relevant )?tickets?\b|i (?:could not|couldn't|cannot|can't) find\b"
+    r"|(?:the )?(?:evidence|data) (?:does not|doesn't)\b|not found\b)",
+    re.I,
+)
+_TANGENT_RE = re.compile(r"^(?:however|but|that said|although|instead|note|other|there are other|related)\b", re.I)
+
+
+def trim_not_found_tangent(answer: str) -> str:
+    """'There are no tickets about X. However, here are other tickets [ATL-1]...' -> keep only the first
+    sentence. Narrow on purpose: needs a not-found opener AND a pivot word AND IDs in the remainder."""
+    first, sep, rest = answer.partition(". ")
+    if sep and _NOT_FOUND_RE.match(first.strip()) and _TANGENT_RE.match(rest.strip()) and ID_RE.search(rest):
+        return first.rstrip(".") + "."
+    return answer
+
+
 def bracket_bare_ids(answer: str) -> str:
     """The model often writes 'ATL-112' instead of '[ATL-112]'. Enforce the format in code."""
     return _BARE_ID_RE.sub(r"[\1]", answer)

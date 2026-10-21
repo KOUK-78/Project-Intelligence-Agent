@@ -17,7 +17,7 @@ from app.nodes.agent_node import extract_calls
 from app.nodes.llm import LLMReply
 from app.nodes.mcp_client import McpToolClient
 from app.nodes.tool_node import clean_args, drop_bad_label, guard_filters
-from app.nodes.verify import bracket_bare_ids, strip_trailing_id_list, tidy_brackets, verify_citations
+from app.nodes.verify import bracket_bare_ids, strip_trailing_id_list, tidy_brackets, trim_not_found_tangent, verify_citations
 from tests.fakes import FakeLLM, synth_reply, text_reply, tool_reply
 
 HERE = Path(__file__).parent
@@ -436,7 +436,7 @@ async def test_invented_status_filter_is_not_sent_to_the_server():
 async def test_repeating_a_successful_call_ends_the_loop_instead_of_burning_steps():
     llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="privacy")],  # the last reply repeats forever
                   synthesizer=[synth_reply("Due 2026-06-15 [ATL-109].", ["ATL-109"])])
-    r = await run(llm, question="When is the privacy policy due?")
+    r = await run(llm, question="Which ticket covers the privacy policy?")
     assert r["status"] == "ok" and len(r["tool_calls"]) == 1 and r["citations"] == ["ATL-109"]
     assert llm.count("agent") == 2
 
@@ -474,3 +474,33 @@ def test_trailing_echo_of_the_citation_list_is_removed_only_when_nothing_is_lost
     assert strip_trailing_id_list(only_there) == only_there            # IDs not cited earlier: keep them
     assert strip_trailing_id_list("It is blocked [ATL-121].") == "It is blocked [ATL-121]."
     assert strip_trailing_id_list("Done. [ATL-1]") == "Done. [ATL-1]"   # a single trailing cite is a real cite
+
+
+# ---------- fixes from the fourth eval run (Q6 conflict, Q7 tangent) ----------
+
+@sync
+async def test_when_question_reads_every_candidate_ticket_in_one_round():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout"), text_reply()],
+                  synthesizer=[synth_reply("Two tickets disagree: [ATL-109] and [ATL-118].", [])])
+    r = await run(llm, question="When is the checkout work due?")
+    ids = [c["args"].get("ticket_id") for c in r["tool_calls"] if c["name"] == "get_ticket"]
+    assert sorted(ids) == ["ATL-109", "ATL-112", "ATL-118"] and r["status"] == "ok"
+    assert llm.count("agent") == 3                          # search; done -> graph reads all; done
+
+
+@sync
+async def test_non_when_question_does_not_trigger_candidate_reading():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout"), text_reply()],
+                  synthesizer=[synth_reply("Checkout tickets: [ATL-109].", ["ATL-109"])])
+    r = await run(llm, question="Which tickets are about checkout?")
+    assert [c["name"] for c in r["tool_calls"]] == ["search_tickets"]
+
+
+def test_not_found_tangent_is_trimmed_only_when_narrow_conditions_all_hold():
+    tangent = ("There are no tickets related to the Salesforce CRM integration. However, there are other "
+               "integration tickets: [ATL-105] is Done and [ATL-119] is Done.")
+    assert trim_not_found_tangent(tangent) == "There are no tickets related to the Salesforce CRM integration."
+    keep1 = "There are no blocked tickets for Atlas. [ATL-9] is at risk."          # no pivot word: keep
+    keep2 = "[ATL-121] is blocked. However, there are other issues [ATL-9]."       # not a not-found opener
+    keep3 = "There are no tickets about Salesforce. However, nothing else relates."  # no IDs in remainder
+    assert [trim_not_found_tangent(x) for x in (keep1, keep2, keep3)] == [keep1, keep2, keep3]

@@ -55,6 +55,26 @@ def unread_references(state: AgentState) -> list[str]:
     return [i for i in mentioned_ids(evidence) if i not in fetched][:4]
 
 
+WHEN_RE = re.compile(r"\bwhen\b", re.I)
+
+
+def unread_candidates(state: AgentState) -> list[str]:
+    """'When' questions: tickets from a search that were never opened (up to 6). Two tickets can give
+    different dates for the same event, and only reading all of them lets the answer flag the conflict."""
+    if not WHEN_RE.search(state.get("question", "")):
+        return []
+    evidence = state.get("evidence", [])
+    fetched = {e["data"].get("id") for e in evidence if e["tool"] == "get_ticket" and e["ok"] and isinstance(e["data"], dict)}
+    out: list[str] = []
+    for e in evidence:
+        if e["tool"] == "search_tickets" and e["ok"] and isinstance(e["data"], dict):
+            for row in e["data"].get("results", []):
+                cid = row.get("id")
+                if cid and cid not in fetched and cid not in out:
+                    out.append(cid)
+    return out[:6]
+
+
 def needs_ticket_details(state: AgentState) -> bool:
     evidence = state.get("evidence", [])
     saw_tickets = bool(evidence_ids(evidence))
@@ -190,7 +210,7 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     {"role": "user", "content": DETAIL_NUDGE},
                 ],
             }
-        refs = unread_references(state) if "get_ticket" in schemas and not state.get("ref_nudged") else []
+        refs = (unread_references(state) or unread_candidates(state)) if "get_ticket" in schemas and not state.get("ref_nudged") else []
         if refs:
             # The model reads one ticket per turn, which would eat the step cap. Read the ticket IDs it
             # already saw named in one parallel round instead. System-initiated, runs once, not counted as a step.
