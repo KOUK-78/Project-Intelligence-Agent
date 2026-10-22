@@ -17,7 +17,7 @@ from datetime import date
 from pathlib import Path
 
 TODAY = "2026-06-30"  # mirror of app/config.py TODAY; used here for self-checks only
-OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "synthetic"
+OUT_DIR = Path(__file__).resolve().parent / "synthetic"
 
 STATUSES = {"To Do", "In Progress", "Blocked", "Done"}
 PRIORITIES = {"Low", "Medium", "High", "Critical"}
@@ -257,6 +257,7 @@ TICKETS = [
       "To Do", PRIYA, "2026-06-22", "2026-10-30", "Low", ["planning"]),
 ]
 
+NO_DATA_TOPICS = ("salesforce", "kubernetes")
 EXPECTED_OVERDUE = {"ATL-109", "ATL-112", "ATL-118", "ATL-121", "ATL-127", "ATL-133"}
 KEYS = ["id", "title", "description", "status", "assignee", "created_date",
         "due_date", "priority", "labels", "comments"]
@@ -308,8 +309,10 @@ def validate(tickets):
     assert {x["status"] for x in tickets} == STATUSES
     assert {x["priority"] for x in tickets} == PRIORITIES
     assert len({x["assignee"] for x in tickets}) >= 6
-    # no Salesforce anywhere: the answer key's "no data" question depends on it
-    assert "salesforce" not in json.dumps(tickets).lower()
+    # topics the "no data" questions ask about must appear nowhere (answer_key Q7, heldout_key H6)
+    blob = json.dumps(tickets).lower()
+    for topic in NO_DATA_TOPICS:
+        assert topic not in blob, f"'{topic}' must not appear: a no-data question depends on it"
 
 
 def write(path, obj):
