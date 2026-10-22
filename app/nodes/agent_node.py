@@ -4,7 +4,6 @@ import re
 from typing import Any
 
 from app import config
-from app.nodes import settings
 from app.nodes.llm import LLM, LLMReply
 from app.nodes.state import AgentState
 from app.nodes.tool_node import normalize_call
@@ -13,19 +12,20 @@ from app.nodes.verify import evidence_ids, mentioned_ids
 AGENT_SYSTEM = (
     "You answer questions about project tickets by calling tools.\n"
     "Look facts up with tools; never answer from memory.\n"
-    "Every ticket is in Project Atlas, so never use 'Atlas' or 'Project Atlas' as a keyword or label.\n"
+    f"Every ticket belongs to the project {config.PROJECT_NAME}, so never use '{config.PROJECT_NAME}' or "
+    "the word 'project' as a keyword or label.\n"
     "Only use status or label filters when the question itself names one.\n"
     "search_tickets: keyword '*' matches everything. status must be exactly one of "
-    "To Do, In Progress, Blocked, Done. label is ONE short topic word (e.g. payments); "
+    "To Do, In Progress, Blocked, Done. label is ONE short topic word (e.g. 'label-a'); "
     "leave label out unless you are sure of it.\n"
-    "For 'what is blocked/blocking', search keyword '*' with status 'Blocked', then get_ticket for details.\n"
-    "keyword is 1-2 distinctive words (e.g. 'launch', 'privacy policy'), never a sentence: every word must match.\n"
+    "To list the tickets in one status, search keyword '*' with that status, then get_ticket for details.\n"
+    "keyword is 1-2 distinctive words (e.g. 'term-a' or 'term-a term-b'), never a sentence: every word must match.\n"
     "If a search returns 0 results, use fewer or different words and fewer filters; never repeat a search.\n"
     "Search results are short summaries. Reasons, date changes and decisions are in the ticket COMMENTS, "
     "so call get_ticket on each relevant ticket before answering why/when/what-changed questions.\n"
     "You may call several tools in one reply, e.g. get_ticket for several IDs at once.\n"
-    "If several tickets could answer (e.g. two launch tickets), read each one and compare them.\n"
-    "To find what depends on a ticket, search its ID as the keyword (e.g. 'ATL-112'). "
+    "If several tickets could answer (e.g. two tickets about the same event), read each one and compare them.\n"
+    "To find what depends on a ticket, search its ID as the keyword (e.g. 'ATL-000'). "
     "If a ticket says it waits on another ticket, look that one up too.\n"
     f"Today's date is {config.TODAY}.\n"
     "When you have enough evidence, stop calling tools and reply with the single word DONE."
@@ -36,31 +36,31 @@ DETAIL_NUDGE = (
     "You only have search summaries. Call get_ticket on the relevant tickets: "
     "their descriptions and comments hold the reasons."
 )
-# Question types whose answer usually lives in a ticket's comments, not its summary line.
-DETAIL_RE = re.compile(r"\b(why|because|reason|chang\w*|moved|slipp\w*|late|delay\w*|blocking|depend\w*|caused?)\b", re.I)
+# HEURISTIC detail_nudge [general]: why/when/change questions are answered by ticket comments, not search summaries.
+DETAIL_RE = re.compile(r"\b(why|because|reason|chang\w*|late|delay\w*|blocking|depend\w*|caused?)\b", re.I)
 
 
-# Dependency questions: the answer spans the tickets that a blocker names, so read those too.
-DEP_RE = re.compile(r"\b(block\w*|depend\w*|waiting|holds? up|held up|affect\w*)\b", re.I)
+# HEURISTIC ref_round [specific-risk, default OFF]: dependency questions span tickets that a read ticket names.
+DEP_RE = re.compile(r"\b(block\w*|depend\w*|waiting|affect\w*)\b", re.I)
 
 
 def unread_references(state: AgentState) -> list[str]:
-    """Ticket IDs named inside tickets we read (e.g. 'Downstream tickets: ATL-118') but never read."""
+    """Ticket IDs named inside tickets we read (a ticket whose text names ATL-000) but never read."""
     if not DEP_RE.search(state.get("question", "")):
         return []
     evidence = state.get("evidence", [])
     fetched = {e["data"].get("id") for e in evidence if e["tool"] == "get_ticket" and e["ok"] and isinstance(e["data"], dict)}
     if not fetched:
         return []
-    return [i for i in mentioned_ids(evidence) if i not in fetched][:4]
+    return [i for i in mentioned_ids(evidence) if i not in fetched][: config.MAX_REF_TICKETS]
 
 
+# HEURISTIC candidate_round [specific-risk, default OFF]: 'when' questions, read every search hit to spot differing dates.
 WHEN_RE = re.compile(r"\bwhen\b", re.I)
 
 
 def unread_candidates(state: AgentState) -> list[str]:
-    """'When' questions: tickets from a search that were never opened (up to 6). Two tickets can give
-    different dates for the same event, and only reading all of them lets the answer flag the conflict."""
+    """'When' questions: tickets from a search that were never opened (capped by config.MAX_CANDIDATE_TICKETS)."""
     if not WHEN_RE.search(state.get("question", "")):
         return []
     evidence = state.get("evidence", [])
@@ -72,7 +72,7 @@ def unread_candidates(state: AgentState) -> list[str]:
                 cid = row.get("id")
                 if cid and cid not in fetched and cid not in out:
                     out.append(cid)
-    return out[:6]
+    return out[: config.MAX_CANDIDATE_TICKETS]
 
 
 def needs_ticket_details(state: AgentState) -> bool:
@@ -139,7 +139,7 @@ def extract_calls(reply: LLMReply) -> list[dict[str, Any]]:
         if tc.get("name")
     ]
     if calls:
-        return calls[: settings.get("MAX_CALLS_PER_STEP")]
+        return calls[: config.MAX_CALLS_PER_STEP]
     obj = _first_json_object(reply.content)
     if obj:
         name = obj.get("tool") or obj.get("name")
@@ -158,7 +158,7 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
         try:
             reply = await llm.chat("agent", messages, tools=tools)
         except Exception as exc:  # noqa: BLE001 - Ollama down, timeout, bad model name...
-            msg = f"llm_unavailable: {type(exc).__name__}: {exc}"[:300]
+            msg = f"llm_unavailable: {type(exc).__name__}: {exc}"[: config.ERROR_TEXT_CHARS]
             return {
                 "route": "end",
                 "status": "error",
@@ -167,8 +167,8 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
             }
 
         calls = extract_calls(reply)
-        if calls:
-            # Same search again adds nothing and burns a step: drop repeats of calls that already succeeded.
+        if calls and config.HEURISTICS["dedupe_repeats"]:
+            # HEURISTIC dedupe_repeats [general]: drop repeats of calls that already succeeded.
             seen = {(e["tool"], json.dumps(e["args"], sort_keys=True, default=str))
                     for e in state.get("evidence", []) if e["ok"]}
             fresh = []
@@ -200,7 +200,7 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                 ],
             }
         can_continue = state.get("steps", 0) < config.MAX_AGENT_STEPS
-        if can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
+        if config.HEURISTICS["detail_nudge"] and can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
             return {
                 "route": "agent",
                 "detail_nudged": True,
@@ -210,9 +210,14 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     {"role": "user", "content": DETAIL_NUDGE},
                 ],
             }
-        refs = (unread_references(state) or unread_candidates(state)) if "get_ticket" in schemas and not state.get("ref_nudged") else []
+        refs: list[str] = []
+        if "get_ticket" in schemas and not state.get("ref_nudged"):
+            if config.HEURISTICS["ref_round"]:
+                refs = unread_references(state)
+            if not refs and config.HEURISTICS["candidate_round"]:
+                refs = unread_candidates(state)
         if refs:
-            # The model reads one ticket per turn, which would eat the step cap. Read the ticket IDs it
+            # MECHANISM for ref_round/candidate_round (general in itself: parallel reads save steps). The model reads one ticket per turn, which would eat the step cap. Read the ticket IDs it
             # already saw named in one parallel round instead. System-initiated, runs once, not counted as a step.
             return {
                 "route": "tool",

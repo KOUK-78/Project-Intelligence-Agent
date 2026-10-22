@@ -48,21 +48,42 @@ AgentResult = {
 ## 5) Answer key format (`evals/answer_key.json`)
 ```json
 [{"id": "Q1", "question": "...", "expected_answer": "...",
-  "expected_citations": ["ATL-212"], "notes": "why this is the answer"}]
+  "expected_citations": ["ATL-212"], "forbidden_citations": ["ATL-109"],
+  "notes": "why this is the answer"}]
 ```
+- `forbidden_citations` is OPTIONAL. A correct answer must NOT cite these IDs.
+  Absent means an empty list, so existing questions behave as before.
+- Every ID in `expected_citations` and `forbidden_citations` must be a real ticket ID, and the two lists must not overlap.
 
 ## 6) Config keys (`app/config.py`)
 `MODELS` (dict by job), `OLLAMA_BASE_URL`, `NUM_CTX`, `TEMPERATURE`, `TODAY`,
-`MAX_AGENT_STEPS` (=5), `DATA_PATH`
+`MAX_AGENT_STEPS` (=5), `DATA_PATH`, plus every other tunable (see section 9).
+
+## 7) Held-out key (`evals/heldout_key.json`)
+- Same format as `answer_key.json`, written by A.
+- It is NEVER used to tune prompts or code. It is only run to measure generalization.
+- Run with `python -m evals.run_evals --heldout`; results go to `evals/results/phase1_heldout.json`.
+- Agent code must never read or reference it.
+
+## 8) Prompt hygiene
+No ticket IDs, ticket titles, people's names from the data, or answer-key wording may appear inside
+prompts (`AGENT_SYSTEM`, `SYNTH_SYSTEM`, hints) or node logic. Examples use placeholders such as
+`ATL-000`, `label-a`, `term-a`. Enforced by `tests/test_prompt_hygiene.py`.
+Graph-side heuristics must carry a `# HEURISTIC <name> [general|specific-risk]` note and a switch in
+`config.HEURISTICS`.
+
+## 9) Tunables
+All tunables (timeouts, size caps, step and call limits, heuristic switches) live in `app/config.py`.
+C owns the file; B sends changes as a PR to C. No numeric constants or slice limits in `app/nodes/`.
 
 ## Ownership
 | Owner | Paths |
 |---|---|
-| A | `data/synthetic/`, `app/mcp_servers/`, `evals/answer_key.json` |
+| A | `data/synthetic/`, `app/mcp_servers/`, `evals/answer_key.json`, `evals/heldout_key.json` |
 | B | `app/agent.py`, `app/nodes/`, `app/graph.py` |
 | C | `app/config.py`, `app/cli.py`, `app/tracing.py`, `app/runtime.py`, `app/stub_agent.py`, `evals/run_evals.py`, README, `docs/` |
 
 ## Tracing hook points (agreed between B and C)
 - **Run wrapper:** C's `app/runtime.py` wraps `run_agent` (trace id, total latency, `logs/runs.jsonl`). B does NOT decorate `run_agent`.
 - **Per node:** B decorates each node function with `@node_span("name")` from `app.tracing`.
-- **LangChain/LangGraph:** model and tool calls are auto-instrumented; no code needed.
+- **Model and tool calls:** the agent uses the raw `ollama` client, so these are not auto-instrumented; only node spans appear in Phoenix.

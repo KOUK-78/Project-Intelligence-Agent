@@ -375,7 +375,8 @@ async def test_citations_list_cannot_name_ids_the_answer_does_not_use():
 
 
 @sync
-async def test_dependency_question_reads_named_tickets_in_one_extra_round():
+async def test_dependency_question_reads_named_tickets_in_one_extra_round(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "ref_round", True)
     llm = FakeLLM(
         agent=[tool_reply("search_tickets", keyword="*", status="Blocked"),
                tool_reply("get_ticket", ticket_id="ATL-112"), text_reply()],  # last reply repeats
@@ -391,7 +392,8 @@ async def test_dependency_question_reads_named_tickets_in_one_extra_round():
 
 
 @sync
-async def test_auto_round_does_not_use_up_the_step_cap():
+async def test_auto_round_does_not_use_up_the_step_cap(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "ref_round", True)
     # The model spends 4 of its 5 steps one call at a time; the automatic reference round must still run.
     llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="a"), tool_reply("get_ticket", ticket_id="ATL-112"),
                          tool_reply("search_tickets", keyword="b"), tool_reply("search_tickets", keyword="c"), text_reply()],
@@ -461,7 +463,7 @@ def test_agent_debug_log_is_opt_in_and_goes_to_stderr(monkeypatch, capsys):
     q = "What is the status of ATL-109?"
     asyncio.run(run(fresh(), question=q))
     assert "[agent-debug]" not in capsys.readouterr().err
-    monkeypatch.setenv("AGENT_DEBUG", "1")
+    monkeypatch.setattr(config, "AGENT_DEBUG", True)
     asyncio.run(run(fresh(), question=q))
     out = capsys.readouterr()
     assert "[agent-debug] tool_executor" in out.err and "get_ticket" in out.err and "[agent-debug]" not in out.out
@@ -479,7 +481,8 @@ def test_trailing_echo_of_the_citation_list_is_removed_only_when_nothing_is_lost
 # ---------- fixes from the fourth eval run (Q6 conflict, Q7 tangent) ----------
 
 @sync
-async def test_when_question_reads_every_candidate_ticket_in_one_round():
+async def test_when_question_reads_every_candidate_ticket_in_one_round(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "candidate_round", True)
     llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout"), text_reply()],
                   synthesizer=[synth_reply("Two tickets disagree: [ATL-109] and [ATL-118].", [])])
     r = await run(llm, question="When is the checkout work due?")
@@ -504,3 +507,23 @@ def test_not_found_tangent_is_trimmed_only_when_narrow_conditions_all_hold():
     keep2 = "[ATL-121] is blocked. However, there are other issues [ATL-9]."       # not a not-found opener
     keep3 = "There are no tickets about Salesforce. However, nothing else relates."  # no IDs in remainder
     assert [trim_not_found_tangent(x) for x in (keep1, keep2, keep3)] == [keep1, keep2, keep3]
+
+
+# ---------- B2: specific-risk heuristics are OFF by default ----------
+
+@sync
+async def test_default_run_makes_no_auto_round_for_when_questions():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout"), text_reply()],
+                  synthesizer=[synth_reply("Unclear [ATL-109].", [])])
+    r = await run(llm, question="When is the checkout work due?")
+    assert [c["name"] for c in r["tool_calls"]] == ["search_tickets"]
+    assert not config.HEURISTICS["candidate_round"] and not config.HEURISTICS["ref_round"]
+
+
+@sync
+async def test_filter_guard_can_be_switched_off(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "filter_guard", False)
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="checkout", status="Blocked"), text_reply()],
+                  synthesizer=[synth_reply("x [ATL-109].", [])])
+    r = await run(llm, question="Tell me about checkout.")
+    assert r["tool_calls"][0]["args"].get("status") == "Blocked"

@@ -247,7 +247,10 @@ def test_answer_key_matches_frozen_format_and_data():
     ids = {t["id"] for t in all_tickets()}
     assert 8 <= len(key) <= 10
     for q in key:
-        assert set(q) == {"id", "question", "expected_answer", "expected_citations", "notes"}
+        required = {"id", "question", "expected_answer", "expected_citations", "notes"}
+        assert required <= set(q) <= required | {"forbidden_citations"}
+        for fid in q.get("forbidden_citations", []):
+            assert fid in ids and fid not in q["expected_citations"]
         assert set(q["expected_citations"]) <= ids, q["id"]
     # Phase 4/5 fixtures must not be used by Phase 1 questions
     cited = {c for q in key for c in q["expected_citations"]}

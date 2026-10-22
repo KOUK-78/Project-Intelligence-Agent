@@ -11,6 +11,7 @@
     "question": "Which tickets are overdue?",
     "expected_answer": "Six tickets are overdue as of 2026-06-30: ATL-112 (20 days), ATL-109 (15 days), ATL-118 (10 days), ATL-121 (6 days), ATL-127 (4 days), ATL-133 (3 days).",
     "expected_citations": ["ATL-112", "ATL-109", "ATL-118", "ATL-121", "ATL-127", "ATL-133"],
+    "forbidden_citations": ["ATL-116"],
     "notes": "Filter question. Overdue = due_date < 2026-06-30 and status != Done. ATL-116 is due exactly today and must NOT be listed. Done tickets with past due dates must NOT be listed."
   },
   {
@@ -18,6 +19,7 @@
     "question": "Why is the checkout card payment screen (ATL-118) late?",
     "expected_answer": "ATL-118 is late because the UI is built but cannot submit real payments; it is waiting on the payments API (ATL-112).",
     "expected_citations": ["ATL-118", "ATL-112"],
+    "forbidden_citations": ["ATL-109"],
     "notes": "Why-question. The reason is in ATL-118's comments, which point to ATL-112. Citing ATL-118 is required; ATL-112 is the root cause and strongly expected."
   },
   {
@@ -25,6 +27,7 @@
     "question": "What is blocking Project Atlas?",
     "expected_answer": "The payments API v2 delivery (ATL-112) is the root blocker: vendor PayGate has not delivered sandbox credentials (new ETA mid-July). It holds up the checkout card payment screen (ATL-118), refund workflow (ATL-121), end-to-end payment tests (ATL-127), and billing invoice generation (ATL-133).",
     "expected_citations": ["ATL-112", "ATL-118", "ATL-121", "ATL-127", "ATL-133"],
+    "forbidden_citations": ["ATL-109", "ATL-136"],
     "notes": "Multi-ticket synthesis. ATL-112 is REQUIRED (the root cause). The four downstream tickets are for recall: a good answer cites most of them. ATL-109 (privacy policy, waiting on Legal) is overdue but NOT part of the chain; including it as a payments blocker is wrong. ATL-136 (pen test, Blocked) is also unrelated."
   },
   {
@@ -46,6 +49,7 @@
     "question": "What is the status of the Salesforce CRM integration?",
     "expected_answer": "Not found. There is no ticket about a Salesforce CRM integration in the Jira data.",
     "expected_citations": [],
+    "forbidden_citations": ["ATL-114"],
     "notes": "No-data question. Correct behavior is to say it was not found and cite nothing. Inventing a status or citing an unrelated ticket (e.g. ATL-114 inventory sync) is a hallucination."
   },
   {
@@ -53,6 +57,7 @@
     "question": "Which tickets are currently Blocked?",
     "expected_answer": "Three tickets are Blocked: ATL-112 (Payments API v2 delivery), ATL-121 (Refund workflow implementation), and ATL-136 (Penetration test scheduling).",
     "expected_citations": ["ATL-112", "ATL-121", "ATL-136"],
+    "forbidden_citations": ["ATL-109", "ATL-118", "ATL-127", "ATL-133"],
     "notes": "Status filter. ATL-136 is Blocked but NOT overdue and unrelated to payments (waiting on an external pen-test vendor), which tests that 'blocked' and 'overdue' are not confused."
   },
   {
@@ -60,6 +65,7 @@
     "question": "Is the overdue privacy policy ticket late because of the payments API?",
     "expected_answer": "No. ATL-109 is overdue because it is waiting on Legal review of the revised data-retention paragraph, not because of the payments API.",
     "expected_citations": ["ATL-109"],
+    "forbidden_citations": ["ATL-112"],
     "notes": "Distractor check. ATL-109 is overdue but is not part of the ATL-112 chain; its comment says so explicitly. Agreeing with the premise is a failure."
   },
   {
