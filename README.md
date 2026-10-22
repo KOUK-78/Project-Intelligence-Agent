@@ -26,7 +26,7 @@ Recorded with tracing on, `qwen3:8b`, `--auto --repeat 3` (every run has a trace
 | Held-out (`heldout_key.json`, 10 questions) | 6 of 10 | 18 of 30 (60.0%) | 8.6 s / 15.7 s |
 
 - The held-out key was never used to tune prompts or code, so the 60% is the honest generalization number. The gap to the original key is expected.
-- The 8B model varies between runs. Three runs of the original key gave 77% to 83% of runs passing, so read these as +/- a few points.
+- The 8B model varies between runs. Three runs of the original key gave 73% to 80% of runs passing, so read these as +/- a few points.
 - `--auto` is a citation-level check (status ok, expected citations present, no forbidden citations, no invalid IDs). It does not read the answer text. See limitations.
 - Earlier tuning runs (heuristics on/off) are kept in `evals/results/history/`. They were recorded without tracing and are not the baseline.
 
