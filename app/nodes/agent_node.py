@@ -180,6 +180,9 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
             calls = fresh  # all repeats -> no new calls -> treated as "done" below
         if calls:
             if state.get("steps", 0) >= config.MAX_AGENT_STEPS:
+                # HEURISTIC partial_on_cap [general]: evidence already gathered is not thrown away at the cap.
+                if config.HEURISTICS["partial_on_cap"] and any(e["ok"] for e in state.get("evidence", [])):
+                    return {"route": "synthesizer", "capped": True, "pending_calls": []}
                 return {
                     "route": "end",
                     "status": "loop_cap",

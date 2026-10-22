@@ -87,9 +87,17 @@ async def test_loop_cap_returns_loop_cap_and_stops():
     r = await run(llm)
     assert r["status"] == "loop_cap"
     assert len(r["tool_calls"]) == config.MAX_AGENT_STEPS
-    assert "could not finish" in r["answer"]
     assert llm.count("agent") == config.MAX_AGENT_STEPS + 1  # bounded, never loops forever
-    assert llm.count("synthesizer") == 0
+    # Evidence was gathered, so the cap yields a flagged partial answer instead of nothing.
+    assert r["answer"].startswith("Partial answer") and llm.count("synthesizer") == 1
+
+
+@sync
+async def test_partial_on_cap_can_be_switched_off(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "partial_on_cap", False)
+    llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
+    r = await run(llm)
+    assert r["status"] == "loop_cap" and "could not finish" in r["answer"] and llm.count("synthesizer") == 0
 
 
 # ---------- unknown ticket / no results ----------
