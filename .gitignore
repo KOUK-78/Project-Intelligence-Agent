@@ -15,3 +15,6 @@ logs/
 .phoenix/
 *.sqlite
 *.db
+
+# Stub (fake-agent) eval output is never a result
+evals/results/*.stub.json

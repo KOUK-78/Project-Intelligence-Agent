@@ -6,8 +6,8 @@
 
 Answers multi-step project questions with **verified ticket citations**, every step traced.
 
-**Phase 1 (done):** one vertical slice. A question goes in, the agent calls a Jira tool over MCP, and a cited answer comes out.
-Baseline: **10 of 10 correct** on the hand-graded answer key (`evals/results/phase1_baseline.json`).
+**Phase 1: complete, with known limitations.** One vertical slice works end to end: a question goes in, the agent calls Jira tools over MCP, and a cited answer comes out, with every step traced in Phoenix.
+Measured, not claimed: see [Results](#results) and [Known limitations](#known-limitations).
 
 ```
 question -> LangGraph agent (qwen3:8b via Ollama) -> Jira MCP server (stdio) -> cited answer
@@ -15,6 +15,35 @@ question -> LangGraph agent (qwen3:8b via Ollama) -> Jira MCP server (stdio) -> 
 ```
 
 Frozen interfaces live in [`CONTRACTS.md`](CONTRACTS.md). Data is synthetic only (fictional company Northwind, project Atlas).
+
+## Results
+
+Recorded with tracing on, `qwen3:8b`, `--auto --repeat 3` (every run has a trace id). Raw data: `evals/results/phase1_baseline.json` and `evals/results/phase1_heldout.json`.
+
+| Key | Questions passing (all 3 runs) | Runs passing | Latency median / worst |
+|---|---|---|---|
+| Original (`answer_key.json`, 10 questions) | 7 of 10 | 23 of 30 (76.7%) | 7.9 s / 16.4 s |
+| Held-out (`heldout_key.json`, 10 questions) | 6 of 10 | 18 of 30 (60.0%) | 8.6 s / 15.7 s |
+
+- The held-out key was never used to tune prompts or code, so the 60% is the honest generalization number. The gap to the original key is expected.
+- The 8B model varies between runs. Three runs of the original key gave 77% to 83% of runs passing, so read these as +/- a few points.
+- `--auto` is a citation-level check (status ok, expected citations present, no forbidden citations, no invalid IDs). It does not read the answer text. See limitations.
+- Earlier tuning runs (heuristics on/off) are kept in `evals/results/history/`. They were recorded without tracing and are not the baseline.
+
+### A trace in Phoenix
+
+![A full run trace in Phoenix: MCP handshake, agent and tool steps, synthesizer, per-step timing](docs/phoenix_trace.png)
+
+## Known limitations
+
+- **Over-answering.** On "is X caused by Y?" style questions the agent sometimes adds the related blocker and its downstream tickets. The extra citations trip the forbidden-citation check. This is the most common failure on both keys.
+- **Conflicting sources.** When two tickets disagree (for example two launch dates), the agent can state one value without flagging the conflict.
+- **Aggregate answers can lack citations.** A count or summary can be right in the text while citing no ticket, which the auto check marks as a failure. Hand grading would pass some of these.
+- **Step cap.** Some multi-hop questions hit the 5-step cap and return an honest "could not finish" (`status=loop_cap`) instead of an answer.
+- **Date edge cases.** "Due on a date" versus "overdue" can be confused at the boundary.
+- **Citation-level scoring is approximate.** It can undercount (right answer, no citation) and overcount (right citation, wrong wording). LLM-judge scoring is planned for Phase 4.
+- **Small and synthetic.** 45 tickets, one tool source (Jira), 10 + 10 questions. Results are indicative, not statistically strong.
+- **Local model only.** Latency (about 8 s median) reflects `qwen3:8b` on an 8 GB GPU.
 
 ## Quickstart
 
@@ -67,12 +96,13 @@ $env:AGENT_DEBUG="1"; python -m app ask "..." 2> debug.txt     # PowerShell
 ```bash
 python -m evals.run_evals                       # original key, grade each answer by hand: p / f / s
 python -m evals.run_evals --auto --repeat 3     # no prompts, exit 1 if any question fails
-python -m evals.run_evals --key evals/heldout_key.json --auto --repeat 3
+python -m evals.run_evals --heldout --auto --repeat 3
 ```
 
 | Flag                   | Meaning                                                                 |
 | ---------------------- | ----------------------------------------------------------------------- |
-| `--key <file>`         | Answer file to run (`answer_key.json` or `heldout_key.json`)            |
+| `--key <file>`         | Answer file to run (default `answer_key.json`)                          |
+| `--heldout`            | Run `heldout_key.json` (measurement only; cannot be combined with `--key`) |
 | `--auto`               | No prompts. A run passes only if status is `ok`, every expected citation is present, no `forbidden_citations` are cited, and every cited ID exists. Exit code 1 if any question fails |
 | `--repeat N`           | Run each question N times; reports pass rate per question and overall   |
 | `--min-pass-rate 0.67` | Per-question pass rate needed to count as passing (default 1.0)         |
@@ -112,9 +142,15 @@ app/
   config.py, cli.py, tracing.py, runtime.py   platform (C)
   agent.py, graph.py, nodes/                  agent (B)
   mcp_servers/jira_server.py                  Jira MCP tools (A)
-data/synthetic/                               jira_tickets.json (A)
-evals/                                        run_evals.py (C), answer_key.json (A), results/
-docs/SETUP.md                                 Ollama + Phoenix setup
+data/
+  synthetic/jira_tickets.json                 synthetic Northwind / Atlas tickets (A)
+  generate_jira.py, PRIVATE_NOTES.md          dataset generator and design notes (A)
+evals/
+  run_evals.py                                eval runner (C)
+  answer_key.json, heldout_key.json           answer files (A)
+  results/                                    phase1_baseline.json, phase1_heldout.json, history/
+docs/                                         SETUP.md, phoenix_trace.png
+.github/workflows/test.yml                    CI (pytest)
 tests/
 ```
 
