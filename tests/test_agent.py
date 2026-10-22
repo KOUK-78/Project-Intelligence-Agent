@@ -470,6 +470,7 @@ def test_agent_debug_log_is_opt_in_and_goes_to_stderr(monkeypatch, capsys):
         return FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-109"), text_reply()],
                        synthesizer=[synth_reply("Waiting on Legal [ATL-109].", ["ATL-109"])])
 
+    monkeypatch.setattr(config, "AGENT_DEBUG", False)  # do not depend on the shell's AGENT_DEBUG
     q = "What is the status of ATL-109?"
     asyncio.run(run(fresh(), question=q))
     assert "[agent-debug]" not in capsys.readouterr().err
