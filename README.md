@@ -7,7 +7,7 @@
 Answers multi-step project questions with **verified ticket citations**, every step traced.
 
 **Phase 1 (done):** one vertical slice. A question goes in, the agent calls a Jira tool over MCP, and a cited answer comes out.
-Baseline: **10 of 10 correct** on the hand-graded answer key (`evals/results/phase1_baseline.json`).
+Status: measurement in progress. Final results are recorded in `evals/results/` once the traced re-run (tracing on, `--repeat 3`) is complete.
 
 ```
 question -> LangGraph agent (qwen3:8b via Ollama) -> Jira MCP server (stdio) -> cited answer
@@ -67,12 +67,13 @@ $env:AGENT_DEBUG="1"; python -m app ask "..." 2> debug.txt     # PowerShell
 ```bash
 python -m evals.run_evals                       # original key, grade each answer by hand: p / f / s
 python -m evals.run_evals --auto --repeat 3     # no prompts, exit 1 if any question fails
-python -m evals.run_evals --key evals/heldout_key.json --auto --repeat 3
+python -m evals.run_evals --heldout --auto --repeat 3
 ```
 
 | Flag                   | Meaning                                                                 |
 | ---------------------- | ----------------------------------------------------------------------- |
-| `--key <file>`         | Answer file to run (`answer_key.json` or `heldout_key.json`)            |
+| `--key <file>`         | Answer file to run (default `answer_key.json`)                          |
+| `--heldout`            | Run `heldout_key.json` (measurement only; cannot be combined with `--key`) |
 | `--auto`               | No prompts. A run passes only if status is `ok`, every expected citation is present, no `forbidden_citations` are cited, and every cited ID exists. Exit code 1 if any question fails |
 | `--repeat N`           | Run each question N times; reports pass rate per question and overall   |
 | `--min-pass-rate 0.67` | Per-question pass rate needed to count as passing (default 1.0)         |

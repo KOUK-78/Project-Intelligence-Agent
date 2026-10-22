@@ -158,3 +158,24 @@ def test_cli_stub_result_goes_to_stub_file(monkeypatch, tmp_path):
     assert (tmp_path / "phase1_heldout.stub.json").exists()
     assert not (tmp_path / "phase1_heldout.json").exists()
     assert json.loads((tmp_path / "phase1_heldout.stub.json").read_text())["agent"] == "stub"
+
+
+def test_cli_heldout_flag_uses_heldout_key_and_file(monkeypatch, tmp_path):
+    hk = tmp_path / "heldout_key.json"
+    hk.write_text(json.dumps([q("H1")]))
+    monkeypatch.setattr(config, "HELDOUT_KEY_PATH", hk)
+    monkeypatch.setattr(config, "RESULTS_DIR", tmp_path)
+    monkeypatch.setattr(ev, "get_run_agent", lambda use_stub=False: (lambda _q: result(["ATL-112"])))
+    monkeypatch.setattr(ev, "load_valid_ids", lambda *a, **k: VALID)
+    r = CliRunner().invoke(ev.cli, ["--heldout", "--auto"])
+    assert r.exit_code == 0, r.output
+    data = json.loads((tmp_path / "phase1_heldout.json").read_text())
+    assert data["key"] == "heldout_key.json" and data["results"][0]["id"] == "H1"
+
+
+def test_cli_heldout_and_key_conflict(monkeypatch, tmp_path):
+    k = tmp_path / "k.json"
+    k.write_text(json.dumps([q()]))
+    monkeypatch.setattr(ev, "get_run_agent", lambda use_stub=False: (lambda _q: result(["ATL-112"])))
+    r = CliRunner().invoke(ev.cli, ["--heldout", "--key", str(k)])
+    assert r.exit_code != 0

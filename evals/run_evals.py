@@ -2,7 +2,7 @@
 
     python -m evals.run_evals                       # original key, grade by hand (p/f/s)
     python -m evals.run_evals --auto --repeat 3     # no prompts; exit 1 if any question fails
-    python -m evals.run_evals --key evals/heldout_key.json --auto --repeat 3
+    python -m evals.run_evals --heldout --auto --repeat 3   # same as --key evals/heldout_key.json
     python -m evals.run_evals --no-grade            # record mechanical checks only
     python -m evals.run_evals --stub --auto         # plumbing smoke test (writes *.stub.json)
 
@@ -205,6 +205,7 @@ def summarize(records: list[dict], min_pass_rate: float = 1.0) -> str:
 @cli.command()
 def main(
     key: Path = typer.Option(config.ANSWER_KEY_PATH, help="Answer file, e.g. evals/heldout_key.json"),
+    heldout: bool = typer.Option(False, "--heldout", help="Run the held-out key (measurement only)"),
     out: Path = typer.Option(None, help="Results file (default depends on --key; stub adds .stub)"),
     stub: bool = typer.Option(False, "--stub", help="Use the TEST-ONLY stub agent"),
     auto: bool = typer.Option(False, "--auto", help="No prompts; exit 1 if any question fails"),
@@ -215,6 +216,10 @@ def main(
 ) -> None:
     if auto and no_grade:
         raise typer.BadParameter("--auto and --no-grade are mutually exclusive")
+    if heldout:
+        if key != config.ANSWER_KEY_PATH:
+            raise typer.BadParameter("--heldout and --key are mutually exclusive")
+        key = config.HELDOUT_KEY_PATH
     questions = load_key(key)
     out = out or default_out_path(key, stub)
     run_agent = get_run_agent(use_stub=stub)
