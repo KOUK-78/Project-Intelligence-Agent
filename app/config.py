@@ -30,6 +30,7 @@ TODAY = "2026-06-30"
 MAX_AGENT_STEPS = 5
 PROJECT_NAME = "Atlas"             # the project every ticket belongs to; never a useful search term
 AGENT_DEBUG = (os.getenv("AGENT_DEBUG") or "0").lower() not in ("0", "false", "no")  # per-node decision log on stderr
+STATUS_VALUES = ("To Do", "In Progress", "Blocked", "Done")  # CONTRACTS.md section 1
 MAX_CALLS_PER_STEP = 6             # tool calls the model may issue in one decision
 MAX_REF_TICKETS = 4                # tickets the graph reads in its follow-the-references round
 MAX_CANDIDATE_TICKETS = 6          # tickets the graph reads in its read-every-candidate round
@@ -67,6 +68,8 @@ HEURISTIC_DEFAULTS = {
     "detail_nudge": True,       # general: any why/when/change question lives in comments, so open the tickets
     "filter_guard": True,       # general: drops status/label filters the question never asked for (invented filters)
     "dedupe_repeats": True,     # general: an identical successful call adds nothing and wastes a step
+    "status_sanitize": True,    # general: a status filter must be exactly one valid status; lists and invented values are dropped
+    "partial_on_cap": False,    # general idea, but held-out run showed partial answers can be confidently wrong; OFF until it helps
     "ref_round": False,         # specific-risk: reads tickets named inside tickets, tuned on one dependency question
     "candidate_round": False,   # specific-risk: reads every search hit for 'when' questions, tuned on one conflict question
     "not_found_trim": False,    # specific-risk: cuts tangents after "not found", tuned on one missing-ticket question

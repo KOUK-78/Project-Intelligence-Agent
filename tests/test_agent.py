@@ -81,15 +81,24 @@ async def test_multi_step_search_then_get_ticket():
 # ---------- loop cap ----------
 
 @sync
-async def test_loop_cap_returns_loop_cap_and_stops():
+async def test_loop_cap_returns_loop_cap_and_stops(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "partial_on_cap", True)
     # A real loop keeps trying NEW searches (repeats of a successful call are ended as "done").
     llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
     r = await run(llm)
     assert r["status"] == "loop_cap"
     assert len(r["tool_calls"]) == config.MAX_AGENT_STEPS
-    assert "could not finish" in r["answer"]
     assert llm.count("agent") == config.MAX_AGENT_STEPS + 1  # bounded, never loops forever
-    assert llm.count("synthesizer") == 0
+    # Evidence was gathered, so the cap yields a flagged partial answer instead of nothing.
+    assert r["answer"].startswith("Partial answer") and llm.count("synthesizer") == 1
+
+
+@sync
+async def test_partial_on_cap_is_off_by_default():
+    assert config.HEURISTIC_DEFAULTS["partial_on_cap"] is False
+    llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
+    r = await run(llm)
+    assert r["status"] == "loop_cap" and "could not finish" in r["answer"] and llm.count("synthesizer") == 0
 
 
 # ---------- unknown ticket / no results ----------
@@ -298,7 +307,8 @@ def test_project_name_or_phrase_is_dropped_from_label():
 
 
 @sync
-async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent():
+async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "status_sanitize", False)  # here we want the server's own error
     llm = FakeLLM(
         agent=[tool_reply("search_tickets", keyword="x", label="Project Atlas", status="Exploded"),
                tool_reply("search_tickets", keyword="*", status="Blocked"), text_reply()],
@@ -460,6 +470,7 @@ def test_agent_debug_log_is_opt_in_and_goes_to_stderr(monkeypatch, capsys):
         return FakeLLM(agent=[tool_reply("get_ticket", ticket_id="ATL-109"), text_reply()],
                        synthesizer=[synth_reply("Waiting on Legal [ATL-109].", ["ATL-109"])])
 
+    monkeypatch.setattr(config, "AGENT_DEBUG", False)  # do not depend on the shell's AGENT_DEBUG
     q = "What is the status of ATL-109?"
     asyncio.run(run(fresh(), question=q))
     assert "[agent-debug]" not in capsys.readouterr().err
@@ -527,3 +538,21 @@ async def test_filter_guard_can_be_switched_off(monkeypatch):
                   synthesizer=[synth_reply("x [ATL-109].", [])])
     r = await run(llm, question="Tell me about checkout.")
     assert r["tool_calls"][0]["args"].get("status") == "Blocked"
+
+
+# ---------- B3: status_sanitize ----------
+
+def test_sanitize_status_keeps_one_valid_status_and_drops_lists_and_inventions():
+    from app.nodes.tool_node import sanitize_status
+    assert sanitize_status({"keyword": "x", "status": "in progress"}) == {"keyword": "x", "status": "in progress"}
+    assert sanitize_status({"keyword": "x", "status": "To Do, In Progress, Blocked"}) == {"keyword": "x"}
+    assert sanitize_status({"keyword": "x", "status": "Open"}) == {"keyword": "x"}
+    assert sanitize_status({"keyword": "x"}) == {"keyword": "x"}
+
+
+@sync
+async def test_status_list_from_the_model_is_dropped_before_the_call():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="*", status="To Do, Blocked"), text_reply()],
+                  synthesizer=[synth_reply("Not done: [ATL-212].", ["ATL-212"])])
+    r = await run(llm, question="Which tickets are not done yet?")
+    assert "status" not in r["tool_calls"][0]["args"]

@@ -17,8 +17,9 @@ SYNTH_SYSTEM = (
     "4. Include the specific facts: names, dates, counts, and the reason from the comments.\n"
     "5. If tickets disagree, report the conflict, give each value with its ticket, and do not pick one.\n"
     "6. If the question's premise is contradicted by a ticket, say so.\n"
-    "7. If tickets wait on or depend on another ticket, name that root cause first, then list EVERY ticket "
-    "it affects, each with its ID.\n"
+    "7. Only when the question asks what is blocking something or what depends on something: name the root-cause "
+    "ticket first, with its ID, then list EVERY ticket it affects, each with its ID. Otherwise do not add other "
+    "tickets' effects.\n"
     "8. If nothing in the evidence answers the question, say that in one sentence with no ticket IDs.\n"
     f"Today's date is {config.TODAY}.\n"
     'Reply as JSON: {"answer": "...", "citations": ["ATL-000"]}. '
@@ -26,6 +27,7 @@ SYNTH_SYSTEM = (
 )
 RETRY_NUDGE = 'That was not valid. Reply again with ONLY a JSON object: {"answer": "...", "citations": ["ID"]}'
 NO_EVIDENCE_ANSWER = "I could not find any ticket evidence to answer that, so I can't answer it."
+PARTIAL_PREFIX = "Partial answer (tool step limit reached, evidence may be incomplete): "
 INVALID_ANSWER = "I could not produce a valid answer."
 
 
@@ -105,10 +107,11 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
             ev_ids=evidence_ids(evidence),
             mentioned=set(mentioned_ids(evidence)),
         )
+        capped = bool(state.get("capped"))
         return {
             "route": "end",
-            "status": "ok",
-            "answer": answer,
+            "status": "loop_cap" if capped else "ok",
+            "answer": PARTIAL_PREFIX + answer if capped else answer,
             "citations": citations,
             "errors": errors,
             "warnings": warnings,

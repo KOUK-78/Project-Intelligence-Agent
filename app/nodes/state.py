@@ -24,6 +24,7 @@ class AgentState(TypedDict, total=False):
     detail_nudged: bool  # agent was already told once to read full tickets
     ref_nudged: bool  # referenced tickets were already read once (system-initiated round)
     auto_round: bool  # the pending calls were issued by the graph, not the model
+    capped: bool  # the step cap was hit; the synthesizer answers from partial evidence
     route: str  # next hop: tool | agent | synthesizer | end
     status: str  # "" while running, else ok | loop_cap | invalid_output | error
     answer: str

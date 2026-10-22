@@ -68,6 +68,14 @@ STATUS_WORDS = re.compile(
 )
 
 
+def sanitize_status(args: dict[str, Any]) -> dict[str, Any]:
+    """A status filter takes exactly one status. 'To Do, Blocked' or an invented value only returns an error."""
+    status = args.get("status")
+    if isinstance(status, str) and status.strip().lower() not in {s.lower() for s in config.STATUS_VALUES}:
+        return {k: v for k, v in args.items() if k != "status"}
+    return args
+
+
 def guard_filters(args: dict[str, Any], question: str) -> dict[str, Any]:
     """A small model often invents filters. Keep status/label only if the question itself points at them."""
     out = dict(args)
@@ -84,6 +92,8 @@ def normalize_call(call: dict[str, Any], schemas: dict[str, dict], question: str
     if schema is None:
         return call
     args = drop_bad_label(clean_args(call.get("args", {}), schema))
+    if config.HEURISTICS["status_sanitize"]:  # HEURISTIC status_sanitize [general]: one valid status or none
+        args = sanitize_status(args)
     if config.HEURISTICS["filter_guard"]:  # HEURISTIC filter_guard [general]: no filter the question did not ask for
         args = guard_filters(args, question)
     return {"name": call["name"], "args": args}
