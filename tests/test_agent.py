@@ -81,7 +81,8 @@ async def test_multi_step_search_then_get_ticket():
 # ---------- loop cap ----------
 
 @sync
-async def test_loop_cap_returns_loop_cap_and_stops():
+async def test_loop_cap_returns_loop_cap_and_stops(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "partial_on_cap", True)
     # A real loop keeps trying NEW searches (repeats of a successful call are ended as "done").
     llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
     r = await run(llm)
@@ -93,8 +94,8 @@ async def test_loop_cap_returns_loop_cap_and_stops():
 
 
 @sync
-async def test_partial_on_cap_can_be_switched_off(monkeypatch):
-    monkeypatch.setitem(config.HEURISTICS, "partial_on_cap", False)
+async def test_partial_on_cap_is_off_by_default():
+    assert config.HEURISTIC_DEFAULTS["partial_on_cap"] is False
     llm = FakeLLM(agent=lambda n: tool_reply("search_tickets", keyword=f"attempt{n}"), synthesizer=[synth_reply("x", [])])
     r = await run(llm)
     assert r["status"] == "loop_cap" and "could not finish" in r["answer"] and llm.count("synthesizer") == 0

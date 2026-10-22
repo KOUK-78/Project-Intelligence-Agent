@@ -67,7 +67,7 @@ HEURISTIC_DEFAULTS = {
     "detail_nudge": True,       # general: any why/when/change question lives in comments, so open the tickets
     "filter_guard": True,       # general: drops status/label filters the question never asked for (invented filters)
     "dedupe_repeats": True,     # general: an identical successful call adds nothing and wastes a step
-    "partial_on_cap": True,     # general: at the step cap, answer from the evidence already gathered, flagged as partial
+    "partial_on_cap": False,    # general idea, but held-out run showed partial answers can be confidently wrong; OFF until it helps
     "ref_round": False,         # specific-risk: reads tickets named inside tickets, tuned on one dependency question
     "candidate_round": False,   # specific-risk: reads every search hit for 'when' questions, tuned on one conflict question
     "not_found_trim": False,    # specific-risk: cuts tangents after "not found", tuned on one missing-ticket question
