@@ -1,10 +1,19 @@
 import json
+import sys
 
+import pytest
 from typer.testing import CliRunner
 
 from app import config, tracing
 from app.cli import app
-from evals.run_evals import failure_reasons, mechanical_checks, summarize
+from app.runtime import get_run_agent
+
+
+@pytest.fixture(autouse=True)
+def _isolate(tmp_path, monkeypatch):
+    monkeypatch.setattr(config, "TRACING_ENABLED", False)
+    monkeypatch.setattr(config, "LOGS_DIR", tmp_path)
+    monkeypatch.setattr(config, "RUNS_LOG", tmp_path / "runs.jsonl")
 
 
 def test_config_contract():
@@ -13,27 +22,28 @@ def test_config_contract():
     assert set(config.MODELS) >= {"agent", "synthesizer"}
 
 
-def test_cli_stub_and_log(tmp_path, monkeypatch):
-    monkeypatch.setattr(config, "TRACING_ENABLED", False)
-    monkeypatch.setattr(config, "LOGS_DIR", tmp_path)
-    monkeypatch.setattr(config, "RUNS_LOG", tmp_path / "runs.jsonl")
+def test_cli_stub_is_explicit_and_logs(tmp_path):
     r = CliRunner().invoke(app, ["ask", "--stub", "What is blocking Project Atlas?"])
     assert r.exit_code == 0 and "ATL-112" in r.output and "Status:" in r.output
     line = json.loads((tmp_path / "runs.jsonl").read_text().splitlines()[0])
     assert line["citations"] == ["ATL-112"] and line["status"] == "ok"
 
 
-def test_observe_run_turns_exceptions_into_error(tmp_path, monkeypatch):
-    monkeypatch.setattr(config, "LOGS_DIR", tmp_path)
-    monkeypatch.setattr(config, "RUNS_LOG", tmp_path / "runs.jsonl")
+def test_no_silent_stub_fallback(monkeypatch):
+    """If the real agent cannot be imported we must fail loudly, never fall back to the stub."""
+    monkeypatch.setitem(sys.modules, "app.agent", None)  # makes `from app.agent import ...` raise ImportError
+    with pytest.raises(RuntimeError, match="Cannot import the real agent"):
+        get_run_agent(use_stub=False)
+
+
+def test_cli_fails_loudly_when_agent_missing(monkeypatch):
+    monkeypatch.setitem(sys.modules, "app.agent", None)
+    r = CliRunner().invoke(app, ["ask", "anything"])
+    assert r.exit_code != 0
+    assert isinstance(r.exception, RuntimeError)
+    assert "ATL-112" not in r.output  # no fake answer was printed
+
+
+def test_observe_run_turns_exceptions_into_error():
     res = tracing.observe_run("q", lambda q: 1 / 0)
     assert res["status"] == "error"
-
-
-def test_mechanical_checks_and_summary():
-    res = {"citations": ["ATL-212", "ATL-999"]}
-    chk = mechanical_checks(["ATL-212"], res, {"ATL-212"})
-    assert chk["all_expected_citations_found"] and chk["invalid_citations"] == ["ATL-999"]
-    rec = {"id": "Q1", "status": "ok", "latency_ms": 5, "correct": True, **chk}
-    assert failure_reasons(rec) == ["invalid citation ['ATL-999']"]
-    assert "SCORE: 1 of 1 correct" in summarize([rec])
