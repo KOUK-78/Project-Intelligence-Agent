@@ -25,7 +25,7 @@ Recorded with tracing on, `qwen3:8b`, `--auto --repeat 3` (every run has a trace
 | Original (`answer_key.json`, 10 questions) | 7 of 10 | 23 of 30 (76.7%) | 7.9 s / 16.4 s |
 | Held-out (`heldout_key.json`, 10 questions) | 6 of 10 | 18 of 30 (60.0%) | 8.6 s / 15.7 s |
 
-- The held-out key was never used to tune prompts or code, so the 60% is the honest generalization number. The gap to the original key is expected.
+- No prompt or code change was tuned against the held-out key, but its failures were read while diagnosing, so it is partly contaminated. Treat the 60% as an honest estimate, not a clean one. A fresh unseen question set is the next step. The gap to the original key is expected.
 - The 8B model varies between runs. Three runs of the original key gave 73% to 80% of runs passing, so read these as +/- a few points.
 - `--auto` is a citation-level check (status ok, expected citations present, no forbidden citations, no invalid IDs). It does not read the answer text. See limitations.
 - Earlier tuning runs (heuristics on/off) are kept in `evals/results/history/`. They were recorded without tracing and are not the baseline.
@@ -129,7 +129,7 @@ python -m evals.run_evals --heldout --auto --repeat 3
 `--auto` is a citation-level check and does not read the answer text. Hand grading still judges wording.
 
 Results go to separate files: `evals/results/phase1_baseline.json` (original key) and `evals/results/phase1_heldout.json` (held-out key).
-The held-out key is never used to tune prompts or code (see `CONTRACTS.md`).
+The held-out key must not be used to tune prompts or code (see `CONTRACTS.md`). In Phase 1 its failures were read for diagnosis, so it is partly contaminated.
 Per run it records: status, citations, expected citations found, forbidden citations hit, invalid IDs, latency and trace id.
 
 ### 5. View traces
