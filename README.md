@@ -34,6 +34,22 @@ Recorded with tracing on, `qwen3:8b`, `--auto --repeat 3` (every run has a trace
 
 ![A full run trace in Phoenix: MCP handshake, agent and tool steps, synthesizer, per-step timing](docs/phoenix_trace.png)
 
+## Failing questions and causes
+
+Causes are from reading the traces of the failing runs (`AGENT_DEBUG=1`). Runs failing = out of 3. Reasons are the ones the runner recorded.
+
+| Key | Q | Question (short) | Runs failing | Recorded reason | Cause |
+|---|---|---|---|---|---|
+| Original | Q6 | When is the Atlas public launch? | 3 | missing `ATL-103`, `ATL-139` | Retrieval depth: the agent opens only the first search hit and states one date. The two launch tickets conflict and neither is cited. |
+| Original | Q7 | Status of the Salesforce CRM integration? | 1 | forbidden `ATL-114` | Tangent after a not-found: the agent adds a related ticket it should not cite. The other 2 runs are clean. |
+| Original | Q9 | Is the overdue privacy ticket late because of the payments API? | 3 | forbidden `ATL-112` | Premise check: the agent correctly says no, but cites the payments ticket it just ruled out. The key forbids that citation; whether that is too strict is for A to decide. |
+| Held-out | H4 | Is the penetration test delayed because of the payments API? | 3 | missing `ATL-136`, forbidden `ATL-112` | The agent searches the suggested cause instead of the pen-test ticket, so it never cites it and cites the payments ticket. |
+| Held-out | H5 | Which tickets are due on 2026-06-30, and are they overdue? | 3 | missing `ATL-116`; run 1 also forbidden `ATL-112`, `109`, `118`, `121`, `127`, `133` | Wrong tool: a due-date question is answered from the overdue list, so the ticket due that day is missed. Run 1 also lists the whole payments chain. |
+| Held-out | H7 | Which overdue tickets are not caused by the payments API delay? | 3 | `status=loop_cap`, missing `ATL-109` | Step cap: the agent reads tickets one at a time and hits the 5-step limit before answering. |
+| Held-out | H10 | How many tickets are labeled launch, and how many are still To Do? | 3 | missing `ATL-103`, `131`, `139`, `140` | Counts are right but no ticket is cited. A hand grader would pass it; the auto check cannot. |
+
+Not covered by the table: `--auto` does not read answer text, so a wrong answer with correct citations passes.
+
 ## Known limitations
 
 - **Over-answering.** On "is X caused by Y?" style questions the agent sometimes adds the related blocker and its downstream tickets. The extra citations trip the forbidden-citation check. This is the most common failure on both keys.
