@@ -48,7 +48,7 @@ AgentResult = {
 ## 5) Answer key format (`evals/answer_key.json`)
 ```json
 [{"id": "Q1", "question": "...", "expected_answer": "...",
-  "expected_citations": ["ATL-212"], "forbidden_citations": ["ATL-109"],
+  "expected_citations": ["ATL-000"], "forbidden_citations": ["ATL-001"],
   "notes": "why this is the answer"}]
 ```
 - `forbidden_citations` is OPTIONAL. A correct answer must NOT cite these IDs.
@@ -79,7 +79,7 @@ C owns the file; B sends changes as a PR to C. No numeric constants or slice lim
 ## Ownership
 | Owner | Paths |
 |---|---|
-| A | `data/synthetic/`, `app/mcp_servers/`, `evals/answer_key.json`, `evals/heldout_key.json` |
+| A | `data/` (synthetic data, `generate_jira.py`, `PRIVATE_NOTES.md`), `app/mcp_servers/`, `evals/answer_key.json`, `evals/heldout_key.json` |
 | B | `app/agent.py`, `app/nodes/`, `app/graph.py` |
 | C | `app/config.py`, `app/cli.py`, `app/tracing.py`, `app/runtime.py`, `app/stub_agent.py`, `evals/run_evals.py`, README, `docs/` |
 
