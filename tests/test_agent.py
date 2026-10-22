@@ -307,7 +307,8 @@ def test_project_name_or_phrase_is_dropped_from_label():
 
 
 @sync
-async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent():
+async def test_empty_filtered_search_gets_a_hint_and_label_junk_is_not_sent(monkeypatch):
+    monkeypatch.setitem(config.HEURISTICS, "status_sanitize", False)  # here we want the server's own error
     llm = FakeLLM(
         agent=[tool_reply("search_tickets", keyword="x", label="Project Atlas", status="Exploded"),
                tool_reply("search_tickets", keyword="*", status="Blocked"), text_reply()],
@@ -536,3 +537,21 @@ async def test_filter_guard_can_be_switched_off(monkeypatch):
                   synthesizer=[synth_reply("x [ATL-109].", [])])
     r = await run(llm, question="Tell me about checkout.")
     assert r["tool_calls"][0]["args"].get("status") == "Blocked"
+
+
+# ---------- B3: status_sanitize ----------
+
+def test_sanitize_status_keeps_one_valid_status_and_drops_lists_and_inventions():
+    from app.nodes.tool_node import sanitize_status
+    assert sanitize_status({"keyword": "x", "status": "in progress"}) == {"keyword": "x", "status": "in progress"}
+    assert sanitize_status({"keyword": "x", "status": "To Do, In Progress, Blocked"}) == {"keyword": "x"}
+    assert sanitize_status({"keyword": "x", "status": "Open"}) == {"keyword": "x"}
+    assert sanitize_status({"keyword": "x"}) == {"keyword": "x"}
+
+
+@sync
+async def test_status_list_from_the_model_is_dropped_before_the_call():
+    llm = FakeLLM(agent=[tool_reply("search_tickets", keyword="*", status="To Do, Blocked"), text_reply()],
+                  synthesizer=[synth_reply("Not done: [ATL-212].", ["ATL-212"])])
+    r = await run(llm, question="Which tickets are not done yet?")
+    assert "status" not in r["tool_calls"][0]["args"]
