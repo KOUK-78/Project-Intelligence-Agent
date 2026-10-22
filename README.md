@@ -32,7 +32,7 @@ Recorded with tracing on, `qwen3:8b`, `--auto --repeat 3` (every run has a trace
 
 ### A trace in Phoenix
 
-![A full run trace in Phoenix: model calls, tool calls, timing](docs/phoenix_trace.png)
+![A full run trace in Phoenix: MCP handshake, agent and tool steps, synthesizer, per-step timing](docs/phoenix_trace.png)
 
 ## Known limitations
 
