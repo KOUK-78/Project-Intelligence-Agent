@@ -1,0 +1,1075 @@
+{
+  "phase": 1,
+  "today": "2026-06-30",
+  "model": "qwen3:8b",
+  "agent": "real",
+  "key": "heldout_key.json",
+  "mode": "auto",
+  "repeat": 3,
+  "min_pass_rate": 1.0,
+  "score": {
+    "questions_passed": 5,
+    "questions_total": 10,
+    "runs_passed": 15,
+    "runs_total": 30,
+    "overall_pass_rate": 0.5
+  },
+  "latency_ms": {
+    "median": 7730,
+    "worst": 16833
+  },
+  "runs_missing_trace_id": 30,
+  "per_question": [
+    {
+      "id": "H1",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 6225,
+      "worst_latency_ms": 16833,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H2",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 9935,
+      "worst_latency_ms": 10010,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H3",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 7301,
+      "worst_latency_ms": 7382,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H4",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 9365,
+      "worst_latency_ms": 9529,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H5",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 12095,
+      "worst_latency_ms": 12316,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H6",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 7000,
+      "worst_latency_ms": 7020,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H7",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 8598,
+      "worst_latency_ms": 8670,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H8",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 6961,
+      "worst_latency_ms": 7120,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H9",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 7811,
+      "worst_latency_ms": 7813,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": "H10",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 6241,
+      "worst_latency_ms": 6343,
+      "trace_ids": [
+        null,
+        null,
+        null
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "id": "H4",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "forbidden citation ['ATL-112']"
+      ]
+    },
+    {
+      "id": "H4",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "forbidden citation ['ATL-112']"
+      ]
+    },
+    {
+      "id": "H4",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "forbidden citation ['ATL-112']"
+      ]
+    },
+    {
+      "id": "H5",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H5",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H5",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H7",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H7",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H7",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H9",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H9",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H9",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H10",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H10",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "H10",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "H1",
+      "run": 1,
+      "question": "Who owns the staging environment upgrade and when is it due?",
+      "status": "ok",
+      "answer": "Daniel Okafor owns the staging environment upgrade, and it is due on 2026-07-15 [ATL-138].",
+      "citations": [
+        "ATL-138"
+      ],
+      "expected_citations": [
+        "ATL-138"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 16833,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H1",
+      "run": 2,
+      "question": "Who owns the staging environment upgrade and when is it due?",
+      "status": "ok",
+      "answer": "Daniel Okafor owns the staging environment upgrade, and it is due on 2026-07-15 [ATL-138].",
+      "citations": [
+        "ATL-138"
+      ],
+      "expected_citations": [
+        "ATL-138"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6225,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H1",
+      "run": 3,
+      "question": "Who owns the staging environment upgrade and when is it due?",
+      "status": "ok",
+      "answer": "Daniel Okafor owns the staging environment upgrade, and it is due on 2026-07-15 [ATL-138].",
+      "citations": [
+        "ATL-138"
+      ],
+      "expected_citations": [
+        "ATL-138"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 5869,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H2",
+      "run": 1,
+      "question": "Which of Wei Zhang's tickets are overdue?",
+      "status": "ok",
+      "answer": "Wei Zhang's ticket [ATL-133] is overdue by 3 days.",
+      "citations": [
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 9935,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H2",
+      "run": 2,
+      "question": "Which of Wei Zhang's tickets are overdue?",
+      "status": "ok",
+      "answer": "Wei Zhang's ticket [ATL-133] is overdue by 3 days.",
+      "citations": [
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 10010,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H2",
+      "run": 3,
+      "question": "Which of Wei Zhang's tickets are overdue?",
+      "status": "ok",
+      "answer": "Wei Zhang's ticket [ATL-133] is overdue by 3 days.",
+      "citations": [
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 9907,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H3",
+      "run": 1,
+      "question": "Why is the end-to-end payment test suite late?",
+      "status": "ok",
+      "answer": "The end-to-end payment test suite is late because the test environment requires the payments API sandbox, which is not yet available as it depends on ticket [ATL-112]. [ATL-127]",
+      "citations": [
+        "ATL-112",
+        "ATL-127"
+      ],
+      "expected_citations": [
+        "ATL-127",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7382,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H3",
+      "run": 2,
+      "question": "Why is the end-to-end payment test suite late?",
+      "status": "ok",
+      "answer": "The end-to-end payment test suite is late because the test environment requires the payments API sandbox, which is not yet available as it depends on ticket [ATL-112] [ATL-127].",
+      "citations": [
+        "ATL-112",
+        "ATL-127"
+      ],
+      "expected_citations": [
+        "ATL-127",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7266,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H3",
+      "run": 3,
+      "question": "Why is the end-to-end payment test suite late?",
+      "status": "ok",
+      "answer": "The end-to-end payment test suite is late because the test environment requires the payments API sandbox, which is not yet available as it depends on ticket [ATL-112]. [ATL-127]",
+      "citations": [
+        "ATL-112",
+        "ATL-127"
+      ],
+      "expected_citations": [
+        "ATL-127",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7301,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H4",
+      "run": 1,
+      "question": "Is the penetration test delayed because of the payments API? What is it waiting on?",
+      "status": "ok",
+      "answer": "The penetration test is delayed because of the payments API. It is waiting on the delivery of the Payments API v2, which is blocked due to the lack of sandbox credentials from the vendor PayGate. The ticket [ATL-112] mentions that all payment-dependent Atlas work is blocked until this lands. The tickets affected by this are [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "latency_ms": 9365,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H4",
+      "run": 2,
+      "question": "Is the penetration test delayed because of the payments API? What is it waiting on?",
+      "status": "ok",
+      "answer": "The penetration test is delayed because of the payments API. It is waiting on the delivery of the Payments API v2, which is blocked due to the lack of sandbox credentials from the vendor PayGate. The ticket [ATL-112] mentions that all payment-dependent Atlas work is blocked until this lands. The downstream tickets affected are [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "latency_ms": 9529,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H4",
+      "run": 3,
+      "question": "Is the penetration test delayed because of the payments API? What is it waiting on?",
+      "status": "ok",
+      "answer": "The penetration test is delayed because of the payments API. It is waiting on the delivery of the Payments API v2, which is blocked due to the lack of sandbox credentials from the vendor PayGate. The ticket [ATL-112] mentions that all payment-dependent Atlas work is blocked until this lands. The tickets affected by this are [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "latency_ms": 9248,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H5",
+      "run": 1,
+      "question": "Which tickets are due on 2026-06-30, and are they overdue?",
+      "status": "ok",
+      "answer": "No tickets are due on 2026-06-30. The tickets listed in the evidence have due dates earlier than 2026-06-30 and are therefore not due on that date.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-116"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 12316,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H5",
+      "run": 2,
+      "question": "Which tickets are due on 2026-06-30, and are they overdue?",
+      "status": "ok",
+      "answer": "No tickets are due on 2026-06-30. The tickets listed in the evidence have due dates earlier than 2026-06-30 and are overdue.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-116"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 12095,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H5",
+      "run": 3,
+      "question": "Which tickets are due on 2026-06-30, and are they overdue?",
+      "status": "ok",
+      "answer": "No tickets are due on 2026-06-30. The tickets listed in the evidence have due dates earlier than 2026-06-30 and are overdue.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-116"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 12072,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H6",
+      "run": 1,
+      "question": "Is there a ticket for the Kubernetes migration?",
+      "status": "ok",
+      "answer": "There is no ticket specifically for the Kubernetes migration. However, there is one ticket related to migration, which is [ATL-134] for the Data migration from legacy billing.",
+      "citations": [
+        "ATL-134"
+      ],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-138",
+        "ATL-129"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7020,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H6",
+      "run": 2,
+      "question": "Is there a ticket for the Kubernetes migration?",
+      "status": "ok",
+      "answer": "There is no ticket specifically for the Kubernetes migration. However, there is a ticket for a data migration from legacy billing, with ID [ATL-134].",
+      "citations": [
+        "ATL-134"
+      ],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-138",
+        "ATL-129"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7000,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H6",
+      "run": 3,
+      "question": "Is there a ticket for the Kubernetes migration?",
+      "status": "ok",
+      "answer": "There is no ticket specifically for the Kubernetes migration. However, there is a ticket for a data migration from legacy billing with ID [ATL-134].",
+      "citations": [
+        "ATL-134"
+      ],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-138",
+        "ATL-129"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6952,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H7",
+      "run": 1,
+      "question": "Which overdue tickets are not caused by the payments API delay?",
+      "status": "loop_cap",
+      "answer": "I could not finish: I reached the limit of 5 tool steps without having enough evidence to answer.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 8670,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H7",
+      "run": 2,
+      "question": "Which overdue tickets are not caused by the payments API delay?",
+      "status": "loop_cap",
+      "answer": "I could not finish: I reached the limit of 5 tool steps without having enough evidence to answer.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 8598,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H7",
+      "run": 3,
+      "question": "Which overdue tickets are not caused by the payments API delay?",
+      "status": "loop_cap",
+      "answer": "I could not finish: I reached the limit of 5 tool steps without having enough evidence to answer.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 8553,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H8",
+      "run": 1,
+      "question": "Which ticket has Critical priority, and what is its status?",
+      "status": "ok",
+      "answer": "The ticket with Critical priority is [ATL-112], and its status is Blocked.",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-121"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7120,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H8",
+      "run": 2,
+      "question": "Which ticket has Critical priority, and what is its status?",
+      "status": "ok",
+      "answer": "The ticket with Critical priority is [ATL-112], and its status is Blocked.",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-121"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6961,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H8",
+      "run": 3,
+      "question": "Which ticket has Critical priority, and what is its status?",
+      "status": "ok",
+      "answer": "The ticket with Critical priority is [ATL-112], and its status is Blocked.",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-121"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6932,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "H9",
+      "run": 1,
+      "question": "Which security-related tickets are not done yet, and what state is each in?",
+      "status": "loop_cap",
+      "answer": "I could not finish: I reached the limit of 5 tool steps without having enough evidence to answer.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-116",
+        "ATL-130",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-105",
+        "ATL-123"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7811,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H9",
+      "run": 2,
+      "question": "Which security-related tickets are not done yet, and what state is each in?",
+      "status": "loop_cap",
+      "answer": "I could not finish: I reached the limit of 5 tool steps without having enough evidence to answer.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-116",
+        "ATL-130",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-105",
+        "ATL-123"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7813,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H9",
+      "run": 3,
+      "question": "Which security-related tickets are not done yet, and what state is each in?",
+      "status": "loop_cap",
+      "answer": "I could not finish: I reached the limit of 5 tool steps without having enough evidence to answer.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-116",
+        "ATL-130",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-105",
+        "ATL-123"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 7649,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H10",
+      "run": 1,
+      "question": "How many tickets are labeled launch, and how many of them are still To Do?",
+      "status": "ok",
+      "answer": "There are 4 tickets labeled launch, and 2 of them are still To Do.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-131",
+        "ATL-139",
+        "ATL-140"
+      ],
+      "forbidden_citations": [
+        "ATL-145"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6169,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H10",
+      "run": 2,
+      "question": "How many tickets are labeled launch, and how many of them are still To Do?",
+      "status": "ok",
+      "answer": "There are 4 tickets labeled launch, and 2 of them are still To Do.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-131",
+        "ATL-139",
+        "ATL-140"
+      ],
+      "forbidden_citations": [
+        "ATL-145"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6241,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "H10",
+      "run": 3,
+      "question": "How many tickets are labeled launch, and how many of them are still To Do?",
+      "status": "ok",
+      "answer": "There are 4 tickets labeled launch, and 2 of them are still To Do.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-131",
+        "ATL-139",
+        "ATL-140"
+      ],
+      "forbidden_citations": [
+        "ATL-145"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 6343,
+      "trace_id": null,
+      "correct": false
+    }
+  ]
+}
