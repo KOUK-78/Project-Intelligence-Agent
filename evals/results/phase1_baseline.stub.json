@@ -1,0 +1,472 @@
+{
+  "phase": 1,
+  "today": "2026-06-30",
+  "model": "qwen3:8b",
+  "agent": "stub",
+  "key": "answer_key.json",
+  "mode": "auto",
+  "repeat": 1,
+  "min_pass_rate": 1.0,
+  "score": {
+    "questions_passed": 2,
+    "questions_total": 10,
+    "runs_passed": 2,
+    "runs_total": 10,
+    "overall_pass_rate": 0.2
+  },
+  "latency_ms": {
+    "median": 50,
+    "worst": 50
+  },
+  "runs_missing_trace_id": 10,
+  "per_question": [
+    {
+      "id": "Q1",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q2",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q3",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q4",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q5",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q6",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q7",
+      "runs": 1,
+      "passes": 1,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q8",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q9",
+      "runs": 1,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    },
+    {
+      "id": "Q10",
+      "runs": 1,
+      "passes": 1,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 50,
+      "worst_latency_ms": 50,
+      "trace_ids": [
+        null
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "id": "Q1",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q2",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q3",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q4",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q5",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q6",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q8",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q9",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "forbidden citation ['ATL-112']"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "Q1",
+      "run": 1,
+      "question": "Who is assigned to ATL-121 and what is its current status?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-121"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q2",
+      "run": 1,
+      "question": "Which tickets are overdue?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-116"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q3",
+      "run": 1,
+      "question": "Why is the checkout card payment screen (ATL-118) late?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q4",
+      "run": 1,
+      "question": "What is blocking Project Atlas?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-136"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q5",
+      "run": 1,
+      "question": "Why did the due date for load testing of checkout change?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q6",
+      "run": 1,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q7",
+      "run": 1,
+      "question": "What is the status of the Salesforce CRM integration?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-114"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": true
+    },
+    {
+      "id": "Q8",
+      "run": 1,
+      "question": "Which tickets are currently Blocked?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-118",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q9",
+      "run": 1,
+      "question": "Is the overdue privacy policy ticket late because of the payments API?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": false
+    },
+    {
+      "id": "Q10",
+      "run": 1,
+      "question": "How many days overdue is ATL-112?",
+      "status": "ok",
+      "answer": "Atlas is blocked by the payments API delay [ATL-112]. (STUB)",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "latency_ms": 50,
+      "trace_id": null,
+      "correct": true
+    }
+  ]
+}

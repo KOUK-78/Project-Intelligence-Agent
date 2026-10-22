@@ -1,0 +1,81 @@
+[
+  {
+    "id": "H1",
+    "question": "Who owns the staging environment upgrade and when is it due?",
+    "expected_answer": "ATL-138 (Staging environment upgrade) is owned by Daniel Okafor, is In Progress, and is due 2026-07-15.",
+    "expected_citations": ["ATL-138"],
+    "notes": "Single-ticket lookup with a different shape from Q1: asks for owner and due date, and the ticket is only findable by title words."
+  },
+  {
+    "id": "H2",
+    "question": "Which of Wei Zhang's tickets are overdue?",
+    "expected_answer": "Only ATL-133 (Billing invoice generation), which is 3 days overdue (due 2026-06-27).",
+    "expected_citations": ["ATL-133"],
+    "forbidden_citations": ["ATL-112", "ATL-109", "ATL-118", "ATL-121", "ATL-127"],
+    "notes": "Filter on assignee AND overdue. Wei Zhang has other open tickets that are not overdue (e.g. ATL-120, ATL-130) and must not be listed."
+  },
+  {
+    "id": "H3",
+    "question": "Why is the end-to-end payment test suite late?",
+    "expected_answer": "ATL-127 is late because the test environment needs the payments API sandbox, so there is nothing to run against until ATL-112 delivers.",
+    "expected_citations": ["ATL-127", "ATL-112"],
+    "forbidden_citations": ["ATL-109"],
+    "notes": "Why-question on a different downstream ticket than the tuning set. The reason is in ATL-127's comment, which points to ATL-112. ATL-109 is an unrelated overdue ticket."
+  },
+  {
+    "id": "H4",
+    "question": "Is the penetration test delayed because of the payments API? What is it waiting on?",
+    "expected_answer": "No. ATL-136 (Penetration test scheduling) is Blocked waiting on the external vendor's availability for a test window; its comment says it is not related to payments.",
+    "expected_citations": ["ATL-136"],
+    "forbidden_citations": ["ATL-112"],
+    "notes": "Distractor check on a Blocked ticket that is not overdue and not payments-related. Agreeing with the premise is a failure."
+  },
+  {
+    "id": "H5",
+    "question": "Which tickets are due on 2026-06-30, and are they overdue?",
+    "expected_answer": "ATL-116 (Security review: threat model for checkout) is due 2026-06-30 and is In Progress. It is not overdue, because overdue means due before 2026-06-30.",
+    "expected_citations": ["ATL-116"],
+    "forbidden_citations": ["ATL-109", "ATL-112", "ATL-118", "ATL-121", "ATL-127", "ATL-133"],
+    "notes": "Boundary case for the frozen TODAY: due exactly today is NOT overdue."
+  },
+  {
+    "id": "H6",
+    "question": "Is there a ticket for the Kubernetes migration?",
+    "expected_answer": "Not found. There is no ticket about a Kubernetes migration in the Jira data.",
+    "expected_citations": [],
+    "forbidden_citations": ["ATL-138", "ATL-129"],
+    "notes": "No-data question with nearby infra tickets as bait (staging upgrade, monitoring dashboards). Correct behavior: not found, cite nothing."
+  },
+  {
+    "id": "H7",
+    "question": "Which overdue tickets are not caused by the payments API delay?",
+    "expected_answer": "Only ATL-109 (Update privacy policy copy for checkout), which is waiting on Legal review of the data-retention paragraph.",
+    "expected_citations": ["ATL-109"],
+    "forbidden_citations": ["ATL-112", "ATL-118", "ATL-121", "ATL-127", "ATL-133"],
+    "notes": "Negation over the overdue set. The other five overdue tickets are the payments chain (ATL-112 is the root) and must not be cited."
+  },
+  {
+    "id": "H8",
+    "question": "Which ticket has Critical priority, and what is its status?",
+    "expected_answer": "ATL-112 (Payments API v2 delivery) is the only Critical ticket, and it is Blocked.",
+    "expected_citations": ["ATL-112"],
+    "forbidden_citations": ["ATL-121"],
+    "notes": "Filter on priority, a field the tuning set never asks about."
+  },
+  {
+    "id": "H9",
+    "question": "Which security-related tickets are not done yet, and what state is each in?",
+    "expected_answer": "Three security-labeled tickets are still open: ATL-116 (Security review: threat model for checkout) is In Progress, ATL-130 (Fraud rule configuration) is To Do, and ATL-136 (Penetration test scheduling) is Blocked.",
+    "expected_citations": ["ATL-116", "ATL-130", "ATL-136"],
+    "forbidden_citations": ["ATL-105", "ATL-123"],
+    "notes": "Multi-ticket question NOT about the payments chain: label filter plus status filter. ATL-105 and ATL-123 are security tickets that are Done and must not be listed as open."
+  },
+  {
+    "id": "H10",
+    "question": "How many tickets are labeled launch, and how many of them are still To Do?",
+    "expected_answer": "Four tickets are labeled launch (ATL-103, ATL-131, ATL-139, ATL-140). Two of them are still To Do: ATL-131 (Release notes draft) and ATL-140 (Beta customer onboarding list).",
+    "expected_citations": ["ATL-103", "ATL-131", "ATL-139", "ATL-140"],
+    "forbidden_citations": ["ATL-145"],
+    "notes": "Count question. Both numbers must be right: 4 total, 2 To Do. ATL-145 (Post-launch retrospective planning) is about the launch but is labeled planning, so it is not part of the count."
+  }
+]
