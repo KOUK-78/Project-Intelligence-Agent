@@ -1,0 +1,243 @@
+[
+  {
+    "id": "P1",
+    "question": "Why was recurring billing taken out of the Atlas launch scope?",
+    "expected_answer": "Recurring (subscription) billing was descoped from GA and moved to Atlas 1.1 (Q4 2026), because payments API v2 only covers one-off charges, refunds and webhooks and the basic fraud rules are not built for recurring charges; including it would risk the launch date. The steering committee decided on 2026-05-28.",
+    "expected_citations": [
+      "NTN-105"
+    ],
+    "sources_required": [
+      "notion"
+    ],
+    "must_mention": [
+      "Atlas 1.1"
+    ],
+    "notes": "Single-source Notion lookup. The reason is in the decision log's Reason section. Jira has no ticket for subscriptions."
+  },
+  {
+    "id": "P2",
+    "question": "Which card-entry approach did the team choose for checkout, and who made the decision?",
+    "expected_answer": "Card entry uses PayGate hosted card fields so card numbers never touch Northwind servers. Marcus Chen and Daniel Okafor decided on 2026-04-30.",
+    "expected_citations": [
+      "NTN-106"
+    ],
+    "sources_required": [
+      "notion"
+    ],
+    "must_mention": [
+      "hosted"
+    ],
+    "notes": "Single-source Notion lookup, a decision-log page. Mentioning ATL-118 is a bonus."
+  },
+  {
+    "id": "P3",
+    "question": "How long does PayGate say sandbox provisioning takes once the amendment is signed?",
+    "expected_answer": "PayGate says 20 business days after countersignature, plus its security review of Northwind's webhook endpoints, with a target of 2026-07-15.",
+    "expected_citations": [
+      "EML-111"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "20 business days"
+    ],
+    "notes": "Single-source email lookup. Jira only says 'mid-July'; the 20 business days appears only in email."
+  },
+  {
+    "id": "P4",
+    "question": "What is the current beta program kickoff date, and was it changed?",
+    "expected_answer": "The kickoff was moved from 2026-08-03 to 2026-08-17 by Priya Nair's email of 2026-06-29, because the payments sandbox will not exist before mid-July. The Notion beta plan still shows the old date, so the email is the newer source.",
+    "expected_citations": [
+      "EML-124"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "2026-08-17"
+    ],
+    "notes": "Email revises a date. NTN-111 still says 2026-08-03 and is stale. Citing NTN-111 is fine ONLY if the answer says it is superseded. Giving 2026-08-03 as current is a failure."
+  },
+  {
+    "id": "P5",
+    "question": "Why is the payments API v2 delivery (ATL-112) late? I want the underlying reason, not just that it is blocked.",
+    "expected_answer": "Jira says PayGate has not delivered sandbox credentials. The email thread explains why: PayGate would only issue credentials after Northwind countersigned the v2 amendment, and signature was held up from 2026-05-18 to 2026-06-12 by a dispute over PayGate's higher fee and the liability cap. After signature PayGate needs about 20 business days to provision, so the sandbox target is 2026-07-15.",
+    "expected_citations": [
+      "ATL-112",
+      "EML-101"
+    ],
+    "forbidden_citations": [
+      "ATL-109"
+    ],
+    "sources_required": [
+      "jira",
+      "email"
+    ],
+    "must_mention": [
+      "fee"
+    ],
+    "notes": "Two-source join (Jira + email 'why'). Jira alone gives only the symptom; the fee dispute is in email only. EML-103, EML-106, EML-109 are bonus citations."
+  },
+  {
+    "id": "P6",
+    "question": "How has the expected payments sandbox delivery changed since the original plan, and why?",
+    "expected_answer": "The plan was sandbox delivery by 2026-06-10 (Notion plan, ATL-112 due date). It moved to mid-July (target 2026-07-15). Email explains the cause: the amendment was not signed until 2026-06-12 because of a fee and liability-cap negotiation, and PayGate then needs 20 business days plus a security review. Jira shows ATL-112 still Blocked.",
+    "expected_citations": [
+      "ATL-112",
+      "NTN-104",
+      "EML-111"
+    ],
+    "sources_required": [
+      "jira",
+      "notion",
+      "email"
+    ],
+    "must_mention": [
+      "2026-06-10",
+      "mid-July"
+    ],
+    "notes": "Three-source 'what changed'. Notion has the original date and the revision log, Jira has status, email has the cause."
+  },
+  {
+    "id": "P7",
+    "question": "Is the refund workflow complete?",
+    "expected_answer": "The sources conflict. The Notion refund status page says Complete (signed off 2026-06-19), but ATL-121 is Blocked and its 2026-06-23 comment says the integration cannot start until the payments API exists. The later Jira comment suggests the Notion page is outdated or wrong, but the data does not say so explicitly, so the conflict should be flagged.",
+    "expected_citations": [
+      "ATL-121",
+      "NTN-107"
+    ],
+    "sources_required": [
+      "jira",
+      "notion"
+    ],
+    "must_mention": [
+      "Complete",
+      "Blocked"
+    ],
+    "notes": "Conflict across Notion and Jira. Confidently saying 'complete' or 'blocked' with no mention of the other source is a failure."
+  },
+  {
+    "id": "P8",
+    "question": "When is the Atlas public launch?",
+    "expected_answer": "The sources conflict and none is shown to be authoritative. Jira ATL-103 and Notion launch spec v1 say public GA is 2026-09-15. Jira ATL-139 and Notion launch spec v2 (still In Review) say 2026-10-06. The email thread shows product and marketing disagreeing, with a decision deferred to the 2026-07-02 steering meeting.",
+    "expected_citations": [
+      "ATL-103",
+      "ATL-139",
+      "NTN-102",
+      "NTN-103"
+    ],
+    "sources_required": [
+      "jira",
+      "notion"
+    ],
+    "must_mention": [
+      "2026-09-15",
+      "2026-10-06"
+    ],
+    "notes": "Conflict across Jira, Notion and email. A correct answer surfaces both dates and says they conflict. EML-119 to EML-123 are bonus citations. Picking one date is a failure."
+  },
+  {
+    "id": "P9",
+    "question": "Do the two Atlas launch spec versions agree on the launch date?",
+    "expected_answer": "No. Spec v1 (approved 2026-05-20) says GA on 2026-09-15; spec v2 (marketing revision, In Review, edited 2026-06-22) says public launch on 2026-10-06.",
+    "expected_citations": [
+      "NTN-102",
+      "NTN-103"
+    ],
+    "sources_required": [
+      "notion"
+    ],
+    "must_mention": [
+      "2026-09-15",
+      "2026-10-06"
+    ],
+    "notes": "Single-source Notion comparison. Both versions must be found and compared."
+  },
+  {
+    "id": "P10",
+    "question": "What is the disagreement in the email discussion about the launch date?",
+    "expected_answer": "Aisha Khan (marketing) says the public launch is locked for 2026-10-06 with the press agency. Priya Nair says the steering committee confirmed GA on 2026-09-15 on 2026-06-04. Aisha says she was not told. It is unresolved and goes to the 2026-07-02 steering meeting.",
+    "expected_citations": [
+      "EML-119",
+      "EML-120"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "2026-10-06",
+      "2026-09-15"
+    ],
+    "notes": "Reply chain with conflicting claims, single-source email. The chain does not resolve; an answer that declares a winner is a failure."
+  },
+  {
+    "id": "P11",
+    "question": "What happened after the payments delay was escalated to vendor management on 2026-06-22?",
+    "expected_answer": "Owen Pierce escalated to PayGate on 2026-06-23 and asked it to expedite. PayGate declined on 2026-06-26: provisioning runs through a fixed queue and the security review is mandatory, so the 2026-07-15 target stands.",
+    "expected_citations": [
+      "ATL-112",
+      "EML-117"
+    ],
+    "sources_required": [
+      "jira",
+      "email"
+    ],
+    "must_mention": [
+      "declined"
+    ],
+    "notes": "Jira + email join. Jira records the escalation comment; only email records the outcome."
+  },
+  {
+    "id": "P12",
+    "question": "Who is handling the penetration test, and when can the vendor start testing?",
+    "expected_answer": "ATL-136 (Penetration test scheduling) is owned by Daniel Okafor and is Blocked on the external vendor's availability. By email, Halberd Security's earliest open window starts 2026-07-20 and runs two weeks.",
+    "expected_citations": [
+      "ATL-136",
+      "EML-128"
+    ],
+    "forbidden_citations": [
+      "ATL-112"
+    ],
+    "sources_required": [
+      "jira",
+      "email"
+    ],
+    "must_mention": [
+      "2026-07-20"
+    ],
+    "notes": "Jira + email join. The vendor window date is email-only. The pen test is unrelated to payments."
+  },
+  {
+    "id": "P13",
+    "question": "What is the status of the Zendesk helpdesk integration?",
+    "expected_answer": "Not found. Nothing in Jira, Notion or email mentions a Zendesk helpdesk integration.",
+    "expected_citations": [],
+    "forbidden_citations": [
+      "ATL-135",
+      "NTN-116"
+    ],
+    "notes": "No-data question across all sources. Support runbook and escalation pages are near-miss traps. Citing them as if they answered is a hallucination."
+  },
+  {
+    "id": "P14",
+    "question": "Was the privacy policy ticket delayed by the PayGate contract dispute?",
+    "expected_answer": "No. ATL-109 is waiting on Legal's review of the data-retention paragraph. Legal's email says this is a separate request from the PayGate contract work, and the review is due by 2026-07-03.",
+    "expected_citations": [
+      "ATL-109",
+      "EML-133"
+    ],
+    "forbidden_citations": [
+      "ATL-112",
+      "EML-101"
+    ],
+    "sources_required": [
+      "jira",
+      "email"
+    ],
+    "must_mention": [
+      "separate"
+    ],
+    "notes": "Distractor check. The same Legal counsel appears in both the PayGate thread and this one, which tempts a wrong link. Agreeing with the premise is a failure."
+  }
+]
