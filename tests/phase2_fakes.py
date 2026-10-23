@@ -6,7 +6,7 @@ the graph relies on: async context manager, `.tools`, and `.call(name, args) -> 
 import json
 from typing import Any, Callable
 
-from app.nodes.llm import LLMReply
+from app.nodes.llm import LLMReply, UsageMeter
 from app.nodes.mcp_client import ToolOutcome
 from app.nodes.scope import Source
 from tests.fakes import FakeLLM
@@ -70,6 +70,8 @@ class SpyLLM(FakeLLM):
         super().__init__(**script)
         self.tools_seen: dict[str, list[list[str]]] = {}
         self._usage = usage or {}
+        if usage:  # like OllamaLLM, only a model that counts tokens carries a meter
+            self.usage = UsageMeter()
 
     async def chat(self, job, messages, *, tools=None, format=None) -> LLMReply:
         names = [t["function"]["name"] for t in (tools or [])]
@@ -77,6 +79,8 @@ class SpyLLM(FakeLLM):
         reply = await super().chat(job, messages, tools=tools, format=format)
         prompt, completion = self._usage.get(job, (0, 0))
         reply.prompt_tokens, reply.completion_tokens = prompt, completion
+        if hasattr(self, "usage"):
+            self.usage.add(job, prompt, completion)
         return reply
 
 
