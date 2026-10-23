@@ -47,14 +47,16 @@ class SynthOutput(BaseModel):
 SYNTH_SCHEMA = SynthOutput.model_json_schema()
 
 
-def format_evidence(evidence: list[dict[str, Any]]) -> str:
+def format_evidence(evidence: list[dict[str, Any]], total_chars: int | None = None) -> str:
+    """One line per tool result. `total_chars` defaults to config.EVIDENCE_TOTAL_CHARS (Phase 1 output unchanged)."""
+    limit = config.EVIDENCE_TOTAL_CHARS if total_chars is None else total_chars
     lines: list[str] = []
     used = 0
     for i, e in enumerate(evidence):
         args = compact_json(e["args"], 200)
         body = compact_json(e["data"], config.EVIDENCE_ITEM_CHARS) if e["ok"] else f"FAILED: {e['error']}"
         line = f"- {e['tool']}({args}) -> {body}"
-        if used + len(line) > config.EVIDENCE_TOTAL_CHARS:
+        if used + len(line) > limit:
             lines.append(f"- ({len(evidence) - i} further tool results omitted for length)")
             break
         lines.append(line)
