@@ -1,0 +1,158 @@
+[
+  {
+    "id": "H1",
+    "question": "Who owns the legacy billing data migration and how is it being rolled out?",
+    "expected_answer": "Tomas Alvarez owns it. It is migrated in phases by customer cohort with a full dry run in the test environment before each phase, invoice history is mapped last, and final cutover follows the beta program. Target completion is 2026-08-14.",
+    "expected_citations": [
+      "NTN-117"
+    ],
+    "sources_required": [
+      "notion"
+    ],
+    "must_mention": [
+      "cohort"
+    ],
+    "notes": "Single-source Notion lookup with a different shape from the tuning key. ATL-134 is a bonus citation."
+  },
+  {
+    "id": "H2",
+    "question": "When is the staging hardware due to arrive?",
+    "expected_answer": "IT Procurement expects delivery on 2026-07-01, then one to two weeks of installation, in line with the 2026-07-15 upgrade target.",
+    "expected_citations": [
+      "EML-131"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "2026-07-01"
+    ],
+    "notes": "Single-source email lookup. ATL-138 is a bonus citation."
+  },
+  {
+    "id": "H3",
+    "question": "Who objected to PayGate's higher transaction fee, and what fee was finally agreed?",
+    "expected_answer": "Owen Pierce (Finance) objected to the 3.1% fee. The agreed amendment sets 3.0% + 0.30, locked for 12 months, with an 18-month liability cap.",
+    "expected_citations": [
+      "EML-103",
+      "EML-107"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "3.0%"
+    ],
+    "notes": "Email-only lookup over a thread. EML-106 and EML-109 are bonus citations."
+  },
+  {
+    "id": "H4",
+    "question": "What changed about the beta program start, and what did the planning page say before?",
+    "expected_answer": "The Notion beta plan says kickoff on 2026-08-03. An email on 2026-06-29 moved it to 2026-08-17 so QA gets two weeks on the payments sandbox first. ATL-140 (customer onboarding list) is still due 2026-07-31.",
+    "expected_citations": [
+      "NTN-111",
+      "EML-124"
+    ],
+    "sources_required": [
+      "notion",
+      "email"
+    ],
+    "must_mention": [
+      "2026-08-17"
+    ],
+    "notes": "Three-source 'what changed'. ATL-140 is a bonus citation, not required."
+  },
+  {
+    "id": "H5",
+    "question": "Is the staging environment ready for the checkout load test?",
+    "expected_answer": "The sources conflict. The Notion load test plan says staging has been upgraded and the test is ready to run, but ATL-138 shows the staging upgrade is still In Progress, due 2026-07-15, and ATL-124's date was moved to 2026-07-22 for that reason. The Notion page is older and appears stale.",
+    "expected_citations": [
+      "ATL-138",
+      "NTN-109"
+    ],
+    "sources_required": [
+      "jira",
+      "notion"
+    ],
+    "must_mention": [
+      "2026-07-15"
+    ],
+    "notes": "Conflict across Notion and Jira on a different topic from P7. ATL-124 is a bonus citation."
+  },
+  {
+    "id": "H6",
+    "question": "What is the status of the customer loyalty program rollout?",
+    "expected_answer": "Not found. Nothing in Jira, Notion or email mentions a loyalty program.",
+    "expected_citations": [],
+    "forbidden_citations": [
+      "ATL-140",
+      "NTN-111"
+    ],
+    "notes": "No-data question across all sources. Beta and analytics material are near-miss traps."
+  },
+  {
+    "id": "H7",
+    "question": "Did marketing pick 2026-10-06 as the launch date because of the payments delay?",
+    "expected_answer": "The data does not say that. Marketing's email says only that the date was locked with the press agency and the embargo is set; no source links it to the payments delay. Not enough evidence for the premise.",
+    "expected_citations": [
+      "EML-119"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "press agency"
+    ],
+    "notes": "Premise check that should end in 'not enough evidence'. Agreeing with the premise is a failure."
+  },
+  {
+    "id": "H8",
+    "question": "Who has to approve a vendor fee change, and who signed the PayGate amendment?",
+    "expected_answer": "Per the vendor management playbook, Finance approves fee changes and Owen Pierce signs for Finance, with Legal reviewing liability terms. Owen Pierce countersigned the PayGate amendment on 2026-06-12.",
+    "expected_citations": [
+      "NTN-119",
+      "EML-109"
+    ],
+    "sources_required": [
+      "notion",
+      "email"
+    ],
+    "must_mention": [
+      "Finance"
+    ],
+    "notes": "Notion + email join: the rule is in Notion, the act is in email."
+  },
+  {
+    "id": "H9",
+    "question": "Why does the card payment screen use PayGate's hosted fields, and which ticket builds that screen?",
+    "expected_answer": "Hosted card fields keep card numbers off Northwind servers and reduce compliance scope (decision log, 2026-04-30). The screen is built under ATL-118, which is waiting on the payments API.",
+    "expected_citations": [
+      "NTN-106",
+      "ATL-118"
+    ],
+    "sources_required": [
+      "notion",
+      "jira"
+    ],
+    "must_mention": [
+      "hosted"
+    ],
+    "notes": "Notion + Jira join. ATL-112 is a bonus citation."
+  },
+  {
+    "id": "H10",
+    "question": "How many days passed between PayGate sending the amendment and Northwind countersigning it?",
+    "expected_answer": "25 days: PayGate sent the amendment on 2026-05-18 and Northwind countersigned on 2026-06-12.",
+    "expected_citations": [
+      "EML-101",
+      "EML-109"
+    ],
+    "sources_required": [
+      "email"
+    ],
+    "must_mention": [
+      "25"
+    ],
+    "notes": "Email date arithmetic across a thread. Both endpoints must be found."
+  }
+]

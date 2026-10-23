@@ -1,0 +1,506 @@
+[
+  {
+    "id": "NTN-101",
+    "title": "Atlas Project Overview and Roster",
+    "page_type": "planning",
+    "owner": "Priya Nair",
+    "status": "Approved",
+    "created_date": "2026-04-01",
+    "last_edited": "2026-06-01",
+    "sections": [
+      {
+        "heading": "Purpose",
+        "text": "Atlas is Northwind's new checkout and billing platform: catalog, cart, card payments, refunds, invoices and a customer account dashboard."
+      },
+      {
+        "heading": "Team roster",
+        "text": "Priya Nair: product lead. Marcus Chen: backend and payments lead. Sofia Lindqvist: frontend and design. Wei Zhang: backend (tax, billing). Elena Rossi: QA. Tomas Alvarez: backend (inventory, refunds, data migration). Daniel Okafor: infrastructure and security. Aisha Khan: marketing and operations (launch communications, support). Owen Pierce: Finance and vendor management. Nadia Haddad: Legal counsel. Rafael Duarte: VP Product, chair of the steering committee."
+      },
+      {
+        "heading": "External vendors",
+        "text": "PayGate provides the payments API. Halberd Security provides the external penetration test."
+      },
+      {
+        "heading": "Where things live",
+        "text": "Tickets are tracked in Jira (ATL project). Specs, plans and decision logs live in Notion. Vendor and cross-team discussion happens by email."
+      }
+    ]
+  },
+  {
+    "id": "NTN-102",
+    "title": "Atlas Launch Spec v1",
+    "page_type": "spec",
+    "owner": "Priya Nair",
+    "status": "Approved",
+    "created_date": "2026-04-20",
+    "last_edited": "2026-05-20",
+    "sections": [
+      {
+        "heading": "Summary",
+        "text": "Version 1 of the Atlas launch specification, approved by product and engineering on 2026-05-20."
+      },
+      {
+        "heading": "Launch date",
+        "text": "Target public GA date: 2026-09-15. The launch announcement follows GA in the same week."
+      },
+      {
+        "heading": "Scope at GA",
+        "text": "Catalog and cart, card payments, refunds, invoice generation, customer account dashboard, and recurring (subscription) billing."
+      },
+      {
+        "heading": "Dependencies",
+        "text": "Payments API v2 from PayGate and the external security review must both land before GA."
+      }
+    ]
+  },
+  {
+    "id": "NTN-103",
+    "title": "Atlas Launch Spec v2 (marketing revision)",
+    "page_type": "spec",
+    "owner": "Aisha Khan",
+    "status": "In Review",
+    "created_date": "2026-06-12",
+    "last_edited": "2026-06-22",
+    "sections": [
+      {
+        "heading": "Summary",
+        "text": "Version 2 of the launch specification, revised by marketing. It replaces version 1 once it is approved. Approval is pending."
+      },
+      {
+        "heading": "Launch date",
+        "text": "Public launch: 2026-10-06, aligned with the press agency embargo. The press release, customer emails and in-app announcements are scheduled around this date."
+      },
+      {
+        "heading": "Scope at launch",
+        "text": "Catalog and cart, card payments, refunds, invoice generation and the customer account dashboard. Recurring billing is not part of launch scope."
+      },
+      {
+        "heading": "Open items",
+        "text": "Final sign-off from product and the steering committee."
+      }
+    ]
+  },
+  {
+    "id": "NTN-104",
+    "title": "Payments Integration Plan",
+    "page_type": "planning",
+    "owner": "Marcus Chen",
+    "status": "Approved",
+    "created_date": "2026-04-12",
+    "last_edited": "2026-06-18",
+    "sections": [
+      {
+        "heading": "Scope",
+        "text": "Integrate PayGate payments API v2: authorize, capture, refund and webhooks. Tracked in ATL-112."
+      },
+      {
+        "heading": "Original schedule",
+        "text": "Sandbox delivery from PayGate by 2026-06-10, then integration work by the checkout, refund, billing and test teams."
+      },
+      {
+        "heading": "Downstream work",
+        "text": "Four workstreams depend on the sandbox: the card payment screen (ATL-118), refund workflow (ATL-121), end-to-end payment tests (ATL-127) and billing invoice generation (ATL-133)."
+      },
+      {
+        "heading": "Revision log",
+        "text": "2026-06-18: sandbox delivery moved from 2026-06-10 to mid-July. The vendor has not yet provisioned the sandbox. Status is tracked in ATL-112."
+      }
+    ]
+  },
+  {
+    "id": "NTN-105",
+    "title": "Decision Log: Subscription billing descoped from Atlas GA",
+    "page_type": "decision_log",
+    "owner": "Priya Nair",
+    "status": "Approved",
+    "created_date": "2026-05-28",
+    "last_edited": "2026-05-28",
+    "sections": [
+      {
+        "heading": "Decision",
+        "text": "Recurring (subscription) billing is removed from the Atlas GA scope and moved to Atlas 1.1, planned for Q4 2026."
+      },
+      {
+        "heading": "Reason",
+        "text": "The payments API v2 launch scope covers one-off charges, refunds and webhooks only. The basic fraud rules (ATL-130) are not designed for recurring charges. Keeping subscriptions in scope would put the launch date at risk."
+      },
+      {
+        "heading": "Decided by",
+        "text": "The steering committee, on 2026-05-28."
+      },
+      {
+        "heading": "Impact",
+        "text": "The scope list in the launch specification no longer includes recurring billing. Existing one-off invoicing work continues."
+      }
+    ]
+  },
+  {
+    "id": "NTN-106",
+    "title": "Decision Log: Hosted card fields for checkout",
+    "page_type": "decision_log",
+    "owner": "Marcus Chen",
+    "status": "Approved",
+    "created_date": "2026-04-30",
+    "last_edited": "2026-04-30",
+    "sections": [
+      {
+        "heading": "Decision",
+        "text": "Card entry uses PayGate hosted card fields, so card numbers never touch Northwind servers."
+      },
+      {
+        "heading": "Reason",
+        "text": "It keeps Atlas out of the heaviest PCI compliance scope and shortens the security review."
+      },
+      {
+        "heading": "Decided by",
+        "text": "Marcus Chen and Daniel Okafor (security), on 2026-04-30."
+      },
+      {
+        "heading": "Consequence",
+        "text": "The card payment screen (ATL-118) is built around the hosted fields. Real card submission cannot be tested until the PayGate sandbox exists."
+      }
+    ]
+  },
+  {
+    "id": "NTN-107",
+    "title": "Refund Workflow Status",
+    "page_type": "status_report",
+    "owner": "Tomas Alvarez",
+    "status": "Complete",
+    "created_date": "2026-06-02",
+    "last_edited": "2026-06-19",
+    "sections": [
+      {
+        "heading": "Status",
+        "text": "Complete. Refund workflow implementation signed off on 2026-06-19 and ready for release."
+      },
+      {
+        "heading": "What it covers",
+        "text": "Customer refund requests, approvals and payouts."
+      },
+      {
+        "heading": "Linked ticket",
+        "text": "ATL-121."
+      }
+    ]
+  },
+  {
+    "id": "NTN-108",
+    "title": "Weekly Status Report 2026-06-19",
+    "page_type": "status_report",
+    "owner": "Priya Nair",
+    "status": "Published",
+    "created_date": "2026-06-19",
+    "last_edited": "2026-06-19",
+    "sections": [
+      {
+        "heading": "Overall",
+        "text": "Amber. One critical dependency is outside the team's control."
+      },
+      {
+        "heading": "Payments",
+        "text": "Payments API v2 is blocked on the vendor sandbox. New ETA is mid-July. Payment-dependent work is on hold."
+      },
+      {
+        "heading": "Coming up",
+        "text": "Threat model review on 2026-06-30 (ATL-116). Staging environment upgrade due 2026-07-15 (ATL-138)."
+      },
+      {
+        "heading": "Risks",
+        "text": "Any further slip in the sandbox delivery moves the checkout, refund and billing work."
+      }
+    ]
+  },
+  {
+    "id": "NTN-109",
+    "title": "Checkout Load Test Plan",
+    "page_type": "planning",
+    "owner": "Elena Rossi",
+    "status": "Ready to run",
+    "created_date": "2026-05-30",
+    "last_edited": "2026-06-02",
+    "sections": [
+      {
+        "heading": "Environment",
+        "text": "Staging has been upgraded to production capacity and is ready for load testing."
+      },
+      {
+        "heading": "Scenarios",
+        "text": "Peak checkout traffic, sustained browse load, and a coupon-heavy cart mix."
+      },
+      {
+        "heading": "Schedule",
+        "text": "Run window 2026-06-08 to 2026-07-08, reported in ATL-124."
+      },
+      {
+        "heading": "Reporting",
+        "text": "Bottlenecks and latency percentiles go into the test report."
+      }
+    ]
+  },
+  {
+    "id": "NTN-110",
+    "title": "Security Review and Pen Test Plan",
+    "page_type": "planning",
+    "owner": "Daniel Okafor",
+    "status": "Approved",
+    "created_date": "2026-05-25",
+    "last_edited": "2026-06-15",
+    "sections": [
+      {
+        "heading": "Threat model",
+        "text": "A checkout threat model is reviewed with the security team (ATL-116, review meeting on 2026-06-30)."
+      },
+      {
+        "heading": "Penetration test",
+        "text": "An external vendor, Halberd Security, tests the checkout and billing endpoints before launch. Scheduling is tracked in ATL-136."
+      },
+      {
+        "heading": "Timing",
+        "text": "The test window depends on the vendor's availability."
+      }
+    ]
+  },
+  {
+    "id": "NTN-111",
+    "title": "Beta Program Plan",
+    "page_type": "planning",
+    "owner": "Priya Nair",
+    "status": "Approved",
+    "created_date": "2026-06-14",
+    "last_edited": "2026-06-14",
+    "sections": [
+      {
+        "heading": "Goal",
+        "text": "Onboard the first 20 beta customers and collect checkout feedback before launch."
+      },
+      {
+        "heading": "Kickoff",
+        "text": "Beta kickoff is 2026-08-03."
+      },
+      {
+        "heading": "Onboarding",
+        "text": "The customer list is selected and onboarding scheduled under ATL-140, due 2026-07-31."
+      },
+      {
+        "heading": "Support",
+        "text": "Beta customers use the standard support escalation process."
+      }
+    ]
+  },
+  {
+    "id": "NTN-112",
+    "title": "Engineering Onboarding Guide",
+    "page_type": "onboarding",
+    "owner": "Daniel Okafor",
+    "status": "Approved",
+    "created_date": "2026-04-02",
+    "last_edited": "2026-05-12",
+    "sections": [
+      {
+        "heading": "Repository",
+        "text": "Atlas lives in a monorepo. Request access from infrastructure and clone it on day one."
+      },
+      {
+        "heading": "Continuous integration",
+        "text": "Every pull request runs build and tests. Main is protected; CI must be green to merge."
+      },
+      {
+        "heading": "Code review",
+        "text": "Every change needs one reviewer from another sub-team."
+      },
+      {
+        "heading": "Local setup",
+        "text": "Use the provided container image so local and CI environments match."
+      }
+    ]
+  },
+  {
+    "id": "NTN-113",
+    "title": "Incident Response Runbook",
+    "page_type": "runbook",
+    "owner": "Daniel Okafor",
+    "status": "Approved",
+    "created_date": "2026-05-15",
+    "last_edited": "2026-06-07",
+    "sections": [
+      {
+        "heading": "Severity levels",
+        "text": "Sev 1: checkout down. Sev 2: degraded performance. Sev 3: minor defect."
+      },
+      {
+        "heading": "On-call",
+        "text": "Infrastructure runs a weekly on-call rotation. The primary acknowledges pages within 10 minutes."
+      },
+      {
+        "heading": "Communication",
+        "text": "Post updates in the incident channel every 30 minutes until resolved."
+      },
+      {
+        "heading": "After the incident",
+        "text": "Write a short review within five working days."
+      }
+    ]
+  },
+  {
+    "id": "NTN-114",
+    "title": "Design System Usage Guidelines",
+    "page_type": "guideline",
+    "owner": "Sofia Lindqvist",
+    "status": "Approved",
+    "created_date": "2026-04-30",
+    "last_edited": "2026-05-20",
+    "sections": [
+      {
+        "heading": "Tokens",
+        "text": "Use the published color, spacing and typography tokens (ATL-104). Do not hard-code values."
+      },
+      {
+        "heading": "Components",
+        "text": "Prefer existing components. Request new ones through the design channel."
+      },
+      {
+        "heading": "Accessibility",
+        "text": "All components target WCAG 2.1 AA contrast and keyboard support."
+      }
+    ]
+  },
+  {
+    "id": "NTN-115",
+    "title": "Company Holiday Calendar 2026",
+    "page_type": "calendar",
+    "owner": "Aisha Khan",
+    "status": "Published",
+    "created_date": "2026-01-05",
+    "last_edited": "2026-05-02",
+    "sections": [
+      {
+        "heading": "US holidays",
+        "text": "Independence Day observed on 2026-07-03, Labor Day on 2026-09-07, Thanksgiving on 2026-11-26 and 2026-11-27."
+      },
+      {
+        "heading": "Year end",
+        "text": "The office is closed from 2026-12-24 to 2026-12-31."
+      },
+      {
+        "heading": "Requesting leave",
+        "text": "Submit leave requests at least two weeks ahead."
+      }
+    ]
+  },
+  {
+    "id": "NTN-116",
+    "title": "Customer Support Escalation Process",
+    "page_type": "process",
+    "owner": "Aisha Khan",
+    "status": "Approved",
+    "created_date": "2026-06-10",
+    "last_edited": "2026-06-17",
+    "sections": [
+      {
+        "heading": "Tiers",
+        "text": "Tier 1 handles general questions. Tier 2 handles account and billing issues. Tier 3 is engineering."
+      },
+      {
+        "heading": "Response targets",
+        "text": "Critical issues get a first reply within one hour, others within one working day."
+      },
+      {
+        "heading": "Handoff",
+        "text": "Escalate with the customer's ticket reference and a short summary of steps already tried."
+      }
+    ]
+  },
+  {
+    "id": "NTN-117",
+    "title": "Data Migration Approach",
+    "page_type": "planning",
+    "owner": "Tomas Alvarez",
+    "status": "Approved",
+    "created_date": "2026-05-14",
+    "last_edited": "2026-06-24",
+    "sections": [
+      {
+        "heading": "Approach",
+        "text": "Migrate legacy billing data in phases by customer cohort, with a full dry run in the test environment before each phase."
+      },
+      {
+        "heading": "Invoice history",
+        "text": "Invoice history is mapped last, after customer records are verified. Mapping is in progress (ATL-134)."
+      },
+      {
+        "heading": "Cutover",
+        "text": "Final cutover happens after the beta program, with a rollback plan for each cohort."
+      },
+      {
+        "heading": "Owner",
+        "text": "Tomas Alvarez owns the migration. Target completion is 2026-08-14."
+      }
+    ]
+  },
+  {
+    "id": "NTN-118",
+    "title": "Analytics Tracking Plan Summary",
+    "page_type": "planning",
+    "owner": "Elena Rossi",
+    "status": "Approved",
+    "created_date": "2026-04-15",
+    "last_edited": "2026-05-19",
+    "sections": [
+      {
+        "heading": "Events",
+        "text": "Track page views, add-to-cart, checkout start, payment submitted and order confirmed."
+      },
+      {
+        "heading": "Governance",
+        "text": "The data team approves any new event before it ships."
+      }
+    ]
+  },
+  {
+    "id": "NTN-119",
+    "title": "Vendor Management Playbook",
+    "page_type": "process",
+    "owner": "Owen Pierce",
+    "status": "Approved",
+    "created_date": "2026-04-20",
+    "last_edited": "2026-05-02",
+    "sections": [
+      {
+        "heading": "Fee and pricing changes",
+        "text": "Any change to a vendor fee schedule needs approval from Finance. Owen Pierce signs for Finance."
+      },
+      {
+        "heading": "Liability and legal terms",
+        "text": "Legal reviews liability and indemnity terms before signature."
+      },
+      {
+        "heading": "Signature",
+        "text": "Finance countersigns vendor contracts after Finance and Legal approve."
+      },
+      {
+        "heading": "Escalation",
+        "text": "If a vendor misses a date, vendor management escalates to the vendor's account lead."
+      }
+    ]
+  },
+  {
+    "id": "NTN-120",
+    "title": "Beta Partner Contact Notes",
+    "page_type": "support_notes",
+    "owner": "Aisha Khan",
+    "status": "Approved",
+    "created_date": "2026-06-16",
+    "last_edited": "2026-06-16",
+    "sections": [
+      {
+        "heading": "Primary contact",
+        "text": "Riley Hart, pilot partner. Phone +1 (555) 010-9921, email riley.hart@example.com."
+      },
+      {
+        "heading": "Preferences",
+        "text": "Prefers email for scheduling and a phone call for urgent issues."
+      }
+    ]
+  }
+]

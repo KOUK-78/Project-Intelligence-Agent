@@ -1,0 +1,38 @@
+[
+  {
+    "id": "EML-101",
+    "thread_id": "THR-201",
+    "subject": "PayGate v2 amendment: fee schedule and liability terms",
+    "from": "Lukas Brandt <lukas.brandt@paygate.example>",
+    "to": [
+      "Marcus Chen <marcus.chen@northwind.example>"
+    ],
+    "date": "2026-05-18T09:12:00",
+    "in_reply_to": null,
+    "body": "Hi Marcus, attached is the PayGate v2 amendment. Two changes from the current terms: the per-transaction fee rises from 2.9% + 0.30 to 3.1% + 0.30, and the liability cap changes to 12 months of fees. We issue sandbox credentials for v2 only after we receive the countersigned amendment. Regards, Lukas"
+  },
+  {
+    "id": "EML-111",
+    "thread_id": "THR-202",
+    "subject": "Re: Sandbox provisioning for PayGate v2",
+    "from": "Lukas Brandt <lukas.brandt@paygate.example>",
+    "to": [
+      "Marcus Chen <marcus.chen@northwind.example>"
+    ],
+    "date": "2026-06-15T13:02:00",
+    "in_reply_to": "EML-110",
+    "body": "Marcus, received. Sandbox provisioning takes 20 business days after countersignature, plus our security review of your webhook endpoints. Our target is 2026-07-15. Lukas"
+  },
+  {
+    "id": "EML-144",
+    "thread_id": "THR-213",
+    "subject": "Northwind Newsletter: June 2026",
+    "from": "People Team <people@northwind.example>",
+    "to": [
+      "All Staff <all-staff@northwind.example>"
+    ],
+    "date": "2026-06-01T08:00:00",
+    "in_reply_to": null,
+    "body": "This month: new coffee machines on every floor, the summer wellness challenge, and a profile of the facilities team. Read more on the intranet."
+  }
+]
