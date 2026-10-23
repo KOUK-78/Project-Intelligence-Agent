@@ -1,4 +1,4 @@
-"""MCP client wrapper: launches the Jira server as a stdio subprocess on demand. OWNER: B.
+"""MCP client wrapper and multi-server router (stdio subprocesses). OWNER: D.
 
 Launch: by default runs `python -m app.mcp_servers.jira_server` from the repo root (so the
 server imports app.config and shares TODAY / DATA_PATH). Pass `server_path` to run a script
@@ -12,6 +12,7 @@ Failure policy (matters for the later tool-failure evals):
     and decide whether to continue.
 The server must never print to stdout; its stderr is passed through to ours.
 """
+import asyncio
 import json
 import sys
 import time
@@ -81,11 +82,13 @@ class McpToolClient:
         self,
         server_path: str | Path | None = None,
         *,
+        server_module: str = "app.mcp_servers.jira_server",
         env: dict[str, str] | None = None,
         call_timeout: float | None = None,
         startup_timeout: float | None = None,
     ) -> None:
         self._server_path = str(server_path) if server_path else None
+        self._server_module = server_module
         self._env = env
         self._call_timeout = call_timeout if call_timeout is not None else config.MCP_CALL_TIMEOUT_S
         self._startup_timeout = startup_timeout if startup_timeout is not None else config.MCP_STARTUP_TIMEOUT_S
@@ -106,7 +109,7 @@ class McpToolClient:
             else:
                 params = StdioServerParameters(
                     command=sys.executable,
-                    args=["-m", "app.mcp_servers.jira_server"],
+                    args=["-m", self._server_module],
                     cwd=config.ROOT,
                     env=self._env,
                 )
@@ -132,7 +135,7 @@ class McpToolClient:
             raise
         except Exception as exc:
             await self._close(stack)
-            raise McpStartupError(f"could not start MCP server {self._server_path or 'jira_server'}: {_describe(exc)}") from exc
+            raise McpStartupError(f"could not start MCP server {self._server_path or self._server_module}: {_describe(exc)}") from exc
         self._stack, self._session = stack, session
         return self
 
@@ -166,3 +169,129 @@ class McpToolClient:
             return done(False, error=f"call_failed: {_describe(exc)}")
         ok, data, error = parse_tool_result(result)
         return done(ok, data, error)
+
+
+class McpRouter:
+    """Several stdio servers behind the McpToolClient interface (tools, call, async context manager).
+
+    * One McpToolClient per registered source. Each lives in its OWN task (anyio needs enter and
+      exit in the same task), so servers can start concurrently.
+    * `lazy=False` (default): every source starts at enter, all at once. `lazy=True`: nothing starts
+      until `await ensure([...])`, so a question that needs one source pays for one launch.
+    * A source that fails to start is recorded in `unavailable` and the run continues. Only when NO
+      source starts does enter raise McpStartupError (Phase 1 behaviour for a Jira-only setup).
+    * Two servers advertising the same tool name is a startup error: routing would be ambiguous.
+    * `call()` never raises; a tool of an unavailable source returns ok=False, "source_unavailable".
+    """
+
+    def __init__(
+        self,
+        sources: list | None = None,
+        *,
+        env: dict[str, dict[str, str]] | None = None,
+        clients: dict[str, Any] | None = None,
+        lazy: bool = False,
+        **client_kwargs: Any,
+    ) -> None:
+        from app import sources as registry
+
+        self._sources = list(sources) if sources is not None else registry.all_sources()
+        self._env = env or {}
+        self._injected = clients or {}
+        self._client_kwargs = client_kwargs
+        self._lazy = lazy
+        self._clients: dict[str, Any] = {}
+        self._runners: dict[str, tuple[asyncio.Task, asyncio.Event]] = {}
+        self._route: dict[str, str] = {}
+        self.unavailable: dict[str, str] = {}
+
+    # ---- interface shared with McpToolClient
+    @property
+    def tools(self) -> list[dict[str, Any]]:
+        return [t for name in self._clients for t in self._clients[name].tools]
+
+    def tools_for(self, source: str) -> list[dict[str, Any]]:
+        return list(self._clients[source].tools) if source in self._clients else []
+
+    @property
+    def started(self) -> list[str]:
+        return list(self._clients)
+
+    async def __aenter__(self) -> "McpRouter":
+        if not self._lazy:
+            await self.ensure([s.name for s in self._sources])
+            if not self._clients:
+                raise McpStartupError("no MCP server could be started: " + "; ".join(
+                    f"{n}: {e}" for n, e in self.unavailable.items()))
+        return self
+
+    async def __aexit__(self, *exc_info: Any) -> None:
+        for _, stop in self._runners.values():
+            stop.set()
+        await asyncio.gather(*(task for task, _ in self._runners.values()), return_exceptions=True)
+        self._runners.clear()
+        self._clients.clear()
+
+    # ---- starting
+    def _make_client(self, source: Any) -> Any:
+        if source.name in self._injected:
+            return self._injected[source.name]
+        return McpToolClient(server_module=source.server_module, env=self._env.get(source.name), **self._client_kwargs)
+
+    async def _run(self, name: str, client: Any, ready: "asyncio.Future[str | None]", stop: asyncio.Event) -> None:
+        try:
+            async with client:
+                if not ready.done():
+                    ready.set_result(None)
+                await stop.wait()
+        except Exception as exc:  # noqa: BLE001 - startup failure becomes "source unavailable"
+            if not ready.done():
+                ready.set_result(_describe(exc))
+
+    async def ensure(self, names: list[str]) -> dict[str, str]:
+        """Start the named sources that are not running yet, concurrently. Returns {source: error}
+        for those that failed (also kept in `unavailable`)."""
+        by_name = {s.name: s for s in self._sources}
+        todo = [n for n in dict.fromkeys(names) if n in by_name and n not in self._clients and n not in self.unavailable]
+        loop = asyncio.get_running_loop()
+        pending: dict[str, asyncio.Future] = {}
+        for n in todo:
+            client, ready, stop = self._make_client(by_name[n]), loop.create_future(), asyncio.Event()
+            task = asyncio.create_task(self._run(n, client, ready, stop))
+            self._runners[n] = (task, stop)
+            self._clients[n] = client
+            pending[n] = ready
+        failed: dict[str, str] = {}
+        for n, err in zip(pending, await asyncio.gather(*pending.values())):
+            if err is not None:
+                failed[n] = err
+                self._drop(n, err)
+        self._index_tools()
+        return failed
+
+    def _drop(self, name: str, error: str) -> None:
+        self.unavailable[name] = error
+        self._clients.pop(name, None)
+        runner = self._runners.pop(name, None)
+        if runner:
+            runner[1].set()
+
+    def _index_tools(self) -> None:
+        route: dict[str, str] = {}
+        for name, client in list(self._clients.items()):
+            for tool in client.tools:
+                owner = route.get(tool["name"])
+                if owner is not None and owner != name:
+                    raise McpStartupError(f"duplicate tool name {tool['name']!r} from sources {owner!r} and {name!r}")
+                route[tool["name"]] = name
+        self._route = route
+
+    # ---- calling
+    async def call(self, name: str, args: dict[str, Any]) -> ToolOutcome:
+        source = self._route.get(name)
+        if source is None:
+            owner = next((s for s in self._sources if name in s.tool_names), None)
+            if owner is not None and owner.name in self.unavailable:
+                return ToolOutcome(False, error=f"source_unavailable: {owner.name}: {self.unavailable[owner.name]}")
+            return ToolOutcome(False, error=f"unknown_tool: {name!r}")
+        return await self._clients[source].call(name, args)
