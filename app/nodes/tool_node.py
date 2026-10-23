@@ -5,6 +5,7 @@ from typing import Any
 from app import config
 from app.nodes.mcp_client import McpToolClient
 from app.nodes.state import AgentState, compact_json
+from app.sources import normalize_for_tool
 
 _NULLISH = {"", "null", "none", "undefined"}
 _TRUE, _FALSE = {"true", "yes", "1"}, {"false", "no", "0"}
@@ -87,15 +88,23 @@ def guard_filters(args: dict[str, Any], question: str) -> dict[str, Any]:
     return out
 
 
-def normalize_call(call: dict[str, Any], schemas: dict[str, dict], question: str) -> dict[str, Any]:
-    schema = schemas.get(call["name"])
-    if schema is None:
-        return call
-    args = drop_bad_label(clean_args(call.get("args", {}), schema))
+def jira_guards(args: dict[str, Any], question: str) -> dict[str, Any]:
+    """Jira-only argument guards; registered as the Jira source's normalizer in app/sources.py."""
+    args = drop_bad_label(args)
     if config.HEURISTICS["status_sanitize"]:  # HEURISTIC status_sanitize [general]: one valid status or none
         args = sanitize_status(args)
     if config.HEURISTICS["filter_guard"]:  # HEURISTIC filter_guard [general]: no filter the question did not ask for
         args = guard_filters(args, question)
+    return args
+
+
+def normalize_call(call: dict[str, Any], schemas: dict[str, dict], question: str) -> dict[str, Any]:
+    schema = schemas.get(call["name"])
+    if schema is None:
+        return call
+    args = clean_args(call.get("args", {}), schema)
+    # Source-specific guards (Jira's label/status/filter heuristics live in app/sources.py).
+    args = normalize_for_tool(call["name"], args, question)
     return {"name": call["name"], "args": args}
 
 
@@ -159,7 +168,7 @@ def make_tool_node(mcp: McpToolClient):
             update.update(
                 route="end",
                 status="error",
-                answer=f"I could not finish: the Jira tool failed repeatedly ({errors[-1] if errors else 'unknown error'}).",
+                answer=f"I could not finish: the tools failed repeatedly ({errors[-1] if errors else 'unknown error'}).",
             )
         return update
 

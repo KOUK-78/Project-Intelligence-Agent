@@ -69,14 +69,32 @@ def bracket_bare_ids(answer: str) -> str:
 
 
 def load_known_ids(path: str | Path | None = None) -> set[str] | None:
-    """All ticket IDs in the data file, or None if it can't be read (stub phase)."""
-    try:
-        raw = json.loads(Path(path or config.DATA_PATH).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return None
-    items = raw.get("tickets", []) if isinstance(raw, dict) else raw
-    ids = {t["id"] for t in items if isinstance(t, dict) and isinstance(t.get("id"), str)}
+    """All record IDs in the data, or None if nothing can be read (stub phase).
+
+    With a path: that one file (Phase 1 behaviour, any {"tickets": [...]} or list file).
+    Without: the union over every registered source. Sources whose file is unreadable are skipped;
+    ask `unreadable_prefixes()` which ones, so their IDs can be checked against evidence only."""
+    from app import sources
+
+    if path is not None:
+        try:
+            raw = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+        items = raw.get("tickets", []) if isinstance(raw, dict) else raw
+        ids = {t["id"] for t in items if isinstance(t, dict) and isinstance(t.get("id"), str)}
+        return ids or None
+    ids: set[str] = set()
+    for src in sources.all_sources():
+        ids |= sources.load_ids(src) or set()
     return ids or None
+
+
+def unreadable_prefixes() -> set[str]:
+    """ID prefixes of registered sources whose data file can't be read right now."""
+    from app import sources
+
+    return {s.id_prefix for s in sources.all_sources() if sources.load_ids(s) is None}
 
 
 def evidence_ids(evidence: list[dict[str, Any]]) -> set[str]:
@@ -102,6 +120,13 @@ def evidence_ids(evidence: list[dict[str, Any]]) -> set[str]:
     return found
 
 
+def _citable_prefix(cid: str) -> bool:
+    """Only IDs of registered sources can be cited; thread IDs and other look-alikes are not mentions."""
+    from app import sources
+
+    return sources.source_for_id(cid) is not None
+
+
 def mentioned_ids(evidence: list[dict[str, Any]]) -> list[str]:
     """IDs named inside the text of successful tool results (descriptions, comments), in order."""
     found: list[str] = []
@@ -118,7 +143,7 @@ def mentioned_ids(evidence: list[dict[str, Any]]) -> list[str]:
                 walk(item)
         elif isinstance(x, str):
             for cid in ID_RE.findall(x):
-                if cid not in found:
+                if cid not in found and _citable_prefix(cid):
                     found.append(cid)
 
     for e in evidence:
@@ -134,6 +159,7 @@ def verify_citations(
     known_ids: set[str] | None,
     ev_ids: set[str],
     mentioned: set[str] | None = None,
+    unchecked_prefixes: set[str] | frozenset[str] = frozenset(),
 ) -> tuple[str, list[str], list[str]]:
     """Returns (answer, verified_citations, warnings). Citations come from the answer text."""
     warnings: list[str] = []
@@ -152,7 +178,7 @@ def verify_citations(
 
     valid: list[str] = []
     for cid in in_answer:
-        if known_ids is not None and cid not in known_ids:
+        if known_ids is not None and cid not in known_ids and cid.split("-", 1)[0] not in unchecked_prefixes:
             warnings.append(f"unknown_ticket_id:{cid}")
             answer = answer.replace(f"[{cid}]", f"[unverified: {cid}]")
         elif cid in ev_ids:

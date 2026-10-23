@@ -210,8 +210,8 @@ def test_stub_dataset_loads(monkeypatch):
 
 # ------------------------------------------------------------ real stdio run
 def _parse(result):
-    if getattr(result, "structuredContent", None):
-        sc = result.structuredContent
+    sc = result.structured_content
+    if sc:
         return sc.get("result", sc) if set(sc) == {"result"} else sc
     return json.loads(result.content[0].text)
 
