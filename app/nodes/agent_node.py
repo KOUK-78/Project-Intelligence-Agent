@@ -45,14 +45,18 @@ DEP_RE = re.compile(r"\b(block\w*|depend\w*|waiting|affect\w*)\b", re.I)
 
 
 def unread_references(state: AgentState) -> list[str]:
-    """Ticket IDs named inside tickets we read (a ticket whose text names ATL-000) but never read."""
+    """Ticket IDs named inside tickets we read (a ticket whose text names ATL-000) but never read.
+
+    Only IDs that look like the ones get_ticket returns are followed: a ticket may also name a page or an email
+    from another source, and get_ticket cannot read those."""
     if not DEP_RE.search(state.get("question", "")):
         return []
     evidence = state.get("evidence", [])
     fetched = {e["data"].get("id") for e in evidence if e["tool"] == "get_ticket" and e["ok"] and isinstance(e["data"], dict)}
     if not fetched:
         return []
-    return [i for i in mentioned_ids(evidence) if i not in fetched][: config.MAX_REF_TICKETS]
+    prefixes = {str(i).partition("-")[0] for i in fetched}
+    return [i for i in mentioned_ids(evidence) if i not in fetched and i.partition("-")[0] in prefixes][: config.MAX_REF_TICKETS]
 
 
 # HEURISTIC candidate_round [specific-risk, default OFF]: 'when' questions, read every search hit to spot differing dates.
