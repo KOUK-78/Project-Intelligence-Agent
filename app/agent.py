@@ -123,7 +123,7 @@ async def arun_agent(
                 initial["sq_results"] = []
             final = await graph.ainvoke(initial, config={"recursion_limit": config.GRAPH_RECURSION_LIMIT})
     except McpStartupError as exc:
-        result["answer"] = f"I could not start the Jira tool server, so I can't answer. ({exc})"
+        result["answer"] = f"I could not start the tool server, so I can't answer. ({exc})"
     except Exception as exc:  # noqa: BLE001 - run_agent must never raise
         result["answer"] = f"I hit an unexpected error and could not finish. ({type(exc).__name__}: {exc})"[: config.ERROR_TEXT_CHARS]
     else:
