@@ -1,0 +1,83 @@
+[
+  {
+    "id": "NTN-104",
+    "title": "Payments Integration Plan",
+    "page_type": "planning",
+    "owner": "Marcus Chen",
+    "status": "Approved",
+    "created_date": "2026-04-12",
+    "last_edited": "2026-06-18",
+    "sections": [
+      {
+        "heading": "Scope",
+        "text": "Integrate PayGate payments API v2: authorize, capture, refund and webhooks. Tracked in ATL-112."
+      },
+      {
+        "heading": "Original schedule",
+        "text": "Sandbox delivery from PayGate by 2026-06-10, then integration work by the checkout, refund, billing and test teams."
+      },
+      {
+        "heading": "Downstream work",
+        "text": "Four workstreams depend on the sandbox: the card payment screen (ATL-118), refund workflow (ATL-121), end-to-end payment tests (ATL-127) and billing invoice generation (ATL-133)."
+      },
+      {
+        "heading": "Revision log",
+        "text": "2026-06-18: sandbox delivery moved from 2026-06-10 to mid-July. The vendor has not yet provisioned the sandbox. Status is tracked in ATL-112."
+      }
+    ]
+  },
+  {
+    "id": "NTN-105",
+    "title": "Decision Log: Subscription billing descoped from Atlas GA",
+    "page_type": "decision_log",
+    "owner": "Priya Nair",
+    "status": "Approved",
+    "created_date": "2026-05-28",
+    "last_edited": "2026-05-28",
+    "sections": [
+      {
+        "heading": "Decision",
+        "text": "Recurring (subscription) billing is removed from the Atlas GA scope and moved to Atlas 1.1, planned for Q4 2026."
+      },
+      {
+        "heading": "Reason",
+        "text": "The payments API v2 launch scope covers one-off charges, refunds and webhooks only. The basic fraud rules (ATL-130) are not designed for recurring charges. Keeping subscriptions in scope would put the launch date at risk."
+      },
+      {
+        "heading": "Decided by",
+        "text": "The steering committee, on 2026-05-28."
+      },
+      {
+        "heading": "Impact",
+        "text": "The scope list in the launch specification no longer includes recurring billing. Existing one-off invoicing work continues."
+      }
+    ]
+  },
+  {
+    "id": "NTN-112",
+    "title": "Engineering Onboarding Guide",
+    "page_type": "onboarding",
+    "owner": "Daniel Okafor",
+    "status": "Approved",
+    "created_date": "2026-04-02",
+    "last_edited": "2026-05-12",
+    "sections": [
+      {
+        "heading": "Repository",
+        "text": "Atlas lives in a monorepo. Request access from infrastructure and clone it on day one."
+      },
+      {
+        "heading": "Continuous integration",
+        "text": "Every pull request runs build and tests. Main is protected; CI must be green to merge."
+      },
+      {
+        "heading": "Code review",
+        "text": "Every change needs one reviewer from another sub-team."
+      },
+      {
+        "heading": "Local setup",
+        "text": "Use the provided container image so local and CI environments match."
+      }
+    ]
+  }
+]
