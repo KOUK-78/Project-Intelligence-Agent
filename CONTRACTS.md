@@ -87,3 +87,22 @@ C owns the file; B sends changes as a PR to C. No numeric constants or slice lim
 - **Run wrapper:** C's `app/runtime.py` wraps `run_agent` (trace id, total latency, `logs/runs.jsonl`). B does NOT decorate `run_agent`.
 - **Per node:** B decorates each node function with `@node_span("name")` from `app.tracing`.
 - **Model and tool calls:** the agent uses the raw `ollama` client, so these are not auto-instrumented; only node spans appear in Phoenix.
+## Phase 2 additions (PROPOSED by B, needs 4 approvals)
+**AgentResult optional keys** (Day 0 decision 3). Readers must tolerate absence. Present only when they have content:
+```
+"plan":  [{"id": "sq1", "question": str, "source": str, "reason": str,        # reason = the planner's
+           "status": "resolved | unresolved | unavailable | not_run",
+           "outcome": str,            # short code: model, no_records, budget_exhausted, source_down, ...
+           "steps": int, "attempts": 1|2, "rewritten": str|None, "capped": bool, "unavailable": [str]}]
+"sources": [str]        # sources that returned at least one record, in order of first use
+"token_usage": {"prompt_tokens", "completion_tokens", "total_tokens", "calls", "by_job": {job: {...}}}
+```
+`plan` and `sources` appear only when `PLANNER_ENABLED`; `token_usage` appears whenever the model reported counts.
+Total tool rounds = sum of `plan[].steps`. `status` is `loop_cap` only when `MAX_TOTAL_STEPS` left a sub-question unrun or unrewritten.
+
+**Step caps** (Day 0 decision 4): `MAX_AGENT_STEPS` = tool rounds per sub-question attempt; `MAX_TOTAL_STEPS` bounds the run;
+`MAX_SUBQUESTIONS` cuts the plan. With `PLANNER_ENABLED=false` the Phase 1 graph is built unchanged.
+
+**Needed from D** (B builds against these until D1 lands): a registry of sources `{name, description, tools, available}`;
+tools of a failed server either absent from `tools` or returning an error starting `source_unavailable`; `known_ids` as the
+union of every source's IDs (otherwise NTN-/EML- citations are flagged `unknown_ticket_id`).
