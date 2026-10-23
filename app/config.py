@@ -14,9 +14,12 @@ MODELS = {
     "synthesizer": "qwen3:8b",
     "judge": "qwen3:8b",          # used from Phase 4
     "embedding": "nomic-embed-text",
+    "planner": "qwen3:8b",        # Phase 2: split the question into source-tagged sub-questions
+    "evidence_check": "qwen3:8b", # Phase 2: is the evidence for a sub-question enough (yes/no)
+    "rewrite": "qwen3:8b",        # Phase 2: rewrite a sub-question once after an insufficient check
 }
-# Thinking off for agent/synthesizer (pass as reasoning=False to ChatOllama)
-THINKING = {"agent": False, "synthesizer": False}
+# Thinking off for every Phase 2 job too (pass as reasoning=False to ChatOllama)
+THINKING = {"agent": False, "synthesizer": False, "planner": False, "evidence_check": False, "rewrite": False}
 
 # --- Ollama
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434"
@@ -35,6 +38,16 @@ MAX_CALLS_PER_STEP = 6             # tool calls the model may issue in one decis
 MAX_REF_TICKETS = 4                # tickets the graph reads in its follow-the-references round
 MAX_CANDIDATE_TICKETS = 6          # tickets the graph reads in its read-every-candidate round
 GRAPH_RECURSION_LIMIT = 40         # LangGraph backstop only; MAX_AGENT_STEPS is the real cap
+
+# --- Phase 2: planner + scoped retrieval. PLANNER_ENABLED=false reproduces Phase 1 exactly.
+PLANNER_ENABLED = (os.getenv("PLANNER_ENABLED") or "0").lower() not in ("0", "false", "no")
+# MAX_AGENT_STEPS (above) is now the cap PER SUB-QUESTION ATTEMPT. These two bound the whole run.
+MAX_SUBQUESTIONS = 4               # the planner's plan is cut to this many sub-questions
+MAX_TOTAL_STEPS = 12               # tool rounds across ALL sub-questions and rewrites
+MAX_REWRITES_PER_SUBQUESTION = 1   # "rewrite the query once"; 0 turns rewriting off
+SUBQUESTION_CHARS = 300            # longest sub-question / rewritten query we keep
+REASON_CHARS = 200                 # longest planner "reason" we keep
+EVIDENCE_CHECK_CHARS = 4000        # evidence shown to the yes/no check (smaller than the synthesizer's)
 
 # --- Timeouts (seconds)
 MCP_CALL_TIMEOUT_S = 15            # one tool call
