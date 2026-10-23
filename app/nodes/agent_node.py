@@ -82,6 +82,12 @@ def needs_ticket_details(state: AgentState) -> bool:
     return saw_tickets and not fetched and bool(DETAIL_RE.search(state.get("question", "")))
 
 
+def step_cap(state: AgentState) -> int:
+    """Tool rounds allowed. Phase 1 never sets `step_cap`, so it is config.MAX_AGENT_STEPS as before;
+    a planned run sets it per retrieval attempt (the smaller of the per-sub-question and remaining total budget)."""
+    return state.get("step_cap", config.MAX_AGENT_STEPS)
+
+
 def loop_cap_message() -> str:
     return (
         f"I could not finish: I reached the limit of {config.MAX_AGENT_STEPS} tool steps "
@@ -179,7 +185,7 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     fresh.append(call)
             calls = fresh  # all repeats -> no new calls -> treated as "done" below
         if calls:
-            if state.get("steps", 0) >= config.MAX_AGENT_STEPS:
+            if state.get("steps", 0) >= step_cap(state):
                 # HEURISTIC partial_on_cap [general]: evidence already gathered is not thrown away at the cap.
                 if config.HEURISTICS["partial_on_cap"] and any(e["ok"] for e in state.get("evidence", [])):
                     return {"route": "synthesizer", "capped": True, "pending_calls": []}
@@ -202,7 +208,7 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                     {"role": "user", "content": NUDGE},
                 ],
             }
-        can_continue = state.get("steps", 0) < config.MAX_AGENT_STEPS
+        can_continue = state.get("steps", 0) < step_cap(state)
         if config.HEURISTICS["detail_nudge"] and can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
             return {
                 "route": "agent",
