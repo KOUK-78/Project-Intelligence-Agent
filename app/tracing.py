@@ -7,6 +7,8 @@ Hook points:
 LangChain/LangGraph model + tool calls are auto-instrumented (OpenInference).
 Tracing failures NEVER break a run; the JSONL log works fully offline.
 """
+import contextlib
+import contextvars
 import functools
 import inspect
 import json
@@ -90,6 +92,103 @@ def node_span(name: str):
     return deco
 
 
+# ---------------------------------------------------------------- Phase 2 spans and token accounting
+_usage: contextvars.ContextVar = contextvars.ContextVar("run_token_usage", default=None)
+
+
+def _new_usage() -> dict:
+    return {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "calls": 0, "by_job": {}}
+
+
+def add_usage(job: str, prompt_tokens, completion_tokens) -> None:
+    """Add one model call's token counts to the current run's counter. No-op outside a run or on bad input."""
+    counter = _usage.get()
+    if counter is None:
+        return
+    p = prompt_tokens if isinstance(prompt_tokens, int) and not isinstance(prompt_tokens, bool) else 0
+    c = completion_tokens if isinstance(completion_tokens, int) and not isinstance(completion_tokens, bool) else 0
+    counter["prompt_tokens"] += p
+    counter["completion_tokens"] += c
+    counter["total_tokens"] += p + c
+    counter["calls"] += 1
+    per = counter["by_job"].setdefault(job, {"prompt_tokens": 0, "completion_tokens": 0})
+    per["prompt_tokens"] += p
+    per["completion_tokens"] += c
+
+
+def _clip(value) -> str:
+    return str(value)[: config.SPAN_TEXT_CHARS]
+
+
+def _set_attrs(span, attrs: dict) -> None:
+    for key, value in attrs.items():
+        if value is None:
+            continue
+        try:
+            span.set_attribute(key, value if isinstance(value, (bool, int, float)) else _clip(value))
+        except Exception:  # noqa: BLE001 - tracing never breaks a run
+            pass
+
+
+def annotate(**attrs) -> None:
+    """Add attributes to the current span (for example the outcome once it is known). Safe with tracing off."""
+    if _tracer is None:
+        return
+    try:
+        from opentelemetry import trace
+
+        _set_attrs(trace.get_current_span(), attrs)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+class _NullSpan:
+    def set_attribute(self, *_a, **_k):
+        pass
+
+
+@contextlib.contextmanager
+def stage_span(name: str, **attrs):
+    """Span for a Phase 2 stage: "planner" or "evidence_check". Attributes: subquestion_index, subquestion, source...
+
+    Yields the span (or a no-op object with tracing off) so the caller can add the outcome with
+    span.set_attribute. Exceptions pass through untouched.
+    """
+    if _tracer is None:
+        yield _NullSpan()
+        return
+    with _tracer.start_as_current_span(f"stage:{name}") as span:
+        _set_attrs(span, {"openinference.span.kind": "CHAIN", "stage.name": name,
+                          **{(k if "." in k else f"stage.{k}"): v for k, v in attrs.items()}})
+        yield span
+
+
+class LLMSpan:
+    """Handle yielded by llm_span: report the token counts once the reply is in."""
+
+    def __init__(self, job: str, span) -> None:
+        self._job, self._span = job, span
+
+    def set_usage(self, prompt_tokens, completion_tokens) -> None:
+        add_usage(self._job, prompt_tokens, completion_tokens)
+        p = prompt_tokens if isinstance(prompt_tokens, int) else 0
+        c = completion_tokens if isinstance(completion_tokens, int) else 0
+        _set_attrs(self._span, {"llm.token_count.prompt": p, "llm.token_count.completion": c,
+                                "llm.token_count.total": p + c})
+
+
+@contextlib.contextmanager
+def llm_span(job: str, model: str):
+    """Span around one model call. Phase 1 traces showed only node spans because the raw ollama client is not
+    auto-instrumented. Token counts go on the span AND into the run's counter, even with tracing off."""
+    if _tracer is None:
+        yield LLMSpan(job, _NullSpan())
+        return
+    with _tracer.start_as_current_span(f"llm:{job}") as span:
+        _set_attrs(span, {"openinference.span.kind": "LLM", "llm.model_name": model, "llm.job": job})
+        yield LLMSpan(job, span)
+
+
 def write_run_log(question: str, result: dict) -> None:
     """Append one JSON line per run to logs/runs.jsonl."""
     try:
@@ -104,6 +203,9 @@ def write_run_log(question: str, result: dict) -> None:
             "latency_ms": result.get("latency_ms"),
             "trace_id": result.get("trace_id"),
         }
+        for optional in ("plan", "sources", "token_usage"):  # Phase 2 fields; absent stays absent
+            if result.get(optional) is not None:
+                record[optional] = result[optional]
         with open(config.RUNS_LOG, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
     except Exception as e:
@@ -116,6 +218,7 @@ def observe_run(question: str, fn) -> dict:
     span_cm = _tracer.start_as_current_span("run_agent") if _tracer else None
     span = span_cm.__enter__() if span_cm else None
     trace_id = None
+    token = _usage.set(_new_usage())
     try:
         if span is not None:
             span.set_attribute("openinference.span.kind", "AGENT")
@@ -129,10 +232,16 @@ def observe_run(question: str, fn) -> dict:
         result = dict(result)
         result["trace_id"] = result.get("trace_id") or trace_id
         result["latency_ms"] = result.get("latency_ms") or int((time.perf_counter() - t0) * 1000)
+        counted = _usage.get()
+        if result.get("token_usage") is None and counted and counted["calls"]:
+            result["token_usage"] = {k: counted[k] for k in ("prompt_tokens", "completion_tokens", "total_tokens", "by_job")}
+        if span is not None and result.get("token_usage"):
+            _set_attrs(span, {"llm.token_count.total": result["token_usage"].get("total_tokens")})
         if span is not None:
             span.set_attribute("output.value", str(result.get("answer", "")))
             span.set_attribute("agent.status", str(result.get("status")))
     finally:
+        _usage.reset(token)
         if span_cm:
             span_cm.__exit__(None, None, None)
     write_run_log(question, result)
