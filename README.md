@@ -42,7 +42,7 @@ Causes are from reading the traces of the failing runs (`AGENT_DEBUG=1`). Runs f
 
 | Key | Q | Question (short) | Runs failing | Recorded reason | Cause |
 |---|---|---|---|---|---|
-| Original | Q6 | When is the Atlas public launch? | 3 | missing `ATL-103`, `ATL-139` | Retrieval depth: the agent opens only the first search hit and states one date. The two launch tickets conflict and neither is cited. |
+| Original | Q6 | When is the Atlas public launch? | 3 | missing `ATL-139` | Retrieval depth: the agent opens only the first search hit, cites `ATL-103` and states one date. The two launch tickets conflict, but `ATL-139` is never read, so the conflict is not flagged. |
 | Original | Q7 | Status of the Salesforce CRM integration? | 1 | forbidden `ATL-114` | Tangent after a not-found: the agent adds a related ticket it should not cite. The other 2 runs are clean. |
 | Original | Q9 | Is the overdue privacy ticket late because of the payments API? | 3 | forbidden `ATL-112` | Premise check: the agent correctly says no, but cites the payments ticket it just ruled out. The key forbids that citation; whether that is too strict is for A to decide. |
 | Held-out | H4 | Is the penetration test delayed because of the payments API? | 3 | missing `ATL-136`, forbidden `ATL-112` | The agent searches the suggested cause instead of the pen-test ticket, so it never cites it and cites the payments ticket. |
