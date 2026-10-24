@@ -56,7 +56,7 @@ Result files recorded for the README (milestones M2 and M4) must come from ONE m
 ```powershell
 ollama show qwen3:8b            # note the digest; the runner also records it
 $env:PHOENIX_WORKING_DIR = "$PWD\.phoenix"; phoenix serve     # second terminal
-python -m evals.run_evals --phase2 --no-planner --auto --repeat 3 --require-trace
+python -m evals.run_evals --phase2 --flat --auto --repeat 3 --require-trace   # only once flat mode exists; it refuses otherwise
 python -m evals.run_evals --phase2 --planner    --auto --repeat 3 --require-trace
 python -m evals.compare evals/results/phase2_flat.json evals/results/phase2_planner.json
 python -m evals.run_evals --auto --repeat 3 --planner --require-trace   # Phase 1 regression, planner on

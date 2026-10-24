@@ -251,11 +251,13 @@ def test_load_key_validates_the_phase2_fields(tmp_path):
 # ---------------------------------------------------------------- result file names
 def test_phase2_result_files_depend_on_key_and_planner(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "RESULTS_DIR", tmp_path)
-    name = lambda key, planner, stub=False: ev.default_out_path(key, stub, planner).name
-    assert name("evals/phase2_key.json", False) == "phase2_flat.json"
+    name = lambda key, planner, stub=False, flat=False: ev.default_out_path(key, stub, planner, flat).name
+    assert name("evals/phase2_key.json", False) == "phase2_jira_only.json"
+    assert name("evals/phase2_key.json", False, flat=True) == "phase2_flat.json"
+    assert name("evals/phase2_heldout_key.json", False, flat=True) == "phase2_heldout_flat.json"
     assert name("evals/phase2_key.json", True) == "phase2_planner.json"
     assert name("evals/phase2_heldout_key.json", True) == "phase2_heldout.json"
-    assert name("evals/phase2_heldout_key.json", False) == "phase2_heldout_flat.json"
+    assert name("evals/phase2_heldout_key.json", False) == "phase2_heldout_jira_only.json"
     assert name("evals/phase2_key.json", True, stub=True) == "phase2_planner.stub.json"
 
 
@@ -359,10 +361,12 @@ def run_p2(monkeypatch, tmp_path, agent, *args, questions=None, planner_default=
     return CliRunner().invoke(ev.cli, ["--phase2", *args])
 
 
-def test_cli_phase2_planner_off_writes_the_flat_file(monkeypatch, tmp_path):
+def test_cli_phase2_planner_off_writes_the_jira_only_file(monkeypatch, tmp_path):
     r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto", "--repeat", "2")
     assert r.exit_code == 0, r.output
-    data = json.loads((tmp_path / "phase2_flat.json").read_text())
+    data = json.loads((tmp_path / "phase2_jira_only.json").read_text())
+    assert data["agent_mode"] == "phase1_jira_only" and not (tmp_path / "phase2_flat.json").exists()
+    assert "NOT a flat baseline" in r.output
     assert data["phase"] == 2 and data["planner_enabled"] is False and data["key"] == "phase2_key.json"
     assert data["score"]["runs_passed"] == 2 and "source_checks" in data["totals"]
     assert {"machine", "models", "git_commit", "settings", "faults"} <= set(data["environment"])
@@ -405,7 +409,35 @@ def test_cli_phase2_heldout_files_and_banner(monkeypatch, tmp_path):
     assert "MEASUREMENT ONLY" in r.output
     assert json.loads((tmp_path / "phase2_heldout.json").read_text())["key"] == "phase2_heldout_key.json"
     r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--heldout", "--no-planner", "--auto")
-    assert (tmp_path / "phase2_heldout_flat.json").exists()
+    assert (tmp_path / "phase2_heldout_jira_only.json").exists()
+
+
+def test_flat_flag_refuses_until_flat_mode_exists(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", False)
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--auto")
+    assert r.exit_code == 2
+    assert not list(tmp_path.glob("phase2_*flat*.json"))
+
+
+def test_flat_flag_writes_the_flat_file_and_sets_the_switch(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", True)
+    seen = []
+
+    def agent(_q):
+        seen.append((config.PLANNER_ENABLED, config.FLAT_ALL_SOURCES))
+        return p2result()
+
+    r = run_p2(monkeypatch, tmp_path, agent, "--flat", "--auto")
+    assert r.exit_code == 0, r.output
+    assert seen == [(False, True)]
+    assert json.loads((tmp_path / "phase2_flat.json").read_text())["agent_mode"] == "flat"
+    assert config.FLAT_ALL_SOURCES is False
+
+
+def test_flat_and_planner_conflict(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", True)
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--planner", "--auto")
+    assert r.exit_code != 0
 
 
 def test_cli_phase2_fails_when_a_required_source_is_not_cited(monkeypatch, tmp_path):

@@ -36,15 +36,14 @@ list_overdue()
   -> {"count": n, "results": [{id, title, status, assignee, due_date, days_overdue}]}
 ```
 New in Phase 2. Day 0 fixes the NAMES, the read-only rule, the ID rule and "keyword search with section-level
-snippets" (decision 7). The shapes below follow A's `data/SCHEMAS.md`, which is what the data supports. D confirms
-them in the PR that adds the servers (that PR must update this block). Open question for D: the Jira search
-argument is `keyword`, A's schema names the new ones `query`; pick one convention before the servers are written.
+snippets" (decision 7). The search argument is `keyword`, the same as `search_tickets`; this is what D's servers
+implement (`data/SCHEMAS.md` still says `query` and is A's to correct). The result shapes below follow A's schema.
 ```
-search_pages(query: str)
+search_pages(keyword: str)
   -> {"count": n, "results": [{id, title, page_type, status, last_edited, section: {heading, text}}]}  # best matching section
 get_page(page_id: str)
   -> full page object {id, title, page_type, owner, status, created_date, last_edited, sections}, or {"error": "not_found", "id": "<id>"}
-search_emails(query: str)
+search_emails(keyword: str)
   -> {"count": n, "results": [{id, thread_id, subject, from, date, snippet}]}   # snippet = FIRST 160 CHARS OF THE BODY ONLY
 get_email(email_id: str)
   -> full message {id, thread_id, subject, from, to, date, in_reply_to, body}, or {"error": "not_found", "id": "<id>"}
@@ -183,14 +182,21 @@ Reserved fixtures (prompt-injection and PII items, for later phases) are listed 
 | 7 | Keyword search for every source, with section-level snippets. Embeddings only if a measured Notion failure needs them | section 3 |
 | 8 | Official result files are recorded on ONE machine and ONE model version | runner records machine and model fingerprint |
 
-**Needed from D** (B builds against these until D's servers land): a registry of sources `{name, description, tools,
-available}`; the tools of a failed server either absent from `tools` or returning an error starting `source_unavailable`;
-`known_ids` as the union of every source's IDs (otherwise NTN-/EML- citations are flagged `unknown_ticket_id`).
+**Delivered by D** (`app/sources.py`): a registry of sources `{name, description, tools, available}`; the tools of a
+failed server are absent from the planner's scope or return an error starting `source_unavailable`; `known_ids` is the
+union of every source's IDs.
+
+**Flat baseline (agreed in review).** "Flat" means ONE retrieval loop over ALL sources with NO planner. With
+`PLANNER_ENABLED=false` the agent is the Phase 1 graph, which reaches Jira only, so it is NOT a flat baseline and its
+Phase 2 results are written as `phase2_jira_only.json` / `phase2_heldout_jira_only.json` (field `agent_mode`:
+`phase1_jira_only`). `phase2_flat.json` / `phase2_heldout_flat.json` are written only by `evals.run_evals --flat`,
+which refuses to run until `config.FLAT_MODE_IMPLEMENTED` is True; B/D flip it when flat mode exists (the runner sets
+`FLAT_ALL_SOURCES=1` for the run). Result files record `agent_mode`: `planner`, `flat`, `phase1` or `phase1_jira_only`.
 
 Additions made while writing these amendments (each needs the same four approvals): `app/faults.py` and the
 `FAULT_INJECT` switch (C4), the token counter and span helpers in `app/tracing.py` (C5), and
-`data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (planner off),
-`phase2_planner.json`, `phase2_heldout.json`, plus `phase2_heldout_flat.json` so the held-out planner-on versus
+`data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (flat mode, not yet available; see above),
+`phase2_planner.json`, `phase2_heldout.json`, plus `phase2_heldout_flat.json` (flat mode only) so the held-out planner-on versus
 planner-off comparison is recorded the same way as the tuning key.
 
 **Sign-off** (tick when you approve the PR that merges this file; merge needs all four):
