@@ -218,26 +218,32 @@ def _int_or_none(value) -> int | None:
 
 
 def phase2_fields(result: dict) -> dict:
-    """Planner, step and token facts from the OPTIONAL AgentResult fields (CONTRACTS.md section 4).
+    """Planner, step, source and token facts from the OPTIONAL AgentResult fields (CONTRACTS.md section 4).
 
+    `plan` is a LIST of sub-question records written by the agent: {id, question, source, reason, status, outcome,
+    steps, attempts, rewritten, capped, unavailable}. A planner fallback is the one sub-question whose `reason`
+    starts with "planner fallback" (the planner failed after its retry), so `planner_valid` is False for it.
     Every field is None when the agent did not report it, so Phase 1 agents and the stub work unchanged.
     """
-    plan = result.get("plan") if isinstance(result.get("plan"), dict) else None
-    subs = plan.get("subquestions") if plan else None
-    subs = subs if isinstance(subs, list) else None
-    steps = [s.get("steps") for s in subs if isinstance(s, dict)] if subs is not None else []
+    plan = result.get("plan") if isinstance(result.get("plan"), list) else None
+    recs = [s for s in plan if isinstance(s, dict)] if plan is not None else None
+    fallback = None if recs is None else any(str(s.get("reason", "")).lower().startswith("planner fallback") for s in recs)
+    steps = [s.get("steps") for s in recs] if recs else []
     usage = result.get("token_usage") if isinstance(result.get("token_usage"), dict) else {}
-    sources = result.get("sources") if isinstance(result.get("sources"), dict) else None
-    return {"planner_used": plan is not None,
-            "planner_valid": plan.get("valid") if plan and isinstance(plan.get("valid"), bool) else None,
-            "planner_fallback": plan.get("fallback") if plan and isinstance(plan.get("fallback"), bool) else None,
-            "subquestion_count": len(subs) if subs is not None else None,
-            "steps_total": sum(steps) if steps and all(_int_or_none(s) is not None for s in steps) else None,
+    sources = result.get("sources") if isinstance(result.get("sources"), list) else None
+    unavailable = sorted({u for s in (recs or []) for u in (s.get("unavailable") or []) if isinstance(u, str)})
+    return {"planner_used": recs is not None,
+            "planner_valid": None if fallback is None else not fallback,
+            "planner_fallback": fallback,
+            "subquestion_count": len(recs) if recs is not None else None,
+            "subquestions_unresolved": sum(1 for s in recs if s.get("status") == "unresolved") if recs is not None else None,
+            "steps_total": sum(steps) if steps and all(_int_or_none(x) is not None for x in steps) else None,
             "tool_call_count": len(result.get("tool_calls") or []),
             "prompt_tokens": _int_or_none(usage.get("prompt_tokens")),
             "completion_tokens": _int_or_none(usage.get("completion_tokens")),
             "total_tokens": _int_or_none(usage.get("total_tokens")),
-            "sources_status": sources}
+            "sources_returning_records": sources,
+            "sources_unavailable": unavailable if recs is not None else None}
 
 
 # ---------------------------------------------------------------- running

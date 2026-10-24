@@ -59,6 +59,51 @@ def _trace_id_hex(span) -> str | None:
         return None
 
 
+STAGE_NODES = ("planner", "retrieve", "evidence_check")  # Phase 2 nodes that get sub-question / source attributes
+
+
+def _stage_attrs(name: str, state) -> dict:
+    """Attributes for a Phase 2 node, read from the graph state it is about to run on. Never raises."""
+    if name not in STAGE_NODES or not isinstance(state, dict):
+        return {}
+    attrs = {"stage.name": name}
+    try:
+        plan, idx = state.get("plan"), state.get("sq_index")
+        if name != "planner" and isinstance(plan, list) and isinstance(idx, int) and 0 <= idx < len(plan):
+            sq = plan[idx]
+            attrs.update({"stage.subquestion_index": idx, "stage.subquestion_id": sq.get("id"),
+                          "stage.subquestion": state.get("sq_question") or sq.get("question"),
+                          "stage.source": sq.get("source"), "stage.attempt": state.get("sq_attempt")})
+    except Exception:  # noqa: BLE001 - tracing never breaks a run
+        pass
+    return attrs
+
+
+def _result_attrs(name: str, result) -> dict:
+    """What the node decided, read from the update it returned. Never raises."""
+    if name not in STAGE_NODES or not isinstance(result, dict):
+        return {}
+    attrs = {}
+    try:
+        if name == "planner" and isinstance(result.get("plan"), list):
+            plan = result["plan"]
+            attrs["stage.subquestion_count"] = len(plan)
+            attrs["stage.sources"] = ",".join(str(sq.get("source")) for sq in plan)
+            attrs["stage.planner_fallback"] = any(str(sq.get("reason", "")).lower().startswith("planner fallback") for sq in plan)
+        if name == "evidence_check":
+            if result.get("route"):
+                attrs["stage.route"] = result["route"]
+            added = result.get("sq_results")
+            if isinstance(added, list) and added:
+                attrs["stage.outcome"] = added[-1].get("status")
+                attrs["stage.reason"] = added[-1].get("outcome")
+        if name == "retrieve":
+            attrs["stage.evidence_items"] = len(result.get("evidence") or [])
+    except Exception:  # noqa: BLE001
+        pass
+    return attrs
+
+
 def node_span(name: str):
     """Decorator for graph nodes: one span per node, tagged with the node name.
 
@@ -78,7 +123,10 @@ def node_span(name: str):
                     return await fn(*args, **kwargs)
                 with _tracer.start_as_current_span(f"node:{name}") as span:
                     _tag(span)
-                    return await fn(*args, **kwargs)
+                    _set_attrs(span, _stage_attrs(name, args[0] if args else None))
+                    result = await fn(*args, **kwargs)
+                    _set_attrs(span, _result_attrs(name, result))
+                    return result
             return async_wrapper
 
         @functools.wraps(fn)
@@ -87,7 +135,10 @@ def node_span(name: str):
                 return fn(*args, **kwargs)
             with _tracer.start_as_current_span(f"node:{name}") as span:
                 _tag(span)
-                return fn(*args, **kwargs)
+                _set_attrs(span, _stage_attrs(name, args[0] if args else None))
+                result = fn(*args, **kwargs)
+                _set_attrs(span, _result_attrs(name, result))
+                return result
         return wrapper
     return deco
 

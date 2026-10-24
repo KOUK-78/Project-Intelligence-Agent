@@ -269,31 +269,42 @@ def test_a_planner_run_never_overwrites_a_phase1_baseline(monkeypatch, tmp_path)
 
 
 # ---------------------------------------------------------------- optional AgentResult fields
+def sq(sid="sq1", source="jira", status="resolved", steps=2, reason="r", unavailable=()):
+    """One sub-question record in the shape the agent emits (CONTRACTS.md section 4)."""
+    return {"id": sid, "question": "q", "source": source, "reason": reason, "status": status, "outcome": "model",
+            "steps": steps, "attempts": 1, "rewritten": None, "capped": False, "unavailable": list(unavailable)}
+
+
 def test_phase2_fields_tolerate_absence():
     f = ev.phase2_fields(result(["ATL-112"]))
     assert f["planner_used"] is False and f["planner_valid"] is None and f["subquestion_count"] is None
-    assert f["steps_total"] is None and f["total_tokens"] is None and f["sources_status"] is None
-    assert f["tool_call_count"] == 0
+    assert f["steps_total"] is None and f["total_tokens"] is None and f["sources_returning_records"] is None
+    assert f["tool_call_count"] == 0 and f["sources_unavailable"] is None
     junk = ev.phase2_fields({"plan": "oops", "token_usage": [1], "sources": 3, "tool_calls": None})
-    assert junk["planner_used"] is False and junk["total_tokens"] is None and junk["sources_status"] is None
+    assert junk["planner_used"] is False and junk["total_tokens"] is None and junk["sources_returning_records"] is None
+    assert ev.phase2_fields({"plan": {"valid": True}})["planner_used"] is False       # the old dict shape is not the contract
 
 
-def test_phase2_fields_read_plan_steps_and_tokens():
-    plan = {"valid": True, "fallback": False,
-            "subquestions": [{"id": "s1", "source": "jira", "outcome": "resolved", "steps": 2},
-                             {"id": "s2", "source": "notion", "outcome": "unresolved", "steps": 5}]}
-    f = ev.phase2_fields(result(["ATL-112"]) | {"plan": plan, "sources": {"jira": "ok", "notion": "unavailable"},
-                                                "token_usage": {"prompt_tokens": 90, "completion_tokens": 10, "total_tokens": 100}})
+def test_phase2_fields_read_the_agents_plan_list():
+    plan = [sq("sq1", "jira", "resolved", 2), sq("sq2", "notion", "unresolved", 5), sq("sq3", "email", "unavailable", 1, unavailable=["email"])]
+    f = ev.phase2_fields(result(["ATL-112"]) | {"plan": plan, "sources": ["jira"],
+                                                "token_usage": {"prompt_tokens": 90, "completion_tokens": 10, "total_tokens": 100, "calls": 3}})
     assert (f["planner_used"], f["planner_valid"], f["planner_fallback"]) == (True, True, False)
-    assert (f["subquestion_count"], f["steps_total"], f["total_tokens"]) == (2, 7, 100)
-    assert f["sources_status"]["notion"] == "unavailable"
-    plan["subquestions"][1]["steps"] = None            # an unreported step count means the total is unknown
+    assert (f["subquestion_count"], f["subquestions_unresolved"], f["steps_total"], f["total_tokens"]) == (3, 1, 8, 100)
+    assert f["sources_returning_records"] == ["jira"] and f["sources_unavailable"] == ["email"]
+    plan[1]["steps"] = None                              # an unreported step count means the total is unknown
     assert ev.phase2_fields({"plan": plan})["steps_total"] is None
 
 
+def test_a_planner_fallback_is_an_invalid_plan():
+    fb = [sq("sq1", "all", "resolved", 3, reason="planner fallback: one question over all sources")]
+    f = ev.phase2_fields({"plan": fb})
+    assert (f["planner_used"], f["planner_valid"], f["planner_fallback"], f["subquestion_count"]) == (True, False, True, 1)
+
+
 def test_totals_count_only_runs_that_reported():
-    ok_plan = {"valid": True, "fallback": False, "subquestions": [{"steps": 3}, {"steps": 1}]}
-    bad_plan = {"valid": False, "fallback": True, "subquestions": [{"steps": 4}]}
+    ok_plan = [sq("sq1", steps=3), sq("sq2", steps=1)]
+    bad_plan = [sq("sq1", "all", steps=4, reason="planner fallback: one question over all sources")]
     replies = iter([p2result(plan=ok_plan, token_usage={"total_tokens": 100}),
                     p2result(["ATL-112"], plan=bad_plan, token_usage={"total_tokens": 300}),
                     p2result()])                                   # reports nothing

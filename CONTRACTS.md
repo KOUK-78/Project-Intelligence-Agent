@@ -204,7 +204,7 @@ planner-off comparison is recorded the same way as the tuning key.
 |---|---|
 | A | `data/` (synthetic data, `WORLD.md`, generators, `PRIVATE_NOTES.md`, `reserved_fixtures.json`), `evals/answer_key.json`, `evals/heldout_key.json`, `evals/phase2_key.json`, `evals/phase2_heldout_key.json` |
 | B | `app/agent.py`, `app/graph.py`, `app/nodes/agent_node.py`, `app/nodes/synthesizer.py`, `app/nodes/llm.py`, `app/nodes/state.py`, `app/nodes/debug.py`, NEW `planner.py`, `evidence_check.py`, `retrieve.py`, `scope.py` (in `app/nodes/`) |
-| C | `app/config.py`, `app/cli.py`, `app/tracing.py`, `app/runtime.py`, `app/stub_agent.py`, NEW `app/faults.py`, `evals/run_evals.py`, NEW `evals/compare.py`, README, `docs/`, tests that police the rules (`tests/test_prompt_hygiene.py`, `tests/test_keys.py`, `tests/test_evals.py`, `tests/test_compare.py`, `tests/test_faults.py`, `tests/test_tracing.py`, `tests/test_contracts.py`, `tests/corpus.py`) |
+| C | `app/config.py`, `app/cli.py`, `app/tracing.py`, `app/runtime.py`, `app/stub_agent.py`, NEW `app/faults.py`, `evals/run_evals.py`, NEW `evals/compare.py`, README, `docs/`, tests that police the rules (`tests/test_prompt_hygiene.py`, `tests/test_keys.py`, `tests/test_evals.py`, `tests/test_compare.py`, `tests/test_faults.py`, `tests/test_tracing.py`, `tests/test_contracts.py`, `tests/test_phase2_measurement.py`, `tests/corpus.py`) |
 | D | `app/mcp_servers/` (all), `app/nodes/mcp_client.py`, `app/nodes/tool_node.py`, `app/nodes/verify.py`, NEW `app/sources.py` |
 
 Rules: one PR per task, the file owner reviews, `CONTRACTS.md` changes need 4 approvals, build against stubs and
