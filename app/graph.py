@@ -76,7 +76,8 @@ def build_inner_graph(llm: LLM, client: ScopedClient):
     return graph.compile()
 
 
-def build_planned_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None, sources: Sequence[Source]):
+def build_planned_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None, sources: Sequence[Source],
+                       unchecked_prefixes: frozenset[str] | set[str] = frozenset()):
     down = unavailable_sources(sources, mcp.tools)
     inner = {}
     for scope in [*(s.name for s in sources if s.name not in down), ALL_SOURCES]:
@@ -91,7 +92,7 @@ def build_planned_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None
     graph.add_node("evidence_check", node_span("evidence_check")(
         logged("evidence_check", make_evidence_check_node(llm, down))))
     graph.add_node("synthesizer", node_span("synthesizer")(
-        logged("synthesizer", make_synthesizer_v2_node(llm, known_ids))))
+        logged("synthesizer", make_synthesizer_v2_node(llm, known_ids, unchecked_prefixes))))
 
     graph.add_edge(START, "planner")
     graph.add_edge("planner", "retrieve")
@@ -105,8 +106,10 @@ def build_planned_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None
     return graph.compile()
 
 
-def build_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None, sources: Sequence[Source] | None = None):
-    """`sources` is the registry (D). It is ignored when the planner is off, so that path cannot change."""
+def build_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None, sources: Sequence[Source] | None = None,
+                unchecked_prefixes: frozenset[str] | set[str] = frozenset()):
+    """`sources` is the registry (D). It and `unchecked_prefixes` are ignored when the planner is off, so that
+    path cannot change."""
     if not config.PLANNER_ENABLED:
         return build_phase1_graph(llm, mcp, known_ids)
-    return build_planned_graph(llm, mcp, known_ids, sources or ())
+    return build_planned_graph(llm, mcp, known_ids, sources or (), unchecked_prefixes)

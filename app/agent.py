@@ -14,7 +14,8 @@ from app.graph import build_graph
 from app.nodes.llm import LLM, OllamaLLM, usage_since
 from app.nodes.mcp_client import McpStartupError, McpToolClient
 from app.nodes.scope import Source
-from app.nodes.verify import evidence_ids, load_known_ids
+from app.nodes.verify import evidence_ids, load_known_ids, unreadable_prefixes
+from app.sources import phase2_runtime
 
 Status = Literal["ok", "loop_cap", "invalid_output", "error"]
 
@@ -96,14 +97,21 @@ async def arun_agent(
     before = meter.snapshot() if hasattr(meter, "snapshot") else None
 
     try:
-        client = mcp or McpToolClient()
+        # Planner on: D's registry supplies the multi-server client and the planner's sources. Planner off returns
+        # (None, None), so the Phase 1 single-server client is used and nothing else changes. This must run BEFORE
+        # load_known_ids(): it registers Notion and email, and the known IDs are the union over registered sources.
+        # It is skipped when the caller injected everything (tests), so the global registry is left alone.
+        default_client, default_sources = (None, None)
+        if mcp is None or sources is None or known_ids is None:
+            default_client, default_sources = phase2_runtime()
+        client = mcp if mcp is not None else (default_client or McpToolClient())
+        planner_sources = sources if sources is not None else default_sources
+        ids = known_ids if known_ids is not None else load_known_ids()
+        # A source whose data file cannot be read has no list of real IDs: its citations are checked against
+        # this run's evidence only (verify_citations), instead of being flagged as unknown.
+        unchecked = unreadable_prefixes() if config.PLANNER_ENABLED and known_ids is None else frozenset()
         async with client as mcp_client:
-            graph = build_graph(
-                model,
-                mcp_client,
-                known_ids if known_ids is not None else load_known_ids(),
-                sources,
-            )
+            graph = build_graph(model, mcp_client, ids, planner_sources, unchecked)
             initial: dict[str, Any] = {
                 "question": question,
                 "messages": [{"role": "user", "content": question}],

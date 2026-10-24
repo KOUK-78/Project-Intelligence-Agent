@@ -221,3 +221,30 @@ def test_describe_tried_handles_failures_and_plain_results():
     text = describe_tried([ev(ok=False, error="timeout: slow"), ev(data={"id": "ATL-001"}), ev(data={"count": 2})])
     assert "failed (timeout: slow)" in text and "-> ok" in text and "-> 2 results" in text
     assert describe_tried([]) == "- nothing"
+
+
+# ---------------------------------------------------------------- servers that cannot read their data
+
+DOWN = {"error": "data_unavailable", "message": "could not read data"}
+
+
+def test_a_server_that_answers_data_unavailable_is_unavailable_not_insufficient():
+    verdict = code_verdict([ev(data=DOWN)], "ok")
+    assert verdict.status == "unavailable" and verdict.reason == "data_unavailable"
+    assert code_verdict([ev(data=DOWN), ev(data=DOWN)], "ok").reason == "data_unavailable"
+    assert code_verdict([ev(data=DOWN), ev(ok=False, error="timeout: x")], "ok").reason == "unreachable"
+
+
+def test_data_unavailable_never_hides_real_records_or_an_ordinary_empty_result():
+    assert code_verdict([ev(data=DOWN), ev()], "ok") is None  # a real record still goes to the model
+    assert code_verdict([ev(data=DOWN), ev(data={"count": 0, "results": []})], "ok").reason == "no_records"
+    assert code_verdict([ev(data={"error": "invalid_input", "message": "bad"})], "ok").reason == "no_records"
+    assert code_verdict([ev(data={"error": "not_found", "id": "X-1"})], "ok").status == "insufficient"
+
+
+def test_data_unavailable_commits_without_a_rewrite_or_a_model_call():
+    llm = llm_with()
+    out = check(llm, state([ev(data=DOWN)]))
+    assert calls(llm) == (0, 0)
+    assert record(out)["status"] == "unavailable" and record(out)["reason"] == "data_unavailable"
+    assert record(out)["unavailable"] == ["jira"]
