@@ -9,6 +9,7 @@ import functools
 import pytest
 
 from app import config
+from app import sources as registry
 from app.agent import arun_agent
 from app.graph import build_graph
 from app.nodes.llm import LLMReply
@@ -34,6 +35,7 @@ def sync(fn):
 @pytest.fixture(autouse=True)
 def planner_on(monkeypatch):
     monkeypatch.setattr(config, "PLANNER_ENABLED", True)
+    monkeypatch.setattr(registry, "_REGISTRY", dict(registry._REGISTRY))  # arun_agent may enable Notion and email
 
 
 async def run(llm, mcp=None, sources=SOURCES, question="What do the tracker, wiki and mail say?"):
@@ -257,10 +259,10 @@ async def test_a_malformed_plan_falls_back_to_one_loop_over_every_tool():
 
 
 @sync
-async def test_without_a_registry_the_planner_is_skipped_and_everything_is_in_scope():
+async def test_with_an_empty_registry_the_planner_is_skipped_and_everything_is_in_scope():
     llm = SpyLLM(planner=[LLMReply(content="never called")], agent=one_round("get_ticket", ticket_id="ATL-001"),
                  evidence_check=[check_reply(True)], synthesizer=[synth_reply("T [ATL-001].", ["ATL-001"])])
-    r = await run(llm, sources=None)
+    r = await run(llm, sources=[])
     assert llm.count("planner") == 0 and r["plan"][0]["source"] == "all" and r["citations"] == ["ATL-001"]
 
 

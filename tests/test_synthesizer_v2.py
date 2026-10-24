@@ -181,3 +181,25 @@ def test_an_unreachable_model_is_status_error():
 
     out = synth(Boom())
     assert out["status"] == "error" and out["errors"][0].startswith("llm_unavailable")
+
+
+# ---------------------------------------------------------------- sources whose data file could not be read
+
+def test_ids_of_an_unreadable_source_are_checked_against_the_evidence_only():
+    answer = "Tracker [ATL-001], wiki [NTN-001]."
+    reply = synth_reply(answer, ["ATL-001", "NTN-001"])
+    known = {"ATL-001"}  # the Notion data could not be read, so its IDs are not in the known set
+    strict = asyncio.run(make_synthesizer_v2_node(FakeLLM(synthesizer=[reply]), known)(
+        {"question": "Q?", "plan": PLAN, "sq_results": ALL_OK, "evidence": EVIDENCE}))
+    assert strict["citations"] == ["ATL-001"] and "[unverified: NTN-001]" in strict["answer"]
+    lenient = asyncio.run(make_synthesizer_v2_node(FakeLLM(synthesizer=[reply]), known, {"NTN"})(
+        {"question": "Q?", "plan": PLAN, "sq_results": ALL_OK, "evidence": EVIDENCE}))
+    assert lenient["citations"] == ["ATL-001", "NTN-001"] and "unverified" not in lenient["answer"]
+
+
+def test_an_unchecked_prefix_does_not_excuse_an_id_that_is_not_in_the_evidence():
+    llm = FakeLLM(synthesizer=[synth_reply("Tracker [ATL-001] and [NTN-999].", ["ATL-001", "NTN-999"])])
+    out = asyncio.run(make_synthesizer_v2_node(llm, {"ATL-001"}, {"NTN"})(
+        {"question": "Q?", "plan": PLAN, "sq_results": ALL_OK, "evidence": EVIDENCE}))
+    assert out["citations"] == ["ATL-001"] and "[unverified: NTN-999]" in out["answer"]
+    assert "not_in_evidence:NTN-999" in out["warnings"]

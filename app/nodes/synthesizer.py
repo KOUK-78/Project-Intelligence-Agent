@@ -216,7 +216,10 @@ def ensure_gap_notes(answer: str, unavailable: list[str], unresolved: list[str])
     return answer
 
 
-def make_synthesizer_v2_node(llm: LLM, known_ids: set[str] | None):
+def make_synthesizer_v2_node(llm: LLM, known_ids: set[str] | None, unchecked_prefixes: frozenset[str] | set[str] = frozenset()):
+    """`unchecked_prefixes`: ID prefixes of sources whose data file could not be read. Their IDs are checked against
+    this run's evidence only, since there is no list of real IDs to check them against."""
+
     async def synthesizer_v2_node(state: AgentState) -> dict[str, Any]:
         plan = state.get("plan", [])
         results = state.get("sq_results", [])
@@ -244,6 +247,7 @@ def make_synthesizer_v2_node(llm: LLM, known_ids: set[str] | None):
             known_ids=known_ids,
             ev_ids=evidence_ids(evidence),
             mentioned=set(mentioned_ids(evidence)),
+            unchecked_prefixes=unchecked_prefixes,
         )
         return {
             "route": "end",

@@ -36,6 +36,8 @@ REWRITE_RETRY_NUDGE = 'That was not valid. Reply again with ONLY a JSON object: 
 # Error prefixes (from the MCP client) meaning a source could not be reached, as opposed to a bad query.
 # "source_unavailable" is the prefix proposed to D for tools of a server that failed to start.
 CONNECTIVITY_ERRORS = ("not_connected", "timeout", "call_failed", "source_unavailable")
+# Error code every server returns, as a normal result, when its data cannot be read (CONTRACTS.md).
+DATA_UNAVAILABLE = "data_unavailable"
 
 
 class CheckOutput(BaseModel):
@@ -59,21 +61,30 @@ class Verdict(NamedTuple):
     missing: str = ""  # what the model says is still needed (steers the rewrite)
 
 
+def _source_down(item: dict[str, Any]) -> str | None:
+    """Why one tool result says its source cannot be reached, or None. Covers a failed call and the server's own
+    'data_unavailable' answer; a bad query or an empty result is not 'down'."""
+    if not item.get("ok"):
+        return "unreachable" if str(item.get("error") or "").startswith(CONNECTIVITY_ERRORS) else None
+    data = item.get("data")
+    return DATA_UNAVAILABLE if isinstance(data, dict) and data.get("error") == DATA_UNAVAILABLE else None
+
+
 def code_verdict(evidence: list[dict[str, Any]], inner_status: str) -> Verdict | None:
     """The checks that need no model. None means real records exist, so the model should judge them."""
     if inner_status == "unavailable":
         return Verdict("unavailable", "source_down")
     good = [e for e in evidence if e.get("ok")]
+    if evidence_ids(good):
+        return None
+    if not good and inner_status == "error":  # the tool node gave up after repeated failures
+        return Verdict("unavailable", "tool_failures")
+    reasons = [_source_down(e) for e in evidence]
+    if evidence and all(reasons):  # nothing but "cannot reach it" answers: rewriting the query would not help
+        return Verdict("unavailable", reasons[0] if len(set(reasons)) == 1 else "unreachable")
     if not good:
-        if inner_status == "error":  # the tool node gave up after repeated failures
-            return Verdict("unavailable", "tool_failures")
-        errors = [str(e.get("error") or "") for e in evidence]
-        if errors and all(err.startswith(CONNECTIVITY_ERRORS) for err in errors):
-            return Verdict("unavailable", "unreachable")
         return Verdict("insufficient", "no_successful_evidence")
-    if not evidence_ids(good):  # calls worked but returned no record (empty search, not-found payload)
-        return Verdict("insufficient", "no_records")
-    return None
+    return Verdict("insufficient", "no_records")  # calls worked but returned no record (empty search, not-found)
 
 
 def describe_tried(evidence: list[dict[str, Any]]) -> str:
