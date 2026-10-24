@@ -80,6 +80,7 @@ MCP_CALL_TIMEOUT_S = 15            # one tool call
 MCP_STARTUP_TIMEOUT_S = 20         # server launch + initialize + list_tools
 LLM_TIMEOUT_S = 120                # one Ollama request
 FAULT_TIMEOUT_SLEEP_S = MCP_CALL_TIMEOUT_S * 2   # injected 'timeout' hang; always longer than the call timeout
+ENV_PROBE_TIMEOUT_S = 3            # git / Ollama probes that describe the machine in result files
 
 # --- Size caps (characters); keep prompts short, num_ctx is 8192 tokens
 MAX_TOOL_CHARS = 2500              # one tool result fed back to the agent
