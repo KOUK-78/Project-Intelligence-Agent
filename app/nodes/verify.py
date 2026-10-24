@@ -17,6 +17,11 @@ from app import config
 ID_RE = re.compile(r"\b[A-Z][A-Z0-9]{1,9}-\d+\b")
 
 
+def is_non_citable(cid: str) -> bool:
+    """Thread IDs (THR-...) look like item IDs but are not citable: ignored everywhere in this module."""
+    return cid.split("-", 1)[0] in config.NON_CITABLE_ID_PREFIXES
+
+
 _BARE_ID_RE = re.compile(r"(?<![\[\w-])([A-Z][A-Z0-9]{1,9}-\d+)(?![\]\w-])")
 
 
@@ -58,14 +63,15 @@ def trim_not_found_tangent(answer: str) -> str:
     """'There are no tickets about X. However, here are other tickets [ATL-000]...' -> keep only the first
     sentence. Narrow on purpose: needs a not-found opener AND a pivot word AND IDs in the remainder."""
     first, sep, rest = answer.partition(". ")
-    if sep and _NOT_FOUND_RE.match(first.strip()) and _TANGENT_RE.match(rest.strip()) and ID_RE.search(rest):
+    if sep and _NOT_FOUND_RE.match(first.strip()) and _TANGENT_RE.match(rest.strip()) \
+            and any(not is_non_citable(i) for i in ID_RE.findall(rest)):
         return first.rstrip(".") + "."
     return answer
 
 
 def bracket_bare_ids(answer: str) -> str:
     """The model often writes 'ATL-000' instead of '[ATL-000]'. Enforce the format in code."""
-    return _BARE_ID_RE.sub(r"[\1]", answer)
+    return _BARE_ID_RE.sub(lambda m: m.group(0) if is_non_citable(m.group(1)) else f"[{m.group(1)}]", answer)
 
 
 def load_known_ids(path: str | Path | None = None) -> set[str] | None:
@@ -166,11 +172,11 @@ def verify_citations(
     mentioned = mentioned or set()
     in_answer: list[str] = []
     for cid in ID_RE.findall(answer):
-        if cid not in in_answer:
+        if cid not in in_answer and not is_non_citable(cid):
             in_answer.append(cid)
     for raw in citations:
         cid = str(raw).strip().strip("[]").upper()
-        if cid and cid not in in_answer:
+        if cid and cid not in in_answer and not is_non_citable(cid):
             warnings.append(f"citation_not_in_answer:{cid}")
 
     if known_ids is None:

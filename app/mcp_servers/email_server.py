@@ -95,7 +95,6 @@ def get_thread(thread_id: str) -> dict[str, Any]:
     budget, out_msgs, truncated = MAX_THREAD_CHARS, [], False
     for m in msgs:
         full = _full(m)
-        full.pop("thread_id", None)
         if budget <= 0:
             truncated = True
             break
@@ -104,7 +103,7 @@ def get_thread(thread_id: str) -> dict[str, Any]:
         budget -= len(body)
         truncated = truncated or cut or full.get("truncated", False)
         out_msgs.append(full)
-    out: dict[str, Any] = {"thread_id": wanted, "count": len(msgs), "messages": out_msgs}
+    out: dict[str, Any] = {"thread_id": wanted, "count": len(msgs), "emails": out_msgs}
     if truncated:
         out["truncated"] = True
     return out
