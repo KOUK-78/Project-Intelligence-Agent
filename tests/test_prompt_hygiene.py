@@ -4,9 +4,14 @@ The agent must work on questions nobody has seen. Prompts and node logic therefo
 anything lifted from the data or the answer key: real ticket IDs, ticket titles, people's names, or
 answer-key wording. Examples in prompts use placeholders (ATL-000, 'label-a', 'term-a').
 
-What is scanned: app/agent.py, app/graph.py and app/nodes/*.py, as raw text (so comments and
-docstrings count) AND as the string constants the modules actually expose at runtime (so f-string
-prompts are checked after formatting).
+What is scanned: app/agent.py, app/graph.py, app/nodes/*.py (including planner.py and evidence_check.py) and
+app/sources.py when it exists, as raw text (so comments and docstrings count) AND as the string constants the
+modules actually expose at runtime (so f-string prompts are checked after formatting).
+
+Phase 2: the rules cover ALL sources. IDs, titles, people's names, email addresses and labels come from the Jira,
+Notion and email data (tests/corpus.py reads them without assuming a layout), and answer-key wording comes from
+the original and Phase 2 tuning keys. The Phase 2 held-out key is checked too, but a failure NEVER prints its
+wording (B and D must not see it before M4): it names the key and question only.
 """
 import ast
 import importlib
@@ -17,12 +22,14 @@ from pathlib import Path
 import pytest
 
 from app import config
+from tests import corpus
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = [ROOT / "app" / "agent.py", ROOT / "app" / "graph.py", *sorted((ROOT / "app" / "nodes").glob("*.py"))]
+_EXTRA = [ROOT / "app" / "sources.py"] if (ROOT / "app" / "sources.py").exists() else []
+SOURCES = [ROOT / "app" / "agent.py", ROOT / "app" / "graph.py", *_EXTRA, *sorted((ROOT / "app" / "nodes").glob("*.py"))]
 PLACEHOLDER_ID = re.compile(r"-00\d$")
 SHINGLE_WORDS = 5
-MODULES = ["app.agent", "app.graph"] + [
+MODULES = ["app.agent", "app.graph"] + (["app.sources"] if _EXTRA else []) + [
     f"app.nodes.{p.stem}" for p in sorted((ROOT / "app" / "nodes").glob("*.py")) if p.stem != "__init__"
 ]
 
@@ -64,61 +71,104 @@ def everything() -> dict[str, str]:
 
 # ---------------------------------------------------------------- B1: leakage
 
-def test_no_real_ticket_id_appears_in_prompts_or_node_logic():
-    real_ids = {t["id"] for t in tickets()}
+ANY_ID = re.compile(r"\b[A-Z]{2,10}-\d{2,}\b")
+
+
+def test_the_corpus_finds_the_phase1_data():
+    """Guard the guard: if the corpus reader stopped finding Jira facts, every test below would pass vacuously."""
+    f = corpus.facts("jira")
+    assert len(f["ids"]) == len(tickets()) and f["titles"] and f["names"] and f["labels"]
+
+
+def test_no_real_item_id_appears_in_prompts_or_node_logic():
+    real_ids = corpus.facts()["ids"]
+    prefixes = set(config.SOURCE_ID_PREFIXES.values())
     bad = []
     for where, text in everything().items():
-        for cid in re.findall(r"\b[A-Z]{2,10}-\d{2,}\b", text):
+        for cid in ANY_ID.findall(text):
             if cid in real_ids or not PLACEHOLDER_ID.search(cid):
                 bad.append(f"{where}: {cid}")
-    assert not bad, "real or non-placeholder ticket IDs found (use ATL-000):\n" + "\n".join(sorted(set(bad)))
+    assert not bad, "real or non-placeholder item IDs found (use ATL-000, NTN-000, EML-000):\n" + "\n".join(sorted(set(bad)))
+    assert prefixes == {"ATL", "NTN", "EML"}
 
 
-def test_no_ticket_title_appears_in_prompts_or_node_logic():
-    titles = {t["title"].lower() for t in tickets() if len(t["title"]) >= 10}
+def test_no_item_title_appears_in_prompts_or_node_logic():
+    titles = corpus.facts()["titles"]
     bad = [f"{where}: {title!r}" for where, text in everything().items() for title in titles if title in text.lower()]
-    assert not bad, "ticket titles found:\n" + "\n".join(sorted(set(bad)))
+    assert not bad, "ticket, page or email titles found:\n" + "\n".join(sorted(set(bad)))
 
 
-def test_no_person_name_from_the_data_appears_in_prompts_or_node_logic():
-    names = set()
-    for t in tickets():
-        for full in [t["assignee"], *[c["author"] for c in t["comments"]]]:
-            names.add(full.lower())
-            names.update(part for part in full.lower().split() if len(part) >= 5)
-    bad = [f"{where}: {n!r}" for where, text in everything().items() for n in names
-           if re.search(rf"\b{re.escape(n)}\b", text.lower())]
-    assert not bad, "people's names found:\n" + "\n".join(sorted(set(bad)))
+def test_no_person_name_or_address_from_the_data_appears_in_prompts_or_node_logic():
+    f = corpus.facts()
+    bad = []
+    for where, text in everything().items():
+        low = text.lower()
+        bad += [f"{where}: {n!r}" for n in f["names"] if re.search(rf"\b{re.escape(n)}\b", low)]
+        bad += [f"{where}: {a!r}" for a in f["addresses"] if a in low]
+    assert not bad, "people's names or email addresses found:\n" + "\n".join(sorted(set(bad)))
+
+
+def key_shingles_for(include_heldout: bool) -> dict[tuple[str, ...], str]:
+    out: dict[tuple[str, ...], str] = {}
+    for name, questions in corpus.key_questions(include_heldout).items():
+        if not include_heldout and name in corpus.HELDOUT_FILES:
+            continue
+        for q in questions:
+            for field in ("question", "expected_answer", "notes"):
+                for sh in shingles(str(q.get(field, ""))):
+                    out.setdefault(sh, f"{name}:{q.get('id')}.{field}")
+    return out
 
 
 def test_no_answer_key_wording_appears_in_prompts_or_node_logic():
-    key = json.loads(Path(config.ANSWER_KEY_PATH).read_text(encoding="utf-8"))
-    key_shingles: dict[tuple[str, ...], str] = {}
-    for q in key:
-        for field in ("question", "expected_answer", "notes"):
-            for sh in shingles(q[field]):
-                key_shingles.setdefault(sh, f"{q['id']}.{field}")
+    key_shingles = key_shingles_for(include_heldout=False)
+    assert key_shingles, "no answer key found"
     bad = []
     for where, text in everything().items():
         for sh in shingles(text) & key_shingles.keys():
             bad.append(f"{where}: '{' '.join(sh)}' (from {key_shingles[sh]})")
-    assert not bad, f"{SHINGLE_WORDS}-word runs copied from the answer key:\n" + "\n".join(sorted(set(bad)))
+    assert not bad, f"{SHINGLE_WORDS}-word runs copied from the answer keys:\n" + "\n".join(sorted(set(bad)))
+
+
+def test_no_heldout_wording_appears_in_prompts_or_node_logic_and_the_failure_never_quotes_it():
+    """Reads the held-out keys only to compare. A failure names the file and key, never the words."""
+    held = {}
+    for name, questions in corpus.key_questions(include_heldout=True).items():
+        if name in corpus.HELDOUT_FILES:
+            for q in questions:
+                for field in ("question", "expected_answer", "notes"):
+                    for sh in shingles(str(q.get(field, ""))):
+                        held.setdefault(sh, f"{name}:{q.get('id')}.{field}")
+    bad = sorted({f"{where} copies wording from {held[sh]} (text withheld)"
+                  for where, text in everything().items() for sh in shingles(text) & held.keys()})
+    assert not bad, "held-out wording found in agent code:\n" + "\n".join(bad)
 
 
 def test_the_data_words_in_prompt_examples_are_placeholders():
     # Labels are domain vocabulary: an example label in a prompt would teach the model THIS dataset.
-    labels = {label.lower() for t in tickets() for label in t["labels"] if len(label) >= 5}
-    prompts = {k: v for k, v in runtime_strings().items() if re.search(r"(SYSTEM|NUDGE|HINT)", k.split(".")[-1])}
+    labels = corpus.facts()["labels"]
+    prompts = {k: v for k, v in runtime_strings().items() if re.search(r"(SYSTEM|NUDGE|HINT|PROMPT)", k.split(".")[-1])}
     assert prompts, "no prompt constants found; the scan is looking in the wrong place"
     bad = [f"{k}: {label!r}" for k, v in prompts.items() for label in labels
            if re.search(rf"\b{re.escape(label)}\b", v.lower())]
     assert not bad, "dataset labels used as prompt examples:\n" + "\n".join(sorted(set(bad)))
 
 
+def test_prompt_constants_exist_for_every_phase2_node_that_has_a_module():
+    """A planner or evidence-check module with no prompt constant would escape the label scan above."""
+    for stem in ("planner", "evidence_check"):
+        path = ROOT / "app" / "nodes" / f"{stem}.py"
+        if not path.exists():
+            continue
+        mod = importlib.import_module(f"app.nodes.{stem}")
+        assert any(isinstance(v, str) and re.search(r"(SYSTEM|PROMPT|NUDGE|HINT)", k) for k, v in vars(mod).items()), \
+            f"app/nodes/{stem}.py has no *_SYSTEM / *_PROMPT constant; name its prompt so the hygiene scan sees it"
+
+
 # ---------------------------------------------------------------- rule 2 and rule 4
 
 def test_agent_code_never_reads_the_heldout_key():
-    offenders = [name for name, text in source_texts().items() if re.search(r"heldout|held-out", text, re.I)]
+    offenders = [name for name, text in source_texts().items() if re.search(r"heldout|held-out|held_out", text, re.I)]
     assert not offenders, f"held-out key referenced in agent code (it is measurement-only): {offenders}"
 
 
