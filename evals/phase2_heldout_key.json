@@ -48,7 +48,7 @@
   {
     "id": "H4",
     "question": "What changed about the beta program start, and what did the planning page say before?",
-    "expected_answer": "The Notion beta plan says kickoff on 2026-08-03. An email on 2026-06-29 moved it to 2026-08-17 so QA gets two weeks on the payments sandbox first. ATL-140 (customer onboarding list) is still due 2026-07-31.",
+    "expected_answer": "The Notion beta plan says kickoff on 2026-08-03. An email on 2026-06-29 moved it to 2026-08-17 so QA gets two weeks on the payments sandbox first.",
     "expected_citations": [
       "NTN-111",
       "EML-124"
@@ -60,12 +60,12 @@
     "must_mention": [
       "2026-08-17"
     ],
-    "notes": "Three-source 'what changed'. ATL-140 is a bonus citation, not required."
+    "notes": "Two-source 'what changed' (Notion plan vs the later email). The Jira ticket for the customer onboarding list (due 2026-07-31) is related but is not required."
   },
   {
     "id": "H5",
     "question": "Is the staging environment ready for the checkout load test?",
-    "expected_answer": "The sources conflict. The Notion load test plan says staging has been upgraded and the test is ready to run, but ATL-138 shows the staging upgrade is still In Progress, due 2026-07-15, and ATL-124's date was moved to 2026-07-22 for that reason. The Notion page is older and appears stale.",
+    "expected_answer": "The sources conflict. The Notion load test plan says staging has been upgraded and the test is ready to run, but ATL-138 shows the staging upgrade is still In Progress, due 2026-07-15, and the load test due date was moved to 2026-07-22 for that reason. The Notion page is older and appears stale.",
     "expected_citations": [
       "ATL-138",
       "NTN-109"
@@ -77,7 +77,7 @@
     "must_mention": [
       "2026-07-15"
     ],
-    "notes": "Conflict across Notion and Jira on a different topic from P7. ATL-124 is a bonus citation."
+    "notes": "Conflict across Notion and Jira on a different topic from P7. The load test ticket is a related bonus citation."
   },
   {
     "id": "H6",
@@ -151,7 +151,7 @@
       "email"
     ],
     "must_mention": [
-      "25"
+      "25 days"
     ],
     "notes": "Email date arithmetic across a thread. Both endpoints must be found."
   }
