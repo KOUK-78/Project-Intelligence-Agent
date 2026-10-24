@@ -60,6 +60,31 @@ EVIDENCE_CHECK_CHARS = 4000        # evidence shown to the yes/no check (smaller
 # Source registry: one name and one citation-ID prefix per source (Day 0 decision 1).
 SOURCES = ("jira", "notion", "email")
 SOURCE_ID_PREFIXES = {"jira": "ATL", "notion": "NTN", "email": "EML"}
+# IDs that look like item IDs but are NOT citable (CONTRACTS.md section 3: a thread ID is not a citable item).
+# The verifier and the bracket logic leave them alone: no warning, no "[unverified: ...]", no bracketing.
+NON_CITABLE_ID_PREFIXES = ("THR",)
+
+# --- Source switch (D). ENABLED_SOURCES chooses which sources a run can reach:
+#   unset, planner off  -> "jira" only: Phase 1 exactly (one server, one flat loop). The regression mode.
+#   unset, planner on   -> every source (jira, notion, email) with the planner.
+#   "all" or "jira,notion,..." with the planner OFF -> FLAT MODE: those sources behind one router and ONE flat
+#                          retrieval loop over all their tools (the M2 baseline, to compare against the planner).
+#   a list with the planner on -> the planner plans over just those sources.
+def resolve_enabled_sources(env=None, planner: bool | None = None) -> tuple[str, ...]:
+    """Parse ENABLED_SOURCES into source names in registry order. Unknown names or an empty list raise."""
+    env = os.environ if env is None else env
+    planner = PLANNER_ENABLED if planner is None else planner
+    raw = (env.get("ENABLED_SOURCES") or "").strip().lower()
+    if not raw:
+        return SOURCES if planner else ("jira",)
+    if raw == "all":
+        return SOURCES
+    names = [p.strip() for p in raw.split(",") if p.strip()]
+    bad = [n for n in names if n not in SOURCES]
+    if bad or not names:
+        raise ValueError(f"ENABLED_SOURCES: bad value {raw!r}; use 'all' or a comma list of {list(SOURCES)}")
+    return tuple(n for n in SOURCES if n in names)
+
 
 # --- Fault injection (C4). FAULT_INJECT="notion:fail,email:timeout" makes that source misbehave.
 #   fail    = the source's server cannot start and every call errors   -> "source unavailable"

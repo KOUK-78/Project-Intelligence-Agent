@@ -107,7 +107,8 @@ def test_get_email_and_numeric_lookup():
 
 def test_get_thread_accepts_a_thread_id_or_an_email_id():
     t = em.get_thread("THR-202")
-    assert t["thread_id"] == "THR-202" and t["count"] == 1 and t["messages"][0]["id"] == "EML-111"
+    assert t["thread_id"] == "THR-202" and t["count"] == 1 and t["emails"][0]["id"] == "EML-111"
+    assert t["emails"][0]["thread_id"] == "THR-202"  # contract: full messages, thread_id included
     assert em.get_thread("EML-111")["thread_id"] == "THR-202"
     assert em.get_thread("THR-999")["error"] == "not_found"
 
@@ -117,7 +118,7 @@ def test_get_thread_order_does_not_depend_on_file_order(tmp_path, monkeypatch):
             {"id": "EML-001", "thread_id": "t", "date": "2026-02-02T08:00:00", "body": "first"}]
     p = tmp_path / "e.json"; p.write_text(json.dumps(rows))
     monkeypatch.setenv("EMAIL_DATA_PATH", str(p))
-    assert [m["id"] for m in em.get_thread("t")["messages"]] == ["EML-001", "EML-002"]
+    assert [m["id"] for m in em.get_thread("t")["emails"]] == ["EML-001", "EML-002"]
 
 
 def test_email_size_caps(tmp_path, monkeypatch):
@@ -127,7 +128,7 @@ def test_email_size_caps(tmp_path, monkeypatch):
     monkeypatch.setenv("EMAIL_DATA_PATH", str(p))
     assert em.get_email("EML-001")["truncated"] is True
     t = em.get_thread("t")
-    assert t["truncated"] is True and sum(len(m["body"]) for m in t["messages"]) <= em.MAX_THREAD_CHARS + 8
+    assert t["truncated"] is True and sum(len(m["body"]) for m in t["emails"]) <= em.MAX_THREAD_CHARS + 8
 
 
 @pytest.mark.parametrize("fn,arg", [(em.search_emails, ""), (em.get_email, None), (em.get_thread, "  ")])

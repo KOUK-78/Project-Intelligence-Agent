@@ -104,8 +104,47 @@ def test_tool_node_failure_text_is_source_neutral():
     assert out["status"] == "error" and "Jira" not in out["answer"] and "source_unavailable" in out["answer"]
 
 
-def test_thread_ids_are_not_mentions_or_citations(three_sources):
+def test_thread_ids_are_not_mentions_and_not_citations(three_sources):
     evidence = [ev("get_email", {"id": "EML-101", "thread_id": "THR-201", "body": "see ATL-112"})]
     assert v.mentioned_ids(evidence) == ["ATL-112"]  # THR-201 is not a registered source prefix
-    _, cites, warns = v.verify_citations("See [THR-201].", [], known_ids=v.load_known_ids(), ev_ids=set())
-    assert cites == [] and "unknown_ticket_id:THR-201" in warns
+    answer, cites, warns = v.verify_citations("See [THR-201].", [], known_ids=v.load_known_ids(), ev_ids=set())
+    assert cites == [] and warns == [] and answer == "See [THR-201]."  # ignored: not citable, not an error
+
+
+# ------------------------------------------------------------------ thread IDs are not citable
+def test_a_thread_id_in_an_answer_gives_no_warning_and_no_rewrite(three_sources):
+    for text in ("The conversation is THR-201.", "See thread [THR-201] for context.", "THR-201 and [THR-201] again."):
+        answer, cites, warns = v.verify_citations(text, [], known_ids=v.load_known_ids(), ev_ids=set())
+        assert (answer, cites, warns) == (text, [], []), text
+        assert "[unverified" not in answer
+
+
+def test_a_thread_id_beside_a_real_citation_leaves_the_real_one_verified(three_sources):
+    evidence = [ev("get_email", {"id": "EML-101", "thread_id": "THR-201", "body": "x"})]
+    answer, cites, warns = v.verify_citations("Per [EML-101] in THR-201.", [], known_ids=v.load_known_ids(),
+                                              ev_ids=v.evidence_ids(evidence))
+    assert cites == ["EML-101"] and warns == [] and answer == "Per [EML-101] in THR-201."
+
+
+def test_a_thread_id_in_the_citations_list_is_not_a_warning(three_sources):
+    _, cites, warns = v.verify_citations("No thread named.", ["THR-201"], known_ids=v.load_known_ids(), ev_ids=set())
+    assert cites == [] and warns == []
+
+
+def test_bracket_logic_leaves_thread_ids_bare_but_still_brackets_real_ids():
+    assert v.bracket_bare_ids("Thread THR-201 mentions ATL-112.") == "Thread THR-201 mentions [ATL-112]."
+    assert v.bracket_bare_ids("Thread THR-201.") == "Thread THR-201."
+    assert v.tidy_brackets("[THR-201] and [days: 3]") == "[THR-201] and (days: 3)"
+
+
+def test_not_found_trim_ignores_thread_ids():
+    text = "There are no tickets about it. However, the thread THR-201 discusses it."
+    assert v.trim_not_found_tangent(text) == text          # a thread ID is not "other tickets": nothing trimmed
+    text2 = "There are no tickets about it. However, see [ATL-112]."
+    assert v.trim_not_found_tangent(text2) == "There are no tickets about it."
+
+
+def test_the_full_synthesizer_cleanup_chain_keeps_a_thread_id_intact(three_sources):
+    from app.nodes.synthesizer import _cleanup  # the synthesizer's post-processing chain
+    out = _cleanup("Reply in THR-201, status in ATL-112.")
+    assert "THR-201" in out and "[THR-201]" not in out and "[ATL-112]" in out

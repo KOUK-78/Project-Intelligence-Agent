@@ -25,7 +25,7 @@ import anyio
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from app import config
+from app import config, faults
 
 
 class McpStartupError(RuntimeError):
@@ -86,7 +86,9 @@ class McpToolClient:
         env: dict[str, str] | None = None,
         call_timeout: float | None = None,
         startup_timeout: float | None = None,
+        source: str | None = None,
     ) -> None:
+        self._source = source  # registry name; lets FAULT_INJECT target this server (app/faults.py)
         self._server_path = str(server_path) if server_path else None
         self._server_module = server_module
         self._env = env
@@ -104,6 +106,8 @@ class McpToolClient:
     async def __aenter__(self) -> "McpToolClient":
         stack = AsyncExitStack()
         try:
+            if self._source:
+                await faults.inject(self._source, "startup")  # injected "fail": raise before any server is launched
             if self._server_path:
                 params = StdioServerParameters(command=sys.executable, args=[self._server_path], env=self._env)
             else:
@@ -162,6 +166,8 @@ class McpToolClient:
             return done(False, error="not_connected: MCP session is not open")
         try:
             with anyio.fail_after(self._call_timeout):
+                if self._source:
+                    await faults.inject(self._source, "call")  # inside the timeout: an injected hang trips the real one
                 result = await self._session.call_tool(name, args)
         except TimeoutError:
             return done(False, error=f"timeout: {name} took longer than {self._call_timeout}s")
@@ -236,7 +242,8 @@ class McpRouter:
     def _make_client(self, source: Any) -> Any:
         if source.name in self._injected:
             return self._injected[source.name]
-        return McpToolClient(server_module=source.server_module, env=self._env.get(source.name), **self._client_kwargs)
+        return McpToolClient(server_module=source.server_module, env=self._env.get(source.name), source=source.name,
+                             **self._client_kwargs)
 
     async def _run(self, name: str, client: Any, ready: "asyncio.Future[str | None]", stop: asyncio.Event) -> None:
         try:

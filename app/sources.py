@@ -125,6 +125,21 @@ def normalize_for_tool(tool: str, args: dict[str, Any], question: str) -> dict[s
     return src.normalizer(args, question) if src and src.normalizer else args
 
 
+_CATALOG = {"jira": JIRA, "notion": NOTION, "email": EMAIL}
+
+
+def configure_sources(names: tuple[str, ...] | list[str]) -> list[Source]:
+    """Make the registry hold exactly `names`, in catalog order (the ENABLED_SOURCES switch)."""
+    unknown = [n for n in names if n not in _CATALOG]
+    if unknown or not names:
+        raise ValueError(f"unknown or empty source list {list(names)}; known sources: {list(_CATALOG)}")
+    _REGISTRY.clear()
+    for name in _CATALOG:
+        if name in names:
+            register(_CATALOG[name])
+    return all_sources()
+
+
 def enable_phase2_sources() -> list[Source]:
     """Register Notion and email (idempotent). Called when the planner is on; with it off only Jira
     is registered, which reproduces Phase 1 exactly."""
@@ -142,15 +157,21 @@ def scope_sources() -> list:
 
 
 def phase2_runtime() -> tuple[Any, list | None]:
-    """(mcp client, planner sources) for arun_agent. Planner off: (None, None), so the default
-    single-server client is used and Phase 1 is untouched. Planner on: Notion and email are registered,
-    one router serves all servers (lazy), and unavailable sources show up as tools it does not advertise."""
-    if not config.PLANNER_ENABLED:
+    """(mcp client, planner sources) for arun_agent. Which sources a run reaches is config.ENABLED_SOURCES:
+
+      planner off, jira only (the default)  -> (None, None): the default single-server client, Phase 1 untouched
+      planner off, several sources          -> (router, None): FLAT MODE, one loop over all their tools (M2 baseline)
+      planner on                            -> (router, planner sources)
+
+    The registry is set to the enabled sources first, so known IDs (the union over registered sources) match."""
+    planner = config.PLANNER_ENABLED
+    names = config.resolve_enabled_sources(planner=planner)
+    configure_sources(names)
+    if names == ("jira",) and not planner:
         return None, None
     from app.nodes.mcp_client import McpRouter
 
-    enable_phase2_sources()
-    return McpRouter(), scope_sources()
+    return McpRouter(), (scope_sources() if planner else None)
 
 
 def load_ids(source: Source, env: dict[str, str] | None = None) -> set[str] | None:
