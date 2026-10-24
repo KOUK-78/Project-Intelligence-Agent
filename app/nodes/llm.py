@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
-from app import config
+from app import config, tracing
 
 _THINK_RE = re.compile(r"<think>.*?</think>", re.DOTALL)
 
@@ -89,15 +89,17 @@ class OllamaLLM:
 
         client = ollama.AsyncClient(host=config.OLLAMA_BASE_URL, timeout=config.LLM_TIMEOUT_S)
         think = getattr(config, "THINKING", {}).get(job, False)
-        resp = await client.chat(
-            model=config.MODELS[job],
-            messages=messages,
-            tools=tools,
-            format=format,
-            think=think,
-            stream=False,
-            options={"num_ctx": config.NUM_CTX, "temperature": config.TEMPERATURE},
-        )
+        with tracing.llm_span(job, config.MODELS[job]) as span:  # C5: model-call span with token counts
+            resp = await client.chat(
+                model=config.MODELS[job],
+                messages=messages,
+                tools=tools,
+                format=format,
+                think=think,
+                stream=False,
+                options={"num_ctx": config.NUM_CTX, "temperature": config.TEMPERATURE},
+            )
+            span.set_usage(getattr(resp, "prompt_eval_count", None), getattr(resp, "eval_count", None))
         msg = resp.message
         calls = []
         for tc in msg.tool_calls or []:

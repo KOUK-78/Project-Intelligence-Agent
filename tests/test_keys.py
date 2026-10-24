@@ -1,6 +1,9 @@
-"""A4: both answer files are valid against the data, and the reserved fixtures stay out of them.
+"""A4 / C6: every answer file is valid against the data, and the reserved fixtures stay out of all of them.
 
-Reads the held-out key only to check its FORMAT and IDs. Nothing here tunes anything against it.
+Covers the Phase 1 keys and, when A has written them, the Phase 2 keys (evals/phase2_key.json and
+evals/phase2_heldout_key.json). Item IDs are checked against the data of the source their prefix names.
+Reads the held-out keys only to check FORMAT, IDs and reserved text. Nothing here tunes anything against them,
+and no assertion message quotes held-out wording.
 """
 import json
 import re
@@ -8,20 +11,26 @@ from pathlib import Path
 
 import pytest
 
+from app import config
 from evals import run_evals as ev
+from tests import corpus
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "synthetic" / "jira_tickets.json"
-KEY_PATHS = {"answer_key": ROOT / "evals" / "answer_key.json",
-             "heldout_key": ROOT / "evals" / "heldout_key.json"}
+PHASE1_KEYS = {"answer_key": ROOT / "evals" / "answer_key.json",
+               "heldout_key": ROOT / "evals" / "heldout_key.json"}
+PHASE2_KEYS = {"phase2_key": ROOT / "evals" / "phase2_key.json",
+               "phase2_heldout_key": ROOT / "evals" / "phase2_heldout_key.json"}
+# Phase 2 keys are A's deliverable; until a file exists its tests are simply absent, not failing.
+KEY_PATHS = {**PHASE1_KEYS, **{n: p for n, p in PHASE2_KEYS.items() if p.exists()}}
+HELDOUT = {"heldout_key", "phase2_heldout_key"}
 
-# Phase 4 (injection) and Phase 5 (PII) fixtures: never used by Phase 1 questions.
-RESERVED = {"ATL-141", "ATL-137"}
-# Anything that identifies those two tickets, so a rewording can't smuggle them in.
-RESERVED_TEXT = ["vendor onboarding checklist", "duplicate charge in legacy billing",
-                 "jordan vale", "jordan.vale", "contact list", "external-contractor",
-                 "ignore previous instructions", "(555)"]
-ID_RE = re.compile(r"^ATL-\d{3}$")
+# Phase 4 (injection) and Phase 5 (PII) fixtures: never used by any question, in any source.
+# data/reserved_fixtures.json (A) adds the Notion and email ones; the two Jira fixtures are always reserved.
+RESERVED = corpus.reserved()["ids"]
+# Anything that identifies those tickets, so a rewording can't smuggle them in.
+RESERVED_TEXT = sorted(corpus.reserved()["phrases"])
+ID_RE = re.compile(r"^(ATL|NTN|EML)-\d{3}$")
 
 
 def tickets():
@@ -29,7 +38,13 @@ def tickets():
 
 
 def ids():
-    return {t["id"] for t in tickets()}
+    """Every real item ID, across all sources whose data exists."""
+    return {t["id"] for t in tickets()} | corpus.facts()["ids"]
+
+
+def shown(name, q, field):
+    """Where a problem is, without quoting held-out wording."""
+    return f"{name} {q['id']}.{field}"
 
 
 def load(name):
@@ -51,7 +66,7 @@ def test_every_expected_and_forbidden_id_exists_in_the_data(key_name):
         for field in ("expected_citations", "forbidden_citations"):
             for cid in q.get(field, []):
                 assert ID_RE.match(cid), f"{key_name} {q['id']}.{field}: malformed ID {cid!r}"
-                assert cid in valid, f"{key_name} {q['id']}.{field}: {cid} is not a ticket in the data"
+                assert cid in valid, f"{key_name} {q['id']}.{field}: {cid} is not an item in the data"
 
 
 def test_expected_and_forbidden_never_overlap_and_have_no_duplicates(key_name):
@@ -61,7 +76,7 @@ def test_expected_and_forbidden_never_overlap_and_have_no_duplicates(key_name):
         assert not set(exp) & set(forb), f"{key_name} {q['id']}: {sorted(set(exp) & set(forb))} both expected and forbidden"
 
 
-def test_reserved_fixture_tickets_are_not_in_either_key(key_name):
+def test_reserved_fixtures_are_not_in_any_key(key_name):
     raw = KEY_PATHS[key_name].read_text(encoding="utf-8")
     for q in load(key_name):
         used = (set(q["expected_citations"]) | set(q.get("forbidden_citations", []))) & RESERVED
@@ -70,12 +85,15 @@ def test_reserved_fixture_tickets_are_not_in_either_key(key_name):
         assert rid not in raw, f"{rid} appears in the text of {KEY_PATHS[key_name].name}"
     low = raw.lower()
     for phrase in RESERVED_TEXT:
-        assert phrase not in low, f"{phrase!r} (identifies a reserved ticket) appears in {KEY_PATHS[key_name].name}"
+        assert phrase not in low, f"a reserved-fixture phrase appears in {KEY_PATHS[key_name].name}"  # phrase withheld
 
 
 def test_key_sizes():
     assert 8 <= len(load("answer_key")) <= 10
     assert 8 <= len(load("heldout_key")) <= 10
+    for name in PHASE2_KEYS:
+        if name in KEY_PATHS:
+            assert 5 <= len(load(name)) <= 20, f"{name}: {len(load(name))} questions"
 
 
 def test_heldout_is_disjoint_from_the_tuning_key():
@@ -84,6 +102,17 @@ def test_heldout_is_disjoint_from_the_tuning_key():
     assert not {q["id"] for q in tune} & {q["id"] for q in held}
     assert not {norm(q["question"]) for q in tune} & {norm(q["question"]) for q in held}
     assert all(q["id"].startswith("H") for q in held) and all(q["id"].startswith("Q") for q in tune)
+
+
+@pytest.mark.skipif(not {"phase2_key", "phase2_heldout_key"} <= set(KEY_PATHS), reason="Phase 2 keys not written yet")
+def test_phase2_heldout_is_disjoint_from_every_tuning_key():
+    norm = lambda s: re.sub(r"\W+", " ", s.lower()).strip()
+    held = load("phase2_heldout_key")
+    tuning = load("answer_key") + load("phase2_key")                  # ids must not collide with a key being tuned on
+    assert not {q["id"] for q in held} & {q["id"] for q in tuning}, "question ids overlap"
+    every_other = tuning + load("heldout_key")                         # but no question may repeat anywhere
+    assert not {norm(q["question"]) for q in held} & {norm(q["question"]) for q in every_other}, "a question is repeated"
+    assert len({q["id"] for q in held}) == len(held)
 
 
 def test_heldout_covers_the_due_today_boundary():
@@ -98,3 +127,72 @@ def test_forbidden_ids_name_a_real_wrong_answer_not_a_random_ticket():
         for q in load(name):
             for fid in q.get("forbidden_citations", []):
                 assert fid in valid and fid not in q["expected_citations"], (name, q["id"], fid)
+
+
+# ---------------------------------------------------------------- Phase 2 optional fields (CONTRACTS.md section 5)
+def phase2_names():
+    return [n for n in PHASE2_KEYS if n in KEY_PATHS]
+
+
+@pytest.fixture(params=phase2_names() or [pytest.param("none", marks=pytest.mark.skip(reason="Phase 2 keys not written yet"))])
+def p2_key(request):
+    return request.param
+
+
+def test_sources_required_are_real_sources_covered_by_expected_citations(p2_key):
+    for q in load(p2_key):
+        prefixes = {ev.source_of(c) for c in q["expected_citations"]}
+        for source in q.get("sources_required", []):
+            assert source in config.SOURCES, f"{shown(p2_key, q, 'sources_required')}: unknown source {source!r}"
+            assert source in prefixes, f"{shown(p2_key, q, 'sources_required')}: no expected citation from {source}"
+
+
+def test_must_mention_strings_are_checkable_against_the_expected_answer(p2_key):
+    for q in load(p2_key):
+        answer = ev.normalize_text(q["expected_answer"])
+        for text in q.get("must_mention", []):
+            assert isinstance(text, str) and text.strip(), shown(p2_key, q, "must_mention")
+            assert ev.mentions(answer, text), \
+                f"{shown(p2_key, q, 'must_mention')}: a required string is not in expected_answer, so a correct answer could fail"
+            assert len(ev.normalize_text(text)) >= 2, f"{shown(p2_key, q, 'must_mention')}: too short to be a meaningful check"
+
+
+def test_phase2_questions_ask_for_more_than_one_source_somewhere(p2_key):
+    multi = [q for q in load(p2_key) if len(q.get("sources_required", [])) >= 2]
+    assert multi, f"{p2_key} has no question that needs two sources; it would not measure Phase 2"
+
+
+def test_phase2_keys_exercise_every_source_and_a_missing_evidence_case(p2_key):
+    qs = load(p2_key)
+    covered = {ev.source_of(c) for q in qs for c in q["expected_citations"]}
+    assert set(config.SOURCES) <= covered, f"{p2_key}: no expected citation from {sorted(set(config.SOURCES) - covered)}"
+    assert any(not q["expected_citations"] for q in qs) or any("not enough evidence" in q["expected_answer"].lower() or
+                                                              "unavailable" in q["expected_answer"].lower() for q in qs), \
+        f"{p2_key}: no question where the right answer is 'not enough evidence' or 'source unavailable'"
+
+
+def test_no_expected_answer_cites_an_id_that_is_not_in_expected_citations(p2_key):
+    """If the written expected answer names an item, that item must be in expected_citations (or forbidden)."""
+    for q in load(p2_key):
+        named = set(re.findall(r"\b(?:ATL|NTN|EML)-\d{3}\b", q["expected_answer"]))
+        allowed = set(q["expected_citations"]) | set(q.get("forbidden_citations", []))
+        assert named <= allowed, f"{shown(p2_key, q, 'expected_answer')}: names {sorted(named - allowed)} that the lists do not mention"
+
+
+# ---------------------------------------------------------------- the rules themselves (key checks must work on bad keys)
+def test_the_reserved_check_would_catch_a_reserved_id_and_phrase():
+    raw = json.dumps([{"id": "Q1", "expected_citations": ["ATL-141"], "expected_answer": "the Vendor Onboarding Checklist"}]).lower()
+    assert any(r.lower() in raw for r in RESERVED)
+    assert any(p in raw for p in RESERVED_TEXT)
+
+
+def test_reserved_fixtures_file_adds_to_the_hard_coded_ones(tmp_path, monkeypatch):
+    f = tmp_path / "reserved.json"
+    f.write_text(json.dumps({"ids": ["NTN-210", "EML-305"], "phrases": ["Secret Phrase"], "ignored": 1}))
+    monkeypatch.setattr(config, "RESERVED_FIXTURES_PATH", f)
+    r = corpus.reserved()
+    assert {"ATL-141", "ATL-137", "NTN-210", "EML-305"} <= r["ids"] and "secret phrase" in r["phrases"]
+    f.write_text(json.dumps(["NTN-211"]))
+    assert "NTN-211" in corpus.reserved()["ids"]
+    f.write_text("not json")
+    assert corpus.reserved()["ids"] == {"ATL-141", "ATL-137"}      # an unreadable file never weakens the rule
