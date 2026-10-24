@@ -20,6 +20,8 @@ LABEL_FIELDS = ("labels", "tags")
 ID_RE = re.compile(r"^[A-Z]{2,10}-\d+$")
 KEY_FILES = {"answer_key": "answer_key.json", "phase2_key": "phase2_key.json"}
 HELDOUT_FILES = {"heldout_key": "heldout_key.json", "phase2_heldout_key": "phase2_heldout_key.json"}
+# A display name ending in one of these is a shared mailbox or team ("People Team <people@...>"), not a person.
+ROLE_WORDS = {"team", "bot", "support", "desk", "alerts", "notifications", "office", "group", "list", "inbox", "robot", "system"}
 EMAIL_ADDR = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 
@@ -89,8 +91,11 @@ def facts(source: str | None = None) -> dict[str, set[str]]:
         for a in EMAIL_ADDR.findall(p):
             addresses.add(a)
         text = EMAIL_ADDR.sub(" ", p)
-        names.add(" ".join(text.split()))
-        names.update(part for part in re.findall(r"[a-z]+", text) if len(part) >= 5)
+        words = re.findall(r"[a-z]+", text)
+        if words and words[-1] in ROLE_WORDS:   # a team or shared mailbox: its words are ordinary vocabulary
+            continue
+        names.add(" ".join(words))               # letters only: "Priya Raman <priya@x>" -> "priya raman"
+        names.update(part for part in words if len(part) >= 5)
     names.discard("")
     # The project name is allowed in prompts (config.PROJECT_NAME); a mailing list called "<Project> Team" is not a person.
     names -= {w.lower() for w in re.findall(r"[A-Za-z]+", config.PROJECT_NAME)}

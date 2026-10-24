@@ -105,3 +105,18 @@ def test_phase1_graph_spans_are_unchanged_with_the_planner_off(monkeypatch):
     assert {"node:agent", "node:tool_executor", "node:synthesizer"} <= names
     assert not names & {"node:planner", "node:retrieve", "node:evidence_check"}
     assert not any(k.startswith("stage.") for s in t.spans for k in s.attrs)
+
+
+# ---------------------------------------------------------------- the people check ignores mailboxes, not people
+def test_team_mailboxes_are_not_people_but_real_names_still_are(monkeypatch, tmp_path):
+    import json
+
+    from tests import corpus
+    mail = tmp_path / "mail.json"
+    mail.write_text(json.dumps([{"id": "EML-901", "subject": "a long enough subject",
+                                 "from": "People Team <people@x.example>", "to": ["Priya Raman <priya@x.example>", "Atlas Team <atlas-team@x.example>"]}]))
+    monkeypatch.setattr(config, "DATA_PATHS", {"jira": tmp_path / "none.json", "notion": tmp_path / "none2.json", "email": mail})
+    f = corpus.facts("email")
+    assert "people" not in f["names"] and "atlas" not in f["names"]           # mailboxes: ordinary words
+    assert {"priya raman", "priya", "raman"} <= f["names"]                    # a person stays checked
+    assert {"people@x.example", "priya@x.example"} <= f["addresses"]          # addresses stay checked either way
