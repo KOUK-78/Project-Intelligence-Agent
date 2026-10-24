@@ -99,6 +99,11 @@ def _warnings(old: dict, new: dict) -> list[str]:
         warn.append(f"frozen TODAY differs (OLD {old.get('today')}, NEW {new.get('today')})")
     if old.get("model") != new.get("model"):
         warn.append(f"model differs (OLD {old.get('model')}, NEW {new.get('model')})")
+    if old.get("agent_mode") and new.get("agent_mode") and old["agent_mode"] != new["agent_mode"]:
+        warn.append(f"agent mode differs (OLD {old.get('agent_mode')}, NEW {new.get('agent_mode')})")
+    if "phase1_jira_only" in (old.get("agent_mode"), new.get("agent_mode")) and str(new.get("key", "")).startswith("phase2"):
+        warn.append("a file was recorded with the Phase 1 graph (Jira only) on a Phase 2 key: it is not a flat baseline, "
+                    "so do not present it as the planner's before/after")
     oe, ne = old.get("environment"), new.get("environment")
     if not oe or not ne:
         side = "Neither file has" if not oe and not ne else ("OLD has no" if not oe else "NEW has no")

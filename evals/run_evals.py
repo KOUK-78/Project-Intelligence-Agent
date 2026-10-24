@@ -132,17 +132,29 @@ def phase_of(key: Path) -> int:
     return 2 if Path(key).name.startswith("phase2") else 1
 
 
-def default_out_path(key: Path, stub: bool, planner: bool | None = None) -> Path:
-    """Separate result files per key and per planner mode; stub runs never overwrite real results.
+def agent_mode(key: Path, planner: bool, flat: bool) -> str:
+    """What kind of agent a result file measures: "planner", "flat" (one loop over every source), or the Phase 1
+    graph. On a Phase 2 key the Phase 1 graph is Jira-only, so it is labelled so and is NOT a flat baseline."""
+    if planner:
+        return "planner"
+    if flat:
+        return "flat"
+    return "phase1_jira_only" if phase_of(key) == 2 else "phase1"
 
-    Phase 2 (CONTRACTS.md section 12): phase2_flat.json (planner off), phase2_planner.json, phase2_heldout.json
-    (planner on) and phase2_heldout_flat.json (planner off). Phase 1 keys keep their file names when the planner
-    is off, and get a `_planner` suffix when it is on, so a planner run can never overwrite a recorded baseline.
+
+def default_out_path(key: Path, stub: bool, planner: bool | None = None, flat: bool = False) -> Path:
+    """Separate result files per key and per agent mode; stub runs never overwrite real results.
+
+    Phase 2 (CONTRACTS.md section 12): phase2_planner.json / phase2_heldout.json (planner on), phase2_flat.json /
+    phase2_heldout_flat.json (a true flat mode, `--flat`) and phase2_jira_only.json / phase2_heldout_jira_only.json
+    (planner off with no flat mode: the Phase 1 graph, which only reaches Jira). Phase 1 keys keep their file names
+    when the planner is off, and get a `_planner` suffix when it is on, so a planner run can never overwrite a baseline.
     """
     planner = config.PLANNER_ENABLED if planner is None else planner
+    mode = agent_mode(key, planner, flat)
     names = {"answer_key.json": "phase1_baseline.json", "heldout_key.json": "phase1_heldout.json",
-             "phase2_key.json": "phase2_planner.json" if planner else "phase2_flat.json",
-             "phase2_heldout_key.json": "phase2_heldout.json" if planner else "phase2_heldout_flat.json"}
+             "phase2_key.json": {"planner": "phase2_planner.json", "flat": "phase2_flat.json"}.get(mode, "phase2_jira_only.json"),
+             "phase2_heldout_key.json": {"planner": "phase2_heldout.json", "flat": "phase2_heldout_flat.json"}.get(mode, "phase2_heldout_jira_only.json")}
     name = names.get(Path(key).name)
     if name is None:
         name = f"{Path(key).stem}{'_planner' if planner else ''}_results.json"
@@ -432,22 +444,28 @@ def describe_environment(stub: bool) -> dict:
 
 
 @contextmanager
-def planner_override(value: bool | None):
-    """Switch the planner for one run and ALWAYS restore config and environment afterwards."""
-    if value is None:
+def planner_override(value: bool | None, flat: bool = False):
+    """Switch the planner (and flat mode) for one run and ALWAYS restore config and environment afterwards."""
+    if value is None and not flat:
         yield
         return
-    old_cfg, old_env = config.PLANNER_ENABLED, os.environ.get("PLANNER_ENABLED")
-    config.PLANNER_ENABLED = value  # the agent reads config.PLANNER_ENABLED at call time (CONTRACTS.md section 6)
-    os.environ["PLANNER_ENABLED"] = "1" if value else "0"
+    old = {"PLANNER_ENABLED": config.PLANNER_ENABLED, "FLAT_ALL_SOURCES": config.FLAT_ALL_SOURCES}
+    old_env = {k: os.environ.get(k) for k in old}
+    if value is not None:
+        config.PLANNER_ENABLED = value  # the agent reads config.PLANNER_ENABLED at call time (CONTRACTS.md section 6)
+        os.environ["PLANNER_ENABLED"] = "1" if value else "0"
+    if flat:
+        config.FLAT_ALL_SOURCES = True
+        os.environ["FLAT_ALL_SOURCES"] = "1"
     try:
         yield
     finally:
-        config.PLANNER_ENABLED = old_cfg
-        if old_env is None:
-            os.environ.pop("PLANNER_ENABLED", None)
-        else:
-            os.environ["PLANNER_ENABLED"] = old_env
+        for k, v in old.items():
+            setattr(config, k, v)
+            if old_env[k] is None:
+                os.environ.pop(k, None)
+            else:
+                os.environ[k] = old_env[k]
 
 
 # ---------------------------------------------------------------- CLI
@@ -458,7 +476,9 @@ def main(
     phase2: bool = typer.Option(False, "--phase2", help="Run the Phase 2 key (with --heldout: the Phase 2 held-out key)"),
     planner: Optional[bool] = typer.Option(None, "--planner/--no-planner",
                                            help="Planner on or off for this run (default: PLANNER_ENABLED)"),
-    out: Path = typer.Option(None, help="Results file (default depends on --key and planner; stub adds .stub)"),
+    flat: bool = typer.Option(False, "--flat", help="Flat baseline: one retrieval loop over ALL sources, no planner "
+                              "(refuses to run until flat mode exists: config.FLAT_MODE_IMPLEMENTED)"),
+    out: Path = typer.Option(None, help="Results file (default depends on --key and agent mode; stub adds .stub)"),
     stub: bool = typer.Option(False, "--stub", help="Use the TEST-ONLY stub agent"),
     auto: bool = typer.Option(False, "--auto", help="No prompts; exit 1 if any question fails"),
     no_grade: bool = typer.Option(False, "--no-grade", help="Record mechanical checks only"),
@@ -474,9 +494,20 @@ def main(
         key = config.PHASE2_HELDOUT_KEY_PATH if heldout else config.PHASE2_KEY_PATH
     elif heldout:
         key = config.HELDOUT_KEY_PATH
-    planner_on = config.PLANNER_ENABLED if planner is None else planner
+    if flat and planner:
+        raise typer.BadParameter("--flat means no planner; it cannot be combined with --planner")
+    if flat and not config.FLAT_MODE_IMPLEMENTED:
+        typer.echo("error: there is no flat mode yet (a single retrieval loop over all sources, no planner). With the planner "
+                   "off the agent is the Phase 1 graph, which only reaches Jira, so it is not a flat baseline. Do not record "
+                   "phase2_flat.json until config.FLAT_MODE_IMPLEMENTED is True.")
+        raise typer.Exit(2)
+    planner_on = False if flat else (config.PLANNER_ENABLED if planner is None else planner)
+    mode_label = agent_mode(key, planner_on, flat)
     questions = load_key(key)
-    out = out or default_out_path(key, stub, planner_on)
+    out = out or default_out_path(key, stub, planner_on, flat)
+    if mode_label == "phase1_jira_only":
+        typer.echo("(!) Planner is off and there is no flat mode: this runs the Phase 1 graph, which only reaches Jira. "
+                   "The result is written as *_jira_only.json and is NOT a flat baseline for the planner.")
     if heldout and phase2:
         typer.echo("MEASUREMENT ONLY: the Phase 2 held-out key is never used to tune prompts or code (CONTRACTS.md 7).")
     if config.resolve_faults():
@@ -498,7 +529,7 @@ def main(
     else:
         grader = lambda q, rec: ask_grade()
 
-    with planner_override(planner):
+    with planner_override(False if flat else planner, flat):
         records = run_questions(questions, run_agent, repeat, valid_ids, grader, echo=typer.echo)
     agg = aggregate(records, min_pass_rate)
     mode = "auto" if auto else ("mechanical" if no_grade else "manual")
@@ -507,7 +538,7 @@ def main(
     Path(out).write_text(json.dumps({
         "phase": phase_of(key), "today": config.TODAY, "model": config.MODELS["agent"],
         "agent": "stub" if stub else "real", "key": Path(key).name, "mode": mode,
-        "planner_enabled": planner_on,
+        "planner_enabled": planner_on, "agent_mode": mode_label,
         "repeat": repeat, "min_pass_rate": min_pass_rate,
         "environment": describe_environment(stub),
         "score": {"questions_passed": agg["questions_passed"], "questions_total": agg["questions_total"],

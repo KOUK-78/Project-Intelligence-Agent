@@ -85,7 +85,8 @@ The contract (new tool names, optional `AgentResult` fields, key fields `sources
 ### Measurement tools
 
 ```bash
-python -m evals.run_evals --phase2 --no-planner --auto --repeat 3   # -> evals/results/phase2_flat.json
+python -m evals.run_evals --phase2 --flat --auto --repeat 3          # -> phase2_flat.json (refuses until flat mode exists)
+python -m evals.run_evals --phase2 --no-planner --auto --repeat 3   # -> phase2_jira_only.json (Phase 1 graph; NOT a flat baseline)
 python -m evals.run_evals --phase2 --planner    --auto --repeat 3   # -> evals/results/phase2_planner.json
 python -m evals.run_evals --phase2 --heldout --planner --auto --repeat 3   # -> phase2_heldout.json (M4 only)
 python -m evals.compare evals/results/phase2_flat.json evals/results/phase2_planner.json
@@ -98,12 +99,12 @@ Each run records sources cited versus `sources_required`, the `must_mention` che
 
 | Run | File | Questions passing | Runs passing | Median / worst latency | Median tokens per run | Trace IDs |
 |---|---|---|---|---|---|---|
-| Flat (planner off) | `phase2_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
+| Flat (one loop, all sources; **not available yet**) | `phase2_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 | Planner on | `phase2_planner.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 | Held-out, planner on | `phase2_heldout.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
-| Held-out, planner off | `phase2_heldout_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
+| Held-out, flat (not available yet) | `phase2_heldout_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 
-Official runs are recorded at M2 and M4 on one machine with one model version and Phoenix on, then this table is filled from the result files (and `compare` output pasted beside it). A planner that does not beat flat on the tuning key, or that regresses the held-out comparison, is reported as such.
+Official runs are recorded at M2 and M4 on one machine with one model version and Phoenix on, then this table is filled from the result files (and `compare` output pasted beside it). With the planner off the agent is the Phase 1 graph, which reaches only Jira, so it is **not** a flat baseline: those runs are recorded as `phase2_jira_only.json` and must not be presented as the planner's before/after. `phase2_flat.json` is recorded only once a flat mode (one retrieval loop over all three sources, no planner) exists. A planner that does not beat flat on the tuning key, or that regresses the held-out comparison, is reported as such.
 
 ### Phase 1 regression table
 
