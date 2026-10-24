@@ -36,21 +36,22 @@ list_overdue()
   -> {"count": n, "results": [{id, title, status, assignee, due_date, days_overdue}]}
 ```
 New in Phase 2. Day 0 fixes the NAMES, the read-only rule, the ID rule and "keyword search with section-level
-snippets" (decision 7). The shapes below are the proposal D confirms in review; D may adjust field names in the
-PR that adds the server, and that PR must update this block.
+snippets" (decision 7). The shapes below follow A's `data/SCHEMAS.md`, which is what the data supports. D confirms
+them in the PR that adds the servers (that PR must update this block). Open question for D: the Jira search
+argument is `keyword`, A's schema names the new ones `query`; pick one convention before the servers are written.
 ```
-search_pages(keyword: str)
-  -> {"count": n, "results": [{id, title, section, snippet}]}          # one row per matching section
+search_pages(query: str)
+  -> {"count": n, "results": [{id, title, page_type, status, last_edited, section: {heading, text}}]}  # best matching section
 get_page(page_id: str)
-  -> full page object, or {"error": "not_found", "id": "<id>"}
-search_emails(keyword: str)
-  -> {"count": n, "results": [{id, subject, from, date, thread_id, snippet}]}
+  -> full page object {id, title, page_type, owner, status, created_date, last_edited, sections}, or {"error": "not_found", "id": "<id>"}
+search_emails(query: str)
+  -> {"count": n, "results": [{id, thread_id, subject, from, date, snippet}]}   # snippet = FIRST 160 CHARS OF THE BODY ONLY
 get_email(email_id: str)
-  -> full email object, or {"error": "not_found", "id": "<id>"}
+  -> full message {id, thread_id, subject, from, to, date, in_reply_to, body}, or {"error": "not_found", "id": "<id>"}
 get_thread(thread_id: str)
-  -> {"thread_id": "<id>", "emails": [{id, subject, from, date}]}, or {"error": "not_found", "id": "<id>"}
+  -> {"thread_id": "<id>", "count": n, "emails": [full messages in date order]}, or {"error": "not_found", "id": "<id>"}
 ```
-Every server must NEVER print to stdout (corrupts the stdio protocol). Log to stderr.
+Email IDs are `EML-`, thread IDs `THR-` (a thread ID is not a citable item). Every server must NEVER print to stdout (corrupts the stdio protocol). Log to stderr.
 
 ## 4) Agent interface (`app/agent.py`)
 `run_agent(question: str) -> AgentResult`
@@ -97,8 +98,8 @@ AgentResult = {
 - `sources_required` is OPTIONAL (Phase 2). A list of source names from `config.SOURCES`. A run passes this check
   only if its citations include at least one ID from each listed source. Absent means no requirement.
   Every listed source must also appear among the prefixes of `expected_citations` (tests enforce).
-- `must_mention` is OPTIONAL (Phase 2). A list of strings that must appear in the answer text
-  (case-insensitive, whitespace-normalised). Each string must also appear in `expected_answer`, so the answer
+- `must_mention` is OPTIONAL (Phase 2). A list of strings that must appear in the answer text as whole tokens
+  (case-insensitive, whitespace-normalised; "25" does not match "2025"). Each string must also appear in `expected_answer`, so the answer
   stays checkable (tests enforce). Absent means no requirement.
 - Phase 1 keys use none of the new fields and are scored exactly as before.
 

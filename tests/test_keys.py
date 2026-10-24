@@ -108,9 +108,10 @@ def test_heldout_is_disjoint_from_the_tuning_key():
 def test_phase2_heldout_is_disjoint_from_every_tuning_key():
     norm = lambda s: re.sub(r"\W+", " ", s.lower()).strip()
     held = load("phase2_heldout_key")
-    tuning = load("answer_key") + load("phase2_key") + load("heldout_key")
+    tuning = load("answer_key") + load("phase2_key")                  # ids must not collide with a key being tuned on
     assert not {q["id"] for q in held} & {q["id"] for q in tuning}, "question ids overlap"
-    assert not {norm(q["question"]) for q in held} & {norm(q["question"]) for q in tuning}, "a question is repeated"
+    every_other = tuning + load("heldout_key")                         # but no question may repeat anywhere
+    assert not {norm(q["question"]) for q in held} & {norm(q["question"]) for q in every_other}, "a question is repeated"
     assert len({q["id"] for q in held}) == len(held)
 
 
@@ -151,9 +152,9 @@ def test_must_mention_strings_are_checkable_against_the_expected_answer(p2_key):
         answer = ev.normalize_text(q["expected_answer"])
         for text in q.get("must_mention", []):
             assert isinstance(text, str) and text.strip(), shown(p2_key, q, "must_mention")
-            assert ev.normalize_text(text) in answer, \
+            assert ev.mentions(answer, text), \
                 f"{shown(p2_key, q, 'must_mention')}: a required string is not in expected_answer, so a correct answer could fail"
-            assert len(ev.normalize_text(text)) >= 3, f"{shown(p2_key, q, 'must_mention')}: too short to be a meaningful check"
+            assert len(ev.normalize_text(text)) >= 2, f"{shown(p2_key, q, 'must_mention')}: too short to be a meaningful check"
 
 
 def test_phase2_questions_ask_for_more_than_one_source_somewhere(p2_key):

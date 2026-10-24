@@ -92,6 +92,8 @@ def facts(source: str | None = None) -> dict[str, set[str]]:
         names.add(" ".join(text.split()))
         names.update(part for part in re.findall(r"[a-z]+", text) if len(part) >= 5)
     names.discard("")
+    # The project name is allowed in prompts (config.PROJECT_NAME); a mailing list called "<Project> Team" is not a person.
+    names -= {w.lower() for w in re.findall(r"[A-Za-z]+", config.PROJECT_NAME)}
     return {"ids": ids, "titles": titles, "names": names, "addresses": addresses, "labels": labels}
 
 

@@ -159,6 +159,12 @@ def normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", str(text or "")).strip().lower()
 
 
+def mentions(answer_text: str, wanted: str) -> bool:
+    """True if `wanted` appears in the (already normalised) answer as a whole token, so "25" does not match "2025"."""
+    w = normalize_text(wanted)
+    return bool(w) and re.search(rf"(?<![\w]){re.escape(w)}(?![\w])", answer_text) is not None
+
+
 def mechanical_checks(expected: list[str], result: dict, valid_ids: set[str] | None,
                       forbidden: list[str] = (), sources_required: list[str] = (),
                       must_mention: list[str] = ()) -> dict:
@@ -171,7 +177,7 @@ def mechanical_checks(expected: list[str], result: dict, valid_ids: set[str] | N
     cited_sources = sources_of(cited)
     sources_missing = [s for s in sources_required if s not in cited_sources]
     text = normalize_text(result.get("answer"))
-    mention_missing = [m for m in must_mention if normalize_text(m) not in text]
+    mention_missing = [m for m in must_mention if not mentions(text, m)]
     return {"all_expected_citations_found": set(expected) <= set(cited),
             "invalid_citations": invalid, "any_invalid_citation": bool(invalid),
             "forbidden_citations_hit": hit, "any_forbidden_citation": bool(hit),

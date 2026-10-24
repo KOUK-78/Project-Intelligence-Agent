@@ -444,3 +444,10 @@ def test_phase1_run_records_phase_1_and_planner_off(monkeypatch, tmp_path):
     r, out = run_cli(monkeypatch, tmp_path, [q()], lambda _q: result(["ATL-112"]), "--auto")
     data = json.loads(out.read_text())
     assert r.exit_code == 0 and data["phase"] == 1 and data["planner_enabled"] is False
+
+
+def test_must_mention_matches_whole_tokens_only():
+    assert ev.mentions("it was 25 days late", "25") and ev.mentions("late by 25.", "25") and ev.mentions("25% done", "25")
+    assert not ev.mentions("due in 2025", "25") and not ev.mentions("250 tickets", "25") and not ev.mentions("v25a", "25")
+    assert ev.mentions("ga is 2026-09-15 for all", "2026-09-15") and ev.mentions("sept 15", "SEPT   15")
+    assert not ev.mentions("anything", "") and not ev.mentions("", "x")

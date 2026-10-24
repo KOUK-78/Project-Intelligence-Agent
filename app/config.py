@@ -92,9 +92,9 @@ SPAN_TEXT_CHARS = 200              # longest text value stored as a trace span a
 
 # --- Paths
 DATA_PATH = ROOT / "data" / "synthetic" / "jira_tickets.json"
-# A (data owner) confirms these two file names in the data PR; change them here if they differ.
+# File names as delivered by A (data/WORLD.md); NOTION_DATA_PATH / EMAIL_DATA_PATH override them.
 NOTION_DATA_PATH = Path(os.getenv("NOTION_DATA_PATH") or ROOT / "data" / "synthetic" / "notion_pages.json")
-EMAIL_DATA_PATH = Path(os.getenv("EMAIL_DATA_PATH") or ROOT / "data" / "synthetic" / "emails.json")
+EMAIL_DATA_PATH = Path(os.getenv("EMAIL_DATA_PATH") or ROOT / "data" / "synthetic" / "email_messages.json")
 DATA_PATHS = {"jira": DATA_PATH, "notion": NOTION_DATA_PATH, "email": EMAIL_DATA_PATH}
 RESERVED_FIXTURES_PATH = ROOT / "data" / "reserved_fixtures.json"  # A lists every injection/PII fixture here
 LOGS_DIR = ROOT / "logs"
