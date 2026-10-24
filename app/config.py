@@ -30,6 +30,8 @@ TEMPERATURE = 0.1
 TODAY = "2026-06-30"
 
 # --- Agent
+# MAX_AGENT_STEPS is the PER-SUB-QUESTION cap (CONTRACTS.md section 6). With the planner off the whole run is
+# one sub-question, so it is also the whole-run cap and Phase 1 behaviour is unchanged.
 MAX_AGENT_STEPS = 5
 PROJECT_NAME = "Atlas"             # the project every ticket belongs to; never a useful search term
 AGENT_DEBUG = (os.getenv("AGENT_DEBUG") or "0").lower() not in ("0", "false", "no")  # per-node decision log on stderr
@@ -49,10 +51,35 @@ SUBQUESTION_CHARS = 300            # longest sub-question / rewritten query we k
 REASON_CHARS = 200                 # longest planner "reason" we keep
 EVIDENCE_CHECK_CHARS = 4000        # evidence shown to the yes/no check (smaller than the synthesizer's)
 
+# Source registry: one name and one citation-ID prefix per source (Day 0 decision 1).
+SOURCES = ("jira", "notion", "email")
+SOURCE_ID_PREFIXES = {"jira": "ATL", "notion": "NTN", "email": "EML"}
+
+# --- Fault injection (C4). FAULT_INJECT="notion:fail,email:timeout" makes that source misbehave.
+#   fail    = the source's server cannot start and every call errors   -> "source unavailable"
+#   timeout = every call hangs for FAULT_TIMEOUT_SLEEP_S, so the caller's own timeout must trip first
+# Hook points are described in CONTRACTS.md section 11; the logic lives in app/faults.py.
+FAULT_MODES = ("fail", "timeout")
+
+
+def resolve_faults(env=None) -> dict[str, str]:
+    """Parse FAULT_INJECT into {source: mode}. Unknown sources or modes raise, like resolve_heuristics."""
+    env = os.environ if env is None else env
+    faults: dict[str, str] = {}
+    for item in (p.strip() for p in (env.get("FAULT_INJECT") or "").split(",") if p.strip()):
+        source, sep, mode = (s.strip().lower() for s in item.partition(":"))
+        if not sep or source not in SOURCES or mode not in FAULT_MODES:
+            raise ValueError(f"FAULT_INJECT: bad entry {item!r}; use <source>:<mode> with source in {list(SOURCES)} "
+                             f"and mode in {list(FAULT_MODES)}")
+        faults[source] = mode
+    return faults
+
+
 # --- Timeouts (seconds)
 MCP_CALL_TIMEOUT_S = 15            # one tool call
 MCP_STARTUP_TIMEOUT_S = 20         # server launch + initialize + list_tools
 LLM_TIMEOUT_S = 120                # one Ollama request
+FAULT_TIMEOUT_SLEEP_S = MCP_CALL_TIMEOUT_S * 2   # injected 'timeout' hang; always longer than the call timeout
 
 # --- Size caps (characters); keep prompts short, num_ctx is 8192 tokens
 MAX_TOOL_CHARS = 2500              # one tool result fed back to the agent
@@ -60,14 +87,26 @@ EVIDENCE_ITEM_CHARS = 2000         # one tool result shown to the synthesizer
 EVIDENCE_TOTAL_CHARS = 9000        # all evidence shown to the synthesizer
 ERROR_TEXT_CHARS = 300             # error text kept in results and logs
 SNIPPET_CHARS = 120                # short excerpt of a bad model/tool output
+SPAN_TEXT_CHARS = 200              # longest text value stored as a trace span attribute
 
 # --- Paths
 DATA_PATH = ROOT / "data" / "synthetic" / "jira_tickets.json"
+# A (data owner) confirms these two file names in the data PR; change them here if they differ.
+NOTION_DATA_PATH = Path(os.getenv("NOTION_DATA_PATH") or ROOT / "data" / "synthetic" / "notion_pages.json")
+EMAIL_DATA_PATH = Path(os.getenv("EMAIL_DATA_PATH") or ROOT / "data" / "synthetic" / "emails.json")
+DATA_PATHS = {"jira": DATA_PATH, "notion": NOTION_DATA_PATH, "email": EMAIL_DATA_PATH}
+RESERVED_FIXTURES_PATH = ROOT / "data" / "reserved_fixtures.json"  # A lists every injection/PII fixture here
 LOGS_DIR = ROOT / "logs"
 RUNS_LOG = LOGS_DIR / "runs.jsonl"
 ANSWER_KEY_PATH = ROOT / "evals" / "answer_key.json"
 HELDOUT_KEY_PATH = ROOT / "evals" / "heldout_key.json"  # measurement only, never tuned against (CONTRACTS.md 7)
+PHASE2_KEY_PATH = ROOT / "evals" / "phase2_key.json"
+PHASE2_HELDOUT_KEY_PATH = ROOT / "evals" / "phase2_heldout_key.json"  # measurement only (CONTRACTS.md 7)
 RESULTS_DIR = ROOT / "evals" / "results"
+
+# --- Regression floor (C3): a Phase 1 key must still pass at least this many runs, as (runs_passed, runs_total).
+# These are the bottom of the recorded Phase 1 ranges (original 22-24/30, held-out 15-18/30).
+REGRESSION_FLOORS = {"answer_key.json": (22, 30), "heldout_key.json": (15, 30)}
 
 # --- Tracing (Arize Phoenix, local)
 TRACING_ENABLED = (os.getenv("TRACING_ENABLED") or "1").lower() not in ("0", "false", "no")
