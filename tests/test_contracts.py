@@ -97,3 +97,47 @@ def test_the_four_owners_each_own_something():
     rows = re.findall(r"^\| ([ABCD]) \| (.+) \|$", owner_text(), re.M)
     assert [r[0] for r in rows] == ["A", "B", "C", "D"]
     assert all(r[1].strip() for r in rows)
+
+
+# ---------------------------------------------------------------- README stays true to the code and the recorded results
+README = (ROOT / "README.md").read_text(encoding="utf-8")
+
+
+def test_every_runner_flag_the_readme_mentions_exists():
+    from typer.testing import CliRunner
+
+    from evals import run_evals
+
+    help_text = CliRunner().invoke(run_evals.cli, ["--help"]).output
+    help_text = re.sub(r"\s+", "", help_text)
+    mentioned = set(re.findall(r"`(--[a-z][a-z0-9-]+)", README + (ROOT / "docs" / "SETUP.md").read_text(encoding="utf-8")))
+    mentioned |= set(re.findall(r"evals\.run_evals [^\n`]*?(--[a-z][a-z0-9-]+)", README))
+    ignored = {"--stub"}  # also an app CLI flag
+    missing = sorted(f for f in mentioned - ignored if f.replace("-", "") not in help_text.replace("-", ""))
+    assert not missing, f"README/SETUP mention runner flags that do not exist: {missing}"
+
+
+def test_readme_phase1_numbers_match_the_recorded_result_files():
+    import json
+
+    for name, runs in (("phase1_baseline.json", "23 of 30 runs"), ("phase1_heldout.json", "18 of 30 runs")):
+        score = json.loads((ROOT / "evals" / "results" / name).read_text(encoding="utf-8"))["score"]
+        assert f"{score['runs_passed']} of {score['runs_total']} runs" == runs
+        assert runs in README, f"README no longer states {runs} for {name}"
+    assert "73% to 80%" in README
+
+
+def test_readme_regression_floors_match_config():
+    for key, (got, total) in config.REGRESSION_FLOORS.items():
+        assert f"{got} of {total}" in README, f"README does not state the {key} floor {got} of {total}"
+
+
+def test_readme_claims_no_phase2_result_that_is_not_recorded():
+    """A number may enter the Phase 2 table only together with its result file."""
+    results = ROOT / "evals" / "results"
+    recorded = {p.name for p in results.glob("phase2_*.json") if ".stub." not in p.name}
+    table = README.split("### Flat versus planner")[1].split("### Phase 1 regression")[0]
+    for name in ("phase2_flat.json", "phase2_planner.json", "phase2_heldout.json", "phase2_heldout_flat.json"):
+        row = next(line for line in table.splitlines() if f"`{name}`" in line)
+        has_number = bool(re.search(r"\d+ of \d+|\d+\.\ds|\d{3,}", row.split(f"`{name}`")[1]))
+        assert has_number == (name in recorded), f"{name}: README row and recorded file disagree (number={has_number})"
