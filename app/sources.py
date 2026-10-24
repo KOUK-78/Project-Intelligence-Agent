@@ -26,7 +26,7 @@ Normalizer = Callable[[dict[str, Any], str], dict[str, Any]]
 class Source:
     name: str                        # short key used in plans and logs
     server_module: str               # launched as `python -m <module>` from the repo root
-    id_prefix: str                   # citation prefix, e.g. "ATL" -> ATL-123
+    id_prefix: str                   # citation prefix, e.g. "ATL" -> ATL-000
     data_env: str                    # env var that overrides the data path for the server
     data_path: Path                  # default data file
     tool_names: tuple[str, ...]      # tools this server advertises
