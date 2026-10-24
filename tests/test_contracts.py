@@ -103,18 +103,37 @@ def test_the_four_owners_each_own_something():
 README = (ROOT / "README.md").read_text(encoding="utf-8")
 
 
-def test_every_runner_flag_the_readme_mentions_exists():
-    from typer.testing import CliRunner
+def runner_flags() -> set[str]:
+    """Every option the runner defines, read from the command itself. Scraping --help is layout-dependent: typer
+    draws it as a rich box that truncates or wraps option names to the terminal width, which differs in CI."""
+    import typer.main
 
     from evals import run_evals
 
-    help_text = CliRunner().invoke(run_evals.cli, ["--help"]).output
-    help_text = re.sub(r"\s+", "", help_text)
+    cmd = typer.main.get_command(run_evals.cli)
+    return {opt for param in cmd.params for opt in (*param.opts, *param.secondary_opts)} | {"--help"}
+
+
+def test_every_runner_flag_the_readme_mentions_exists():
     mentioned = set(re.findall(r"`(--[a-z][a-z0-9-]+)", README + (ROOT / "docs" / "SETUP.md").read_text(encoding="utf-8")))
     mentioned |= set(re.findall(r"evals\.run_evals [^\n`]*?(--[a-z][a-z0-9-]+)", README))
-    ignored = {"--stub"}  # also an app CLI flag
-    missing = sorted(f for f in mentioned - ignored if f.replace("-", "") not in help_text.replace("-", ""))
+    ignored = {"--stub", "--no-floor"}  # --stub is also an app CLI flag; --no-floor belongs to evals.compare
+    missing = sorted(mentioned - ignored - runner_flags())
     assert not missing, f"README/SETUP mention runner flags that do not exist: {missing}"
+
+
+def test_the_flag_reader_finds_the_flags_the_docs_rely_on():
+    """Guard the guard: if the reader returned an empty set the test above would only fail on typos."""
+    assert {"--phase2", "--planner", "--no-planner", "--min-pass-rate", "--no-grade", "--require-trace",
+            "--heldout", "--auto", "--repeat"} <= runner_flags()
+
+
+def test_compare_flag_the_docs_mention_exists():
+    import typer.main
+
+    from evals import compare
+
+    assert "--no-floor" in {o for p in typer.main.get_command(compare.cli).params for o in p.opts}
 
 
 def test_readme_phase1_numbers_match_the_recorded_result_files():
