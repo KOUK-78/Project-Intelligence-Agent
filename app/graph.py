@@ -39,11 +39,13 @@ def logged(name, fn):
     return wrapper
 
 
-def build_phase1_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None):
+def build_phase1_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None,
+                       unchecked_prefixes: frozenset[str] | set[str] = frozenset()):
     graph = StateGraph(AgentState)
     graph.add_node("agent", node_span("agent")(logged("agent", make_agent_node(llm, mcp.tools))))
     graph.add_node("tool_executor", node_span("tool_executor")(logged("tool_executor", make_tool_node(mcp))))
-    graph.add_node("synthesizer", node_span("synthesizer")(logged("synthesizer", make_synthesizer_node(llm, known_ids))))
+    graph.add_node("synthesizer", node_span("synthesizer")(
+        logged("synthesizer", make_synthesizer_node(llm, known_ids, unchecked_prefixes))))
 
     graph.add_edge(START, "agent")
     graph.add_conditional_edges(
@@ -108,8 +110,9 @@ def build_planned_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None
 
 def build_graph(llm: LLM, mcp: McpToolClient, known_ids: set[str] | None, sources: Sequence[Source] | None = None,
                 unchecked_prefixes: frozenset[str] | set[str] = frozenset()):
-    """`sources` is the registry (D). It and `unchecked_prefixes` are ignored when the planner is off, so that
-    path cannot change."""
+    """`sources` (the planner's registry, from D) is ignored when the planner is off. `unchecked_prefixes` is not: the
+    Phase 1 graph also serves flat mode (several sources, no planner), where an unreadable source's IDs need it. It is
+    empty for a Jira-only run, so that path is unchanged."""
     if not config.PLANNER_ENABLED:
-        return build_phase1_graph(llm, mcp, known_ids)
+        return build_phase1_graph(llm, mcp, known_ids, unchecked_prefixes)
     return build_planned_graph(llm, mcp, known_ids, sources or (), unchecked_prefixes)

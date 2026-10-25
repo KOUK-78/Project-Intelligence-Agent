@@ -108,8 +108,10 @@ async def arun_agent(
         planner_sources = sources if sources is not None else default_sources
         ids = known_ids if known_ids is not None else load_known_ids()
         # A source whose data file cannot be read has no list of real IDs: its citations are checked against
-        # this run's evidence only (verify_citations), instead of being flagged as unknown.
-        unchecked = unreadable_prefixes() if config.PLANNER_ENABLED and known_ids is None else frozenset()
+        # this run's evidence only (verify_citations), instead of being flagged as unknown. This applies with the
+        # planner off too: flat mode (several sources, one loop) has the same problem. A Jira-only run has at most
+        # {"ATL"} here, and only when no ID list exists at all, so Phase 1 is unchanged.
+        unchecked = unreadable_prefixes() if known_ids is None else frozenset()
         async with client as mcp_client:
             graph = build_graph(model, mcp_client, ids, planner_sources, unchecked)
             initial: dict[str, Any] = {
