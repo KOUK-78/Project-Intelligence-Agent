@@ -31,6 +31,21 @@ AGENT_SYSTEM = (
     "When you have enough evidence, stop calling tools and reply with the single word DONE."
 )
 
+# Scopes with no ticket tools (a planned run over one non-ticket source) get this prompt instead of AGENT_SYSTEM, whose
+# text describes ticket tools the model does not have there. Scopes with ticket tools keep AGENT_SYSTEM unchanged.
+RECORD_AGENT_SYSTEM = (
+    "You answer questions by calling tools that read records.\n"
+    "Look facts up with tools; never answer from memory.\n"
+    f"Never use '{config.PROJECT_NAME}' or the word 'project' as a keyword.\n"
+    "A search tool matches a keyword against the records. Use 1-2 distinctive words, never a sentence: every word "
+    "must match.\n"
+    "If a search returns 0 results, use fewer or different words; never repeat a search.\n"
+    "Search results are short summaries. Reasons, dates and decisions are in the full record, so call the matching "
+    "get_ tool on each relevant record before answering.\n"
+    "You may call several tools in one reply, e.g. one get_ call per record.\n"
+    f"Today's date is {config.TODAY}.\n"
+    "When you have enough evidence, stop calling tools and reply with the single word DONE."
+)
 NUDGE = "You have no evidence yet. Call a tool to look this up."
 DETAIL_NUDGE = (
     "You only have search summaries. Call get_ticket on the relevant tickets: "
@@ -79,11 +94,16 @@ def unread_candidates(state: AgentState) -> list[str]:
     return out[: config.MAX_CANDIDATE_TICKETS]
 
 
-def needs_ticket_details(state: AgentState) -> bool:
+def needs_ticket_details(state: AgentState, detail_tools: tuple[str, ...] = ("get_ticket",)) -> bool:
     evidence = state.get("evidence", [])
     saw_tickets = bool(evidence_ids(evidence))
-    fetched = any(e["tool"] == "get_ticket" and e["ok"] for e in evidence)
+    fetched = any(e["tool"] in detail_tools and e["ok"] for e in evidence)
     return saw_tickets and not fetched and bool(DETAIL_RE.search(state.get("question", "")))
+
+
+def record_detail_nudge(detail_tools: list[str]) -> str:
+    return ("You only have search summaries. Call " + " or ".join(detail_tools) +
+            " on the relevant records: their full text holds the reasons.")
 
 
 def step_cap(state: AgentState) -> int:
@@ -162,9 +182,14 @@ def extract_calls(reply: LLMReply) -> list[dict[str, Any]]:
 def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
     tools = to_ollama_tools(tool_specs)
     schemas = {t["name"]: t["input_schema"] for t in tool_specs}
+    # A scope without ticket tools (one non-ticket source in a planned run) is told about its own tools.
+    records_only = "search_tickets" not in schemas and "get_ticket" not in schemas
+    detail_tools = [n for n in schemas if n.startswith("get_")] if records_only else ["get_ticket"]
+    system = RECORD_AGENT_SYSTEM if records_only else AGENT_SYSTEM
+    detail_nudge = record_detail_nudge(detail_tools) if records_only and detail_tools else DETAIL_NUDGE
 
     async def agent_node(state: AgentState) -> dict[str, Any]:
-        messages = [{"role": "system", "content": AGENT_SYSTEM}, *state.get("messages", [])]
+        messages = [{"role": "system", "content": system}, *state.get("messages", [])]
         try:
             reply = await llm.chat("agent", messages, tools=tools)
         except Exception as exc:  # noqa: BLE001 - Ollama down, timeout, bad model name...
@@ -213,14 +238,15 @@ def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
                 ],
             }
         can_continue = state.get("steps", 0) < step_cap(state)
-        if config.HEURISTICS["detail_nudge"] and can_continue and needs_ticket_details(state) and not state.get("detail_nudged"):
+        if config.HEURISTICS["detail_nudge"] and can_continue and detail_tools \
+                and needs_ticket_details(state, tuple(detail_tools)) and not state.get("detail_nudged"):
             return {
                 "route": "agent",
                 "detail_nudged": True,
                 "pending_calls": [],
                 "messages": [
                     {"role": "assistant", "content": reply.content},
-                    {"role": "user", "content": DETAIL_NUDGE},
+                    {"role": "user", "content": detail_nudge},
                 ],
             }
         refs: list[str] = []
