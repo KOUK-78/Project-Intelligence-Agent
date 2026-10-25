@@ -203,3 +203,16 @@ def test_an_unchecked_prefix_does_not_excuse_an_id_that_is_not_in_the_evidence()
         {"question": "Q?", "plan": PLAN, "sq_results": ALL_OK, "evidence": EVIDENCE}))
     assert out["citations"] == ["ATL-001"] and "[unverified: NTN-999]" in out["answer"]
     assert "not_in_evidence:NTN-999" in out["warnings"]
+
+
+def test_records_of_an_unresolved_sub_question_are_marked_as_possibly_unrelated():
+    """A keyword search that found something unrelated must not be reported as the answer (planner-on regression)."""
+    from app.nodes.synthesizer import SYNTH_V2_SYSTEM, format_grouped_evidence
+    plan = [{"id": "sq1", "question": "Q?", "source": "jira", "reason": "r"}]
+    results = [{"id": "sq1", "status": "unresolved", "reason": "insufficient", "unavailable": []}]
+    from app.nodes.state import tag_evidence
+    evidence = tag_evidence([{"tool": "search_tickets", "args": {}, "ok": True,
+                              "data": {"results": [{"id": "ATL-001"}]}, "error": None}], "sq1", "jira")
+    text = format_grouped_evidence(plan, results, evidence)
+    assert "NOT ENOUGH EVIDENCE" in text and "unrelated" in text and "ATL-001" in text
+    assert "do not cite them" in SYNTH_V2_SYSTEM
