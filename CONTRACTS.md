@@ -128,15 +128,15 @@ generation job), `OLLAMA_BASE_URL`, `NUM_CTX`, `TEMPERATURE`, `TODAY`, `DATA_PAT
   variable is set and skip elsewhere.
 - **Freezing by hash.** Every result file records `key_sha256` (SHA-256 of the key file it ran), and `compare` warns when
   two files used different keys. `evals/phase2_key.json` is frozen after A's last fix (P5 requires EML-103); the frozen
-  hash, taken from the committed file with `sha256sum evals/phase2_key.json`, is recorded in the table below. A key change
+  hash, taken from the committed file (`sha256sum evals/phase2_key.json`, or `Get-FileHash -Algorithm SHA256`), is recorded in the table below. `.gitattributes` pins the key files to LF so the hash is the same on every machine; each result file's `key_sha256` must equal the table. A key change
   after the freeze needs all four approvals and a new hash. A records the held-out key's hash before M4.
 - Agent code must never read or reference them. **B and D never see `phase2_heldout_key.json` before M4.**
   Tests that read it must never print its wording in a failure message (they report key id and location only).
 
 | Key | SHA-256 (frozen) | Frozen on |
 |---|---|---|
-| `evals/phase2_key.json` | *to be filled after A's fix merges* | *pending* |
-| Phase 2 held-out key (off-repo) | *recorded by A before M4* | *pending* |
+| `evals/phase2_key.json` | `c9e9bbffdae00e7b8afbbb1166800658610da314a4dfcf54c60f44bb68910267` | 2026-10-25 |
+| Phase 2 held-out key (off-repo) | `1ab1bca2ddc6f4b07dcda795c35d1155c16c6f2bc967018e4fb9a14311c56a6e` (recorded by A) | 2026-10-25 |
 - Fix failures with general changes only. Report planner-on and planner-off honestly, including regressions.
 
 ## 8) Prompt hygiene

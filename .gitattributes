@@ -1,0 +1,2 @@
+# Key files are hashed byte for byte (CONTRACTS.md section 7): never convert their line endings.
+evals/*.json text eol=lf
