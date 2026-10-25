@@ -1,6 +1,7 @@
 """Phase 2 A4: both Phase 2 answer files are valid against all three data sources, use the optional
 fields correctly, and keep every reserved fixture out. Reads the held-out key only to check FORMAT and IDs."""
 import json
+import os
 import re
 from pathlib import Path
 
@@ -10,8 +11,10 @@ from evals import run_evals as ev
 
 ROOT = Path(__file__).resolve().parents[1]
 SYN = ROOT / "data" / "synthetic"
+# The held-out key is kept outside the repo (CONTRACTS.md 7). Its tests run only where PHASE2_HELDOUT_KEY_PATH points at it.
+_HELD = Path(os.getenv("PHASE2_HELDOUT_KEY_PATH") or ROOT / "evals" / "phase2_heldout_key.json")
 KEY_PATHS = {"phase2_key": ROOT / "evals" / "phase2_key.json",
-             "phase2_heldout_key": ROOT / "evals" / "phase2_heldout_key.json"}
+             **({"phase2_heldout_key": _HELD} if _HELD.exists() else {})}
 SOURCE_OF = {"ATL": "jira", "NTN": "notion", "EML": "email"}
 ID_RE = re.compile(r"^(ATL|NTN|EML)-\d{3}$")
 
@@ -30,6 +33,8 @@ def all_ids():
 
 
 def load(name):
+    if name not in KEY_PATHS:
+        pytest.skip(f"{name} is not available here (kept outside the repo)")
     return json.loads(KEY_PATHS[name].read_text(encoding="utf-8"))
 
 

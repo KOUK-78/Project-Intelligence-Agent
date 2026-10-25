@@ -14,6 +14,7 @@ citation, no invalid ID, plus (Phase 2 keys only) every required source cited an
 `must_mention` string present in the answer. It does not judge the answer's meaning.
 Hand grading still judges wording.
 """
+import hashlib
 import json
 import os
 import platform
@@ -99,12 +100,22 @@ def load_extra_ids() -> tuple[set[str], list[str]]:
     return ids, missing
 
 
+def key_sha256(path: Path) -> str | None:
+    """SHA-256 of the key file's bytes: a result file proves which exact key it used, and keys can be frozen by hash."""
+    try:
+        return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
 def load_key(path: Path) -> list[dict]:
     """Load and validate an answer file (answer_key.json, heldout_key.json or a Phase 2 key)."""
     try:
         questions = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        raise typer.BadParameter(f"cannot read answer file {path}: {e}")
+        hint = (" The Phase 2 held-out key is kept outside the repo: set PHASE2_HELDOUT_KEY_PATH to it."
+                if Path(path) == config.PHASE2_HELDOUT_KEY_PATH else "")
+        raise typer.BadParameter(f"cannot read answer file {path}: {e}.{hint}")
     if not isinstance(questions, list) or not questions:
         raise typer.BadParameter(f"{path} must be a non-empty JSON list")
     seen = set()
@@ -559,6 +570,7 @@ def main(
         "phase": phase_of(key), "today": config.TODAY, "model": config.MODELS["agent"],
         "agent": "stub" if stub else "real", "key": Path(key).name, "mode": mode,
         "planner_enabled": planner_on, "agent_mode": mode_label, "enabled_sources": enabled,
+        "key_sha256": key_sha256(key),
         "repeat": repeat, "min_pass_rate": min_pass_rate,
         "environment": describe_environment(stub),
         "score": {"questions_passed": agg["questions_passed"], "questions_total": agg["questions_total"],

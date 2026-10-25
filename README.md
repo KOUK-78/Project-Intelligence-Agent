@@ -266,7 +266,7 @@ data/
 evals/
   run_evals.py, compare.py                    eval runner and result comparison (C)
   answer_key.json, heldout_key.json           Phase 1 answer files (A)
-  phase2_key.json, phase2_heldout_key.json    Phase 2 answer files (A, when written)
+  phase2_key.json                             Phase 2 tuning key (A); the Phase 2 held-out key is kept off-repo (CONTRACTS.md section 7)
   results/                                    phase1_*.json, phase2_*.json, history/
 docs/                                         SETUP.md, phoenix_trace.png
 CONTRACTS.md                                  frozen interfaces, Phase 2 amendments, ownership

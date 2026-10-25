@@ -64,7 +64,7 @@ python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_
 python -m evals.run_evals --auto --repeat 3 --planner --require-trace   # Phase 1 with planner on: reported separately, not the gate
 python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_planner.json
 ```
-The runner refuses to overwrite an existing result file; use `--out` (as above) or `--force` on purpose. Close other GPU apps first, keep `NUM_CTX = 8192`, and do not change `config.py` between the paired runs. The held-out key (`--phase2 --heldout`) is run only at M4, once, and never used to tune anything. `compare` warns if two files differ in machine, model digest or repeat count; do not publish a comparison that warns.
+The runner refuses to overwrite an existing result file; use `--out` (as above) or `--force` on purpose. Close other GPU apps first, keep `NUM_CTX = 8192`, and do not change `config.py` between the paired runs. The Phase 2 held-out key is NOT in the repo: on the measurement machine set `$env:PHASE2_HELDOUT_KEY_PATH = "C:\path\to\phase2_heldout_key.json"` first. It (`--phase2 --heldout`) is run only at M4, once, and never used to tune anything. `compare` warns if two files differ in machine, model digest or repeat count; do not publish a comparison that warns.
 
 ## Choosing sources (`ENABLED_SOURCES`)
 ```powershell
