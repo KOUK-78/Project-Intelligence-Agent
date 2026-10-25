@@ -141,3 +141,10 @@ def test_no_sources_means_no_model_call():
     llm = FakeLLM(planner=[bad()])
     out = run_planner(llm, sources=())
     assert is_fallback(out) and llm.count("planner") == 0 and out["warnings"] == ["planner_fallback:no_sources"]
+
+
+def test_the_prompt_tells_the_model_sub_questions_run_independently_and_sources_are_used_once():
+    from app.nodes.planner import PLANNER_SYSTEM
+    low = PLANNER_SYSTEM.lower()
+    assert "cannot see the other sub-questions" in low and "at most once" in low
+    assert "earlier sub-question can help" not in low

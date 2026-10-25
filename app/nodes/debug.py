@@ -34,7 +34,7 @@ def log_node(name: str, state: dict[str, Any], update: dict[str, Any]) -> None:
     if nudges:
         parts.append(f"nudge={nudges[-1][: config.SNIPPET_CHARS]!r}")
     if update.get("plan"):
-        parts.append(f"plan={[(p['id'], p['source']) for p in update['plan']]}")
+        parts.append(f"plan={[(p['id'], p['source'], p['question']) for p in update['plan']]}")
     if update.get("sq_results"):
         parts.append(f"done={[(r['id'], r['status'], r['reason']) for r in update['sq_results']]}")
     if update.get("errors"):

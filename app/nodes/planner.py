@@ -22,7 +22,9 @@ PLANNER_SYSTEM = (
     "2. If one source can answer the whole question, write ONE sub-question. Do not split for the sake of it.\n"
     "3. Write every sub-question so it makes sense on its own: say what to look for and keep the distinctive "
     "words from the question.\n"
-    "4. Order them so an earlier sub-question can help with a later one.\n"
+    "4. Each sub-question is answered separately and cannot see the other sub-questions' results, so never write "
+    "one that depends on another's answer. Use each source at most once: put everything to look up in a source "
+    "into one sub-question.\n"
     "5. Do not answer anything and do not invent facts, names or IDs.\n"
     '6. "reason" is one short sentence on why that source.\n'
     'Reply as JSON: {"sub_questions": [{"id": "sq1", "question": "...", "source": "<source name>", "reason": "..."}]}'
