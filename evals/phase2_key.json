@@ -65,7 +65,7 @@
     "expected_answer": "Jira says PayGate has not delivered sandbox credentials. The email thread explains why: PayGate would only issue credentials after Northwind countersigned the v2 amendment, and signature was held up from 2026-05-18 to 2026-06-12 by a dispute over PayGate's higher fee and the liability cap. After signature PayGate needs about 20 business days to provision, so the sandbox target is 2026-07-15.",
     "expected_citations": [
       "ATL-112",
-      "EML-101"
+      "EML-103"
     ],
     "forbidden_citations": [
       "ATL-109"
@@ -77,7 +77,7 @@
     "must_mention": [
       "fee"
     ],
-    "notes": "Two-source join (Jira + email 'why'). Jira alone gives only the symptom; the fee dispute is in email only. EML-103, EML-106, EML-109 are bonus citations."
+    "notes": "Two-source join (Jira + email 'why'). Jira alone gives only the symptom; the fee dispute is in email only. EML-103 is the Finance objection and is reachable by a plain keyword search. EML-101, EML-106 and EML-109 are bonus citations."
   },
   {
     "id": "P6",
