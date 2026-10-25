@@ -534,3 +534,14 @@ def test_an_existing_results_file_is_not_overwritten_without_force(monkeypatch, 
     assert recorded.read_text() == '{"recorded": true}'
     r = CliRunner().invoke(ev.cli, ["--key", str(key), "--out", str(recorded), "--auto", "--force"])
     assert r.exit_code == 0 and json.loads(recorded.read_text())["key"] == "k.json"
+
+
+def test_planner_off_with_enabled_sources_all_in_the_shell_and_no_flag_is_refused(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENABLED_SOURCES", "all")
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--auto")        # planner default off, no mode flag
+    assert r.exit_code == 2 and "--flat" in r.output and "--no-planner" in r.output
+    assert not [p for p in tmp_path.glob("phase2_*.json") if "key" not in p.name]
+    assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto").exit_code == 0
+    assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--auto").exit_code == 0
+    monkeypatch.setenv("ENABLED_SOURCES", "jira")
+    assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--auto", "--force").exit_code == 0

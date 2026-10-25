@@ -515,9 +515,18 @@ def main(
                    f"(--out {Path(out).with_name(Path(out).stem + '_rerun.json')}) and compare it with the recorded one, "
                    "or pass --force to overwrite it on purpose.")
         raise typer.Exit(2)
+    if not planner_on and not flat and planner is None:
+        # No flag chose the mode, so the run would use whatever ENABLED_SOURCES the shell holds. With the planner off that
+        # is flat mode, which must not be labelled (or filed) as the Phase 1 graph.
+        inherited = config.resolve_enabled_sources(planner=False)
+        if inherited != ("jira",):
+            typer.echo(f"error: the planner is off and ENABLED_SOURCES={os.environ.get('ENABLED_SOURCES')!r} in your shell "
+                       f"selects {list(inherited)}, which is flat mode, but no flag says so. Pass --flat to record a flat run, "
+                       "--no-planner for the Phase 1 graph (Jira only), or unset ENABLED_SOURCES.")
+            raise typer.Exit(2)
     if mode_label == "phase1_jira_only":
-        typer.echo("(!) Planner is off and there is no flat mode: this runs the Phase 1 graph, which only reaches Jira. "
-                   "The result is written as *_jira_only.json and is NOT a flat baseline for the planner.")
+        typer.echo("(!) Planner is off with only Jira enabled: this runs the Phase 1 graph, which reaches only Jira. "
+                   "The result is written as *_jira_only.json and is NOT a flat baseline for the planner (use --flat).")
     if heldout and phase2:
         typer.echo("MEASUREMENT ONLY: the Phase 2 held-out key is never used to tune prompts or code (CONTRACTS.md 7).")
     if config.resolve_faults():
