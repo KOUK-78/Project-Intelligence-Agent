@@ -125,7 +125,11 @@ async def generate(llm: LLM, messages: list[dict]) -> tuple[SynthOutput | None, 
                           "errors": errors}
 
 
-def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
+def make_synthesizer_node(llm: LLM, known_ids: set[str] | None, unchecked_prefixes: frozenset[str] | set[str] = frozenset()):
+    """`unchecked_prefixes`: ID prefixes of sources whose data file could not be read (see the v2 node). The default
+    is empty, so a Jira-only run, which is Phase 1, behaves exactly as before. Flat mode (planner off, several
+    sources behind one router) uses this node too, so it needs the same protection."""
+
     async def synthesizer_node(state: AgentState) -> dict[str, Any]:
         evidence = state.get("evidence", [])
         if not any(e["ok"] for e in evidence):
@@ -147,6 +151,7 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None):
             known_ids=known_ids,
             ev_ids=evidence_ids(evidence),
             mentioned=set(mentioned_ids(evidence)),
+            unchecked_prefixes=unchecked_prefixes,
         )
         capped = bool(state.get("capped"))
         return {

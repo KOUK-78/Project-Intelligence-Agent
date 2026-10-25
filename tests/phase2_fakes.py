@@ -34,7 +34,8 @@ RECORDS = {
     "get_page": {"id": "NTN-001", "title": "p"},
     "search_emails": {"count": 1, "results": [{"id": "EML-001", "subject": "s"}]},
     "get_email": {"id": "EML-001", "subject": "s"},
-    "get_thread": {"id": "EML-001", "messages": []},
+    # CONTRACTS.md section 3: a thread result has its own thread_id (not citable) and the full emails under "emails".
+    "get_thread": {"thread_id": "THR-001", "count": 1, "emails": [{"id": "EML-001", "subject": "s"}]},
 }
 
 
