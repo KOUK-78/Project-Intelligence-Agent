@@ -28,11 +28,12 @@ def test_search_pages_returns_best_matching_section():
     assert len(row["section"]["text"]) <= nt.SECTION_CHARS + 1
 
 
-def test_search_pages_all_tokens_must_match_and_star_matches_all():
-    assert nt.search_pages("continuous integration")["count"] == 1
-    assert nt.search_pages("continuous refund")["count"] == 0  # every token must match
-    assert nt.search_pages("*")["count"] == 3
+def test_search_pages_ranks_by_how_many_words_match_and_star_matches_all():
+    out = nt.search_pages("continuous integration")  # one word per page: neither page is excluded any more
+    ids = [r["id"] for r in out["results"]]
+    assert {"NTN-112", "NTN-104"} <= set(ids) and ids[0] == "NTN-104"  # a title hit outranks a body hit
     assert nt.search_pages("zzzznothing")["count"] == 0
+    assert nt.search_pages("*")["count"] == 3
 
 
 def test_search_pages_newest_first_and_capped(tmp_path, monkeypatch):
@@ -170,3 +171,96 @@ def test_three_servers_through_the_router_with_real_subprocesses():
             assert jira.ok and jira.data["id"] == "ATL-112"
 
     asyncio.run(go())
+
+
+# ------------------------------------------------------------- ranked search (D, after the M2 retrieval check)
+def _write(tmp_path, monkeypatch, var, rows):
+    p = tmp_path / "d.json"
+    p.write_text(json.dumps(rows))
+    monkeypatch.setenv(var, str(p))
+
+
+def test_a_question_shaped_query_is_not_empty_any_more(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": "EML-001", "thread_id": "T-1", "subject": "Sandbox provisioning timeline", "from": "a", "date": "2026-01-01", "body": "Twenty days."},
+        {"id": "EML-002", "thread_id": "T-2", "subject": "Lunch", "from": "b", "date": "2026-02-01", "body": "Pizza on Friday."}])
+    out = em.search_emails("how long does the vendor say sandbox provisioning takes once signed")
+    assert out["results"][0]["id"] == "EML-001"   # the old all-words-must-match rule returned nothing here
+
+
+def test_more_matching_words_and_subject_hits_rank_first(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": "EML-001", "thread_id": "T", "subject": "Misc", "from": "a", "date": "2026-03-01", "body": "budget review notes"},
+        {"id": "EML-002", "thread_id": "T", "subject": "Budget review", "from": "a", "date": "2026-01-01", "body": "x"},
+        {"id": "EML-003", "thread_id": "T", "subject": "Misc", "from": "a", "date": "2026-02-01", "body": "budget"}])
+    ids = [r["id"] for r in em.search_emails("budget review")["results"]]
+    assert ids == ["EML-002", "EML-001", "EML-003"]   # subject hits triple; then two words beat one; newest not first
+
+
+def test_equal_scores_fall_back_to_newest_first(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": f"EML-00{i}", "thread_id": "T", "subject": "s", "from": "a", "date": f"2026-0{i}-01", "body": "same word"} for i in (1, 2, 3)])
+    assert [r["id"] for r in em.search_emails("word")["results"]] == ["EML-003", "EML-002", "EML-001"]
+
+
+def test_word_forms_match_by_stem(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": "EML-001", "thread_id": "T", "subject": "Escalation: vendor timeline", "from": "a", "date": "2026-01-01", "body": "policies delayed"}])
+    for kw in ("escalated", "escalate", "delay", "delays", "policy", "vendors"):
+        assert em.search_emails(kw)["count"] == 1, kw
+    assert em.search_emails("budget")["count"] == 0
+    assert em.search_emails("cat")["count"] == 0     # short words must match exactly (no prefix guessing)
+
+
+def test_ids_and_dates_stay_exact(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": "EML-001", "thread_id": "T", "subject": "s", "from": "a", "date": "2026-01-01", "body": "see ATL-112 on 2026-06-22"}])
+    assert em.search_emails("ATL-112")["count"] == 1 and em.search_emails("2026-06-22")["count"] == 1
+    assert em.search_emails("ATL-11")["count"] == 0 and em.search_emails("2026-06-2")["count"] == 0
+
+
+def test_the_snippet_is_still_only_the_start_of_the_body_after_ranking(tmp_path, monkeypatch):
+    body = "a" * 200 + " hidden payload"
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": "EML-001", "thread_id": "T", "subject": "s", "from": "a", "date": "2026-01-01", "body": body}])
+    r = em.search_emails("payload")["results"][0]
+    assert r["snippet"] == body[:160] and "payload" not in r["snippet"]
+
+
+def test_pages_rank_title_hits_first_and_return_the_best_section(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "NOTION_DATA_PATH", [
+        {"id": "NTN-001", "title": "Misc", "last_edited": "2026-03-01", "sections": [{"heading": "h", "text": "launch scope decision"}]},
+        {"id": "NTN-002", "title": "Launch scope", "last_edited": "2026-01-01", "sections": [
+            {"heading": "Intro", "text": "nothing"}, {"heading": "Decision", "text": "launch scope was cut"}]}])
+    out = nt.search_pages("why was the launch scope cut")
+    assert [r["id"] for r in out["results"]] == ["NTN-002", "NTN-001"]
+    assert out["results"][0]["section"]["heading"] == "Decision"
+
+
+def test_star_and_filler_only_queries_list_newest_first(tmp_path, monkeypatch):
+    _write(tmp_path, monkeypatch, "EMAIL_DATA_PATH", [
+        {"id": "EML-001", "thread_id": "T", "subject": "s", "from": "a", "date": "2026-01-01", "body": "x"},
+        {"id": "EML-002", "thread_id": "T", "subject": "s", "from": "a", "date": "2026-02-01", "body": "y"}])
+    for kw in ("*", "the of"):
+        assert [r["id"] for r in em.search_emails(kw)["results"]] == ["EML-002", "EML-001"]
+
+
+def test_question_shaped_queries_reach_the_documents_the_tuning_key_expects():
+    """Retrieval floor on A's real data and the TUNING key only: with the question's content words as the query,
+    each expected Notion/email record must rank in the top 10. (Measured: 16 of 17; the old rule gave 0 of 17.)"""
+    key_path, em_path, nt_path = (Path(__file__).parents[1] / "evals" / "phase2_key.json",
+                                  SYN / "email_messages.json", SYN / "notion_pages.json")
+    if not (key_path.exists() and em_path.exists() and nt_path.exists()):
+        pytest.skip("tuning key or A's full data is not present")
+    from app.mcp_servers import _common as c
+    import os
+    os.environ["EMAIL_DATA_PATH"], os.environ["NOTION_DATA_PATH"] = str(em_path), str(nt_path)
+    total = reached = 0
+    for q in json.loads(key_path.read_text(encoding="utf-8")):
+        query = " ".join(c.tokens(q["question"]))
+        for cid in q.get("expected_citations", []):
+            if cid.startswith(("EML", "NTN")):
+                fn = em.search_emails if cid.startswith("EML") else nt.search_pages
+                total += 1
+                reached += cid in [r["id"] for r in fn(query)["results"]]
+    assert total >= 15 and reached >= total - 2, (reached, total)
