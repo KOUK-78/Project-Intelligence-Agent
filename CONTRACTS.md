@@ -122,8 +122,21 @@ generation job), `OLLAMA_BASE_URL`, `NUM_CTX`, `TEMPERATURE`, `TODAY`, `DATA_PAT
 - Run with `python -m evals.run_evals --heldout` (Phase 1) or `--phase2 --heldout`; results go to
   `evals/results/phase1_heldout.json`, `phase2_heldout.json` (planner on) and `phase2_heldout_flat.json`
   (planner off).
+- **`phase2_heldout_key.json` is not in the repo.** The repository is public, so the first Phase 2 held-out set was
+  dropped and A wrote a fresh one for M4. It lives only on the measurement machine; `PHASE2_HELDOUT_KEY_PATH` points the
+  runner at it (the default path `evals/phase2_heldout_key.json` is git-ignored). Tests that read it run only where that
+  variable is set and skip elsewhere.
+- **Freezing by hash.** Every result file records `key_sha256` (SHA-256 of the key file it ran), and `compare` warns when
+  two files used different keys. `evals/phase2_key.json` is frozen after A's last fix (P5 requires EML-103); the frozen
+  hash, taken from the committed file with `sha256sum evals/phase2_key.json`, is recorded in the table below. A key change
+  after the freeze needs all four approvals and a new hash. A records the held-out key's hash before M4.
 - Agent code must never read or reference them. **B and D never see `phase2_heldout_key.json` before M4.**
   Tests that read it must never print its wording in a failure message (they report key id and location only).
+
+| Key | SHA-256 (frozen) | Frozen on |
+|---|---|---|
+| `evals/phase2_key.json` | *to be filled after A's fix merges* | *pending* |
+| Phase 2 held-out key (off-repo) | *recorded by A before M4* | *pending* |
 - Fix failures with general changes only. Report planner-on and planner-off honestly, including regressions.
 
 ## 8) Prompt hygiene

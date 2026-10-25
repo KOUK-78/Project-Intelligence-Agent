@@ -545,3 +545,27 @@ def test_planner_off_with_enabled_sources_all_in_the_shell_and_no_flag_is_refuse
     assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--auto").exit_code == 0
     monkeypatch.setenv("ENABLED_SOURCES", "jira")
     assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--auto", "--force").exit_code == 0
+def test_result_files_record_the_sha256_of_the_key_they_ran(monkeypatch, tmp_path):
+    import hashlib
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--planner", "--auto")
+    assert r.exit_code == 0, r.output
+    data = json.loads((tmp_path / "phase2_planner.json").read_text())
+    assert data["key_sha256"] == hashlib.sha256((tmp_path / "phase2_key.json").read_bytes()).hexdigest()
+
+
+def test_a_missing_phase2_heldout_key_says_where_it_must_come_from(monkeypatch, tmp_path):
+    monkeypatch.setattr(config, "PHASE2_HELDOUT_KEY_PATH", tmp_path / "nowhere.json")
+    monkeypatch.setattr(config, "RESULTS_DIR", tmp_path)
+    r = CliRunner().invoke(ev.cli, ["--phase2", "--heldout", "--planner", "--auto"])
+    assert r.exit_code != 0 and "PHASE2_HELDOUT_KEY_PATH" in r.output
+
+
+def test_the_heldout_key_path_can_come_from_the_environment(monkeypatch, tmp_path):
+    import importlib
+    monkeypatch.setenv("PHASE2_HELDOUT_KEY_PATH", str(tmp_path / "x.json"))
+    try:
+        importlib.reload(config)
+        assert config.PHASE2_HELDOUT_KEY_PATH == tmp_path / "x.json"
+    finally:
+        monkeypatch.delenv("PHASE2_HELDOUT_KEY_PATH")
+        importlib.reload(config)

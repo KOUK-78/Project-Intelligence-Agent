@@ -178,6 +178,12 @@ def test_different_enabled_sources_are_flagged_only_within_one_agent_mode():
     assert any("agent mode differs" in x for x in w) and not any("enabled sources differ" in x for x in w)
 
 
+def test_different_key_hashes_are_flagged():
+    w = warnings_for({"environment": ENV, "key_sha256": "a" * 64}, {"environment": ENV, "key_sha256": "b" * 64})
+    assert any("answer key differs" in x for x in w)
+    assert warnings_for({"environment": ENV, "key_sha256": "a" * 64}, {"environment": ENV, "key_sha256": "a" * 64}) == []
+
+
 def test_files_without_an_environment_record_are_called_out():
     w = warnings_for({}, {"environment": ENV})
     assert len(w) == 1 and w[0].startswith("OLD has no environment record")

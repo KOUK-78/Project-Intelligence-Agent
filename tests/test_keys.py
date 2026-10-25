@@ -6,6 +6,7 @@ Reads the held-out keys only to check FORMAT, IDs and reserved text. Nothing her
 and no assertion message quotes held-out wording.
 """
 import json
+import os
 import re
 from pathlib import Path
 
@@ -20,7 +21,7 @@ DATA = ROOT / "data" / "synthetic" / "jira_tickets.json"
 PHASE1_KEYS = {"answer_key": ROOT / "evals" / "answer_key.json",
                "heldout_key": ROOT / "evals" / "heldout_key.json"}
 PHASE2_KEYS = {"phase2_key": ROOT / "evals" / "phase2_key.json",
-               "phase2_heldout_key": ROOT / "evals" / "phase2_heldout_key.json"}
+               "phase2_heldout_key": Path(os.getenv("PHASE2_HELDOUT_KEY_PATH") or ROOT / "evals" / "phase2_heldout_key.json")}
 # Phase 2 keys are A's deliverable; until a file exists its tests are simply absent, not failing.
 KEY_PATHS = {**PHASE1_KEYS, **{n: p for n, p in PHASE2_KEYS.items() if p.exists()}}
 HELDOUT = {"heldout_key", "phase2_heldout_key"}

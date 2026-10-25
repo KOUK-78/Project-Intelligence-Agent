@@ -132,7 +132,9 @@ RUNS_LOG = LOGS_DIR / "runs.jsonl"
 ANSWER_KEY_PATH = ROOT / "evals" / "answer_key.json"
 HELDOUT_KEY_PATH = ROOT / "evals" / "heldout_key.json"  # measurement only, never tuned against (CONTRACTS.md 7)
 PHASE2_KEY_PATH = ROOT / "evals" / "phase2_key.json"
-PHASE2_HELDOUT_KEY_PATH = ROOT / "evals" / "phase2_heldout_key.json"  # measurement only (CONTRACTS.md 7)
+# Measurement only (CONTRACTS.md 7). The Phase 2 held-out key is NOT in the repo: it lives on the measurement machine and
+# this variable points at it. The default path is git-ignored, so a copy dropped there is never committed.
+PHASE2_HELDOUT_KEY_PATH = Path(os.getenv("PHASE2_HELDOUT_KEY_PATH") or ROOT / "evals" / "phase2_heldout_key.json")
 RESULTS_DIR = ROOT / "evals" / "results"
 
 # --- Regression floor (C3): a Phase 1 key must still pass at least this many runs, as (runs_passed, runs_total).
