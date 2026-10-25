@@ -42,24 +42,26 @@ def _full(m: dict[str, Any]) -> dict[str, Any]:
 
 
 def search_emails(keyword: str) -> dict[str, Any]:
+    """Ranked keyword search: emails with more of the query words (subject hits count triple) come first, newest on ties."""
     if not isinstance(keyword, str) or not keyword.strip():
         return c.error(log, "invalid_input", "keyword must be a non-empty string; use '*' to match all emails")
     try:
         emails = _load()
     except (OSError, ValueError) as exc:
         return c.error(log, "data_unavailable", f"could not read email data: {exc}")
-    toks = c.tokens(keyword)
-    hits = []
+    terms = c.query_terms(keyword)
+    scored = []
     for m in emails:
-        hay = " ".join([m["id"], str(m.get("subject", "")), str(m.get("from", "")), str(m.get("body", ""))]).lower()
-        if all(t in hay for t in toks):
-            hits.append(m)
-    hits.sort(key=_order, reverse=True)
+        body = " ".join([m["id"], str(m.get("from", "")), str(m.get("body", ""))])
+        score = c.relevance(terms, str(m.get("subject", "")), body)
+        if score:
+            scored.append((score, m))
+    scored.sort(key=lambda r: (r[0], *_order(r[1])), reverse=True)
     results = [{"id": m["id"], "thread_id": m.get("thread_id", ""), "subject": m.get("subject", ""),
                 "from": m.get("from", ""), "date": m.get("date", ""),
-                "snippet": str(m.get("body", ""))[:SNIPPET_CHARS]} for m in hits[:MAX_RESULTS]]
-    out: dict[str, Any] = {"count": len(hits), "results": results}
-    if len(hits) > MAX_RESULTS:
+                "snippet": str(m.get("body", ""))[:SNIPPET_CHARS]} for _, m in scored[:MAX_RESULTS]]
+    out: dict[str, Any] = {"count": len(scored), "results": results}
+    if len(scored) > MAX_RESULTS:
         out["truncated"] = True
     return out
 

@@ -53,6 +53,47 @@ def tokens(keyword: str) -> list[str]:
     return [w for w in re.findall(r"[a-z0-9][a-z0-9\-\.]*", keyword.lower()) if w not in STOPWORDS]
 
 
+# ---- ranked keyword search (Notion and email). A multi-word query used to need EVERY word in one record, so a
+# question-shaped query matched nothing. Now records are ranked by how many query words they contain (a hit in the
+# title or subject counts triple) and the newest wins ties. Word forms are matched by a light stem comparison.
+_SUFFIXES = ("ations", "ation", "ments", "ment", "ities", "ity", "ings", "ing", "edly", "ed", "ies", "es", "ly", "s")
+TITLE_WEIGHT = 3
+MIN_STEM = 5  # two stems match when equal, or when the shorter (>= MIN_STEM letters) is a prefix of the other
+
+
+def stem(word: str) -> str:
+    if any(ch.isdigit() for ch in word) or "-" in word:  # IDs, dates, versions stay exact
+        return word
+    for suf in _SUFFIXES:
+        if word.endswith(suf) and len(word) - len(suf) >= 4:
+            return word[: -len(suf)] + ("y" if suf == "ies" else "")
+    return word
+
+
+def _term_hits(term: str, doc_stems: set[str]) -> bool:
+    if term in doc_stems:
+        return True
+    if len(term) < MIN_STEM or not term.isalpha():  # IDs, dates and versions never match by prefix
+        return False
+    return any(d.isalpha() and len(d) >= MIN_STEM and (d.startswith(term) or term.startswith(d)) for d in doc_stems)
+
+
+def stems_of(text: str) -> set[str]:
+    return {stem(w) for w in re.findall(r"[a-z0-9][a-z0-9\-\.]*", text.lower())}
+
+
+def relevance(terms: list[str], title: str, body: str) -> int:
+    """0 = no query word found; otherwise title hits count TITLE_WEIGHT each, body hits 1 each."""
+    if not terms:
+        return 1  # '*' (or only filler words): every record qualifies, ordered by date
+    t_stems, b_stems = stems_of(title), stems_of(body)
+    return sum(TITLE_WEIGHT if _term_hits(t, t_stems) else 1 for t in terms if _term_hits(t, t_stems | b_stems))
+
+
+def query_terms(keyword: str) -> list[str]:
+    return list(dict.fromkeys(stem(t) for t in tokens(keyword)))
+
+
 def snippet(text: str, toks: list[str], width: int = 160) -> str:
     """A window of `text` around the first token hit (start of text when there is none)."""
     low = text.lower()

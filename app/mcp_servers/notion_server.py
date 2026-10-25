@@ -35,30 +35,34 @@ def _sec_text(s: dict[str, Any]) -> str:
 
 
 def search_pages(keyword: str) -> dict[str, Any]:
+    """Ranked keyword search: pages with more of the query words (title hits count triple) come first, newest on ties."""
     if not isinstance(keyword, str) or not keyword.strip():
         return c.error(log, "invalid_input", "keyword must be a non-empty string; use '*' to match all pages")
     try:
         pages = _load()
     except (OSError, ValueError) as exc:
         return c.error(log, "data_unavailable", f"could not read page data: {exc}")
-    toks = c.tokens(keyword)
-    results = []
+    terms = c.query_terms(keyword)
+    scored = []
     for p in pages:
         secs = _sections(p)
-        hay = " ".join([p["id"], str(p.get("title", "")), str(p.get("page_type", ""))] + [_sec_text(s) for s in secs]).lower()
-        if not all(t in hay for t in toks):
-            continue
-        # The best section = the one containing the most search words (first one wins a tie).
-        best = max(secs, key=lambda s: sum(t in _sec_text(s) for t in toks), default=None)
+        body = " ".join([p["id"], str(p.get("page_type", ""))] + [_sec_text(s) for s in secs])
+        score = c.relevance(terms, str(p.get("title", "")), body)
+        if score:
+            scored.append((score, p, secs))
+    scored.sort(key=lambda r: (r[0], str(r[1].get("last_edited", "")), r[1]["id"]), reverse=True)
+    results = []
+    for _, p, secs in scored[:MAX_RESULTS]:
+        # The best section = the one containing the most query words (first one wins a tie).
+        best = max(secs, key=lambda s: c.relevance(terms, "", _sec_text(s)), default=None)
         row = {"id": p["id"], "title": p.get("title", ""), "page_type": p.get("page_type", ""),
                "status": p.get("status", ""), "last_edited": p.get("last_edited", "")}
         if best is not None:
             text, _ = c.cap(str(best.get("text", "")), SECTION_CHARS)
             row["section"] = {"heading": best.get("heading", ""), "text": text}
         results.append(row)
-    results.sort(key=lambda r: (r["last_edited"], r["id"]), reverse=True)
-    out: dict[str, Any] = {"count": len(results), "results": results[:MAX_RESULTS]}
-    if len(results) > MAX_RESULTS:
+    out: dict[str, Any] = {"count": len(scored), "results": results}
+    if len(scored) > MAX_RESULTS:
         out["truncated"] = True
     return out
 
