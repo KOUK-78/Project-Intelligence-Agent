@@ -11,3 +11,15 @@ def _no_model_probe(monkeypatch):
     from evals import run_evals
 
     monkeypatch.setattr(run_evals, "model_fingerprint", lambda model: None)
+
+
+@pytest.fixture(autouse=True)
+def _tests_do_not_depend_on_the_shell(monkeypatch):
+    """A switch left in the person's shell (PLANNER_ENABLED, ENABLED_SOURCES, FAULT_INJECT) must not change test
+    outcomes, and a test that widens the source registry must not leak into the next one."""
+    from app import config, sources
+
+    for var in ("PLANNER_ENABLED", "ENABLED_SOURCES", "FAULT_INJECT"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setattr(config, "PLANNER_ENABLED", False)  # config reads the variable once, at import
+    monkeypatch.setattr(sources, "_REGISTRY", dict(sources._REGISTRY))
