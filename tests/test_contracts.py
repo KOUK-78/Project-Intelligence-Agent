@@ -160,3 +160,11 @@ def test_readme_claims_no_phase2_result_that_is_not_recorded():
         row = next(line for line in table.splitlines() if f"`{name}`" in line)
         has_number = bool(re.search(r"\d+ of \d+|\d+\.\ds|\d{3,}", row.split(f"`{name}`")[1]))
         assert has_number == (name in recorded), f"{name}: README row and recorded file disagree (number={has_number})"
+
+
+def test_non_citable_prefixes_never_overlap_citable_source_prefixes():
+    from app import config
+
+    assert not set(config.NON_CITABLE_ID_PREFIXES) & set(config.SOURCE_ID_PREFIXES.values())
+    assert config.resolve_enabled_sources({}, False) == ("jira",)
+    assert config.resolve_enabled_sources({"ENABLED_SOURCES": "all"}, False) == config.SOURCES

@@ -85,7 +85,7 @@ The contract (new tool names, optional `AgentResult` fields, key fields `sources
 ### Measurement tools
 
 ```bash
-python -m evals.run_evals --phase2 --flat --auto --repeat 3          # -> phase2_flat.json (refuses until flat mode exists)
+python -m evals.run_evals --phase2 --flat --auto --repeat 3          # -> phase2_flat.json (flat mode: planner off, ENABLED_SOURCES=all)
 python -m evals.run_evals --phase2 --no-planner --auto --repeat 3   # -> phase2_jira_only.json (Phase 1 graph; NOT a flat baseline)
 python -m evals.run_evals --phase2 --planner    --auto --repeat 3   # -> evals/results/phase2_planner.json
 python -m evals.run_evals --phase2 --heldout --planner --auto --repeat 3   # -> phase2_heldout.json (M4 only)
@@ -95,16 +95,27 @@ python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_
 
 Each run records sources cited versus `sources_required`, the `must_mention` check, planner validity and fallback, sub-question count, step and token totals, and the machine, Ollama model digest and git commit it was recorded with. `compare` prints per-question deltas and **exits 1** if the candidate passes fewer than 22/30 runs on the original key or 15/30 on the held-out key (the bottom of the recorded Phase 1 ranges), and 2 if the files cannot be compared. It warns when two files come from different machines, model digests or repeat counts, or when fault injection was on. Fault injection is described in [`docs/SETUP.md`](docs/SETUP.md#fault-injection).
 
+### Which sources a run reaches (`ENABLED_SOURCES`)
+
+| Planner | `ENABLED_SOURCES` | What runs |
+|---|---|---|
+| off | unset | Phase 1 graph, Jira only (regression mode; not a flat baseline) |
+| off | `all` or a list (`jira,notion`) | **Flat mode**: those sources behind one router and ONE retrieval loop over all their tools |
+| on | unset | planner over every source |
+| on | `all` or a list | planner over just those sources |
+
+Names are `jira`, `notion`, `email`; a bad value stops the run with an error. `evals.run_evals` sets the variable itself (`--flat` sets `all`; `--no-planner` removes it so a value left in your shell cannot turn a Jira-only run into a flat one) and records `enabled_sources` in the result file. Thread IDs (`THR-...`) are in `NON_CITABLE_ID_PREFIXES`: the verifier ignores them, they are never citations.
+
 ### Flat versus planner (Phase 2 key)
 
 | Run | File | Questions passing | Runs passing | Median / worst latency | Median tokens per run | Trace IDs |
 |---|---|---|---|---|---|---|
-| Flat (one loop, all sources; **not available yet**) | `phase2_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
+| Flat (one loop over all sources, no planner) | `phase2_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 | Planner on | `phase2_planner.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 | Held-out, planner on | `phase2_heldout.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
-| Held-out, flat (not available yet) | `phase2_heldout_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
+| Held-out, flat | `phase2_heldout_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 
-Official runs are recorded at M2 and M4 on one machine with one model version and Phoenix on, then this table is filled from the result files (and `compare` output pasted beside it). With the planner off the agent is the Phase 1 graph, which reaches only Jira, so it is **not** a flat baseline: those runs are recorded as `phase2_jira_only.json` and must not be presented as the planner's before/after. `phase2_flat.json` is recorded only once a flat mode (one retrieval loop over all three sources, no planner) exists. A planner that does not beat flat on the tuning key, or that regresses the held-out comparison, is reported as such.
+Official runs are recorded at M2 and M4 on one machine with one model version and Phoenix on, then this table is filled from the result files (and `compare` output pasted beside it). With the planner off the agent is the Phase 1 graph, which reaches only Jira, so it is **not** a flat baseline: those runs are recorded as `phase2_jira_only.json` and must not be presented as the planner's before/after. `phase2_flat.json` is the real baseline: `--flat` runs the planner off with `ENABLED_SOURCES=all`, one retrieval loop over all three sources. A planner that does not beat flat on the tuning key, or that regresses the held-out comparison, is reported as such.
 
 ### Phase 1 regression table
 

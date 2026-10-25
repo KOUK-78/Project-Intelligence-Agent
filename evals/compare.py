@@ -101,6 +101,9 @@ def _warnings(old: dict, new: dict) -> list[str]:
         warn.append(f"model differs (OLD {old.get('model')}, NEW {new.get('model')})")
     if old.get("agent_mode") and new.get("agent_mode") and old["agent_mode"] != new["agent_mode"]:
         warn.append(f"agent mode differs (OLD {old.get('agent_mode')}, NEW {new.get('agent_mode')})")
+    if old.get("enabled_sources") and new.get("enabled_sources") and old["enabled_sources"] != new["enabled_sources"] \
+            and old.get("agent_mode") == new.get("agent_mode"):
+        warn.append(f"enabled sources differ (OLD {old['enabled_sources']}, NEW {new['enabled_sources']})")
     if "phase1_jira_only" in (old.get("agent_mode"), new.get("agent_mode")) and str(new.get("key", "")).startswith("phase2"):
         warn.append("a file was recorded with the Phase 1 graph (Jira only) on a Phase 2 key: it is not a flat baseline, "
                     "so do not present it as the planner's before/after")

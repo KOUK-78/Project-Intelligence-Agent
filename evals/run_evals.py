@@ -445,30 +445,34 @@ def describe_environment(stub: bool) -> dict:
 
 @contextmanager
 def planner_override(value: bool | None, flat: bool = False):
-    """Switch the planner (and flat mode) for one run and ALWAYS restore config and environment afterwards."""
+    """Switch the planner and the source set for one run and ALWAYS restore config and environment afterwards.
+
+    --flat       -> planner off, ENABLED_SOURCES=all (D's flat mode: one loop over every source).
+    --no-planner -> planner off, ENABLED_SOURCES removed, so a stray value in the shell cannot turn a Phase 1 /
+                    Jira-only run into a flat run behind the label's back.
+    --planner    -> planner on; the person's ENABLED_SOURCES (if any) is kept and recorded in the result file."""
     if value is None and not flat:
         yield
         return
-    old = {"PLANNER_ENABLED": config.PLANNER_ENABLED, "FLAT_ALL_SOURCES": config.FLAT_ALL_SOURCES}
-    old_env = {k: os.environ.get(k) for k in old}
+    old_planner, old_env = config.PLANNER_ENABLED, {k: os.environ.get(k) for k in ("PLANNER_ENABLED", "ENABLED_SOURCES")}
     if value is not None:
         config.PLANNER_ENABLED = value  # the agent reads config.PLANNER_ENABLED at call time (CONTRACTS.md section 6)
         os.environ["PLANNER_ENABLED"] = "1" if value else "0"
     if flat:
-        config.FLAT_ALL_SOURCES = True
-        os.environ["FLAT_ALL_SOURCES"] = "1"
+        os.environ["ENABLED_SOURCES"] = "all"
+    elif value is False:
+        os.environ.pop("ENABLED_SOURCES", None)
     try:
         yield
     finally:
-        for k, v in old.items():
-            setattr(config, k, v)
-            if old_env[k] is None:
+        config.PLANNER_ENABLED = old_planner
+        for k, v in old_env.items():
+            if v is None:
                 os.environ.pop(k, None)
             else:
-                os.environ[k] = old_env[k]
+                os.environ[k] = v
 
 
-# ---------------------------------------------------------------- CLI
 @cli.command()
 def main(
     key: Path = typer.Option(config.ANSWER_KEY_PATH, help="Answer file, e.g. evals/heldout_key.json"),
@@ -477,7 +481,7 @@ def main(
     planner: Optional[bool] = typer.Option(None, "--planner/--no-planner",
                                            help="Planner on or off for this run (default: PLANNER_ENABLED)"),
     flat: bool = typer.Option(False, "--flat", help="Flat baseline: one retrieval loop over ALL sources, no planner "
-                              "(refuses to run until flat mode exists: config.FLAT_MODE_IMPLEMENTED)"),
+                              "(planner off, ENABLED_SOURCES=all: one loop over every source)"),
     out: Path = typer.Option(None, help="Results file (default depends on --key and agent mode; stub adds .stub)"),
     stub: bool = typer.Option(False, "--stub", help="Use the TEST-ONLY stub agent"),
     auto: bool = typer.Option(False, "--auto", help="No prompts; exit 1 if any question fails"),
@@ -497,9 +501,9 @@ def main(
     if flat and planner:
         raise typer.BadParameter("--flat means no planner; it cannot be combined with --planner")
     if flat and not config.FLAT_MODE_IMPLEMENTED:
-        typer.echo("error: there is no flat mode yet (a single retrieval loop over all sources, no planner). With the planner "
-                   "off the agent is the Phase 1 graph, which only reaches Jira, so it is not a flat baseline. Do not record "
-                   "phase2_flat.json until config.FLAT_MODE_IMPLEMENTED is True.")
+        typer.echo("error: flat mode is switched off (config.FLAT_MODE_IMPLEMENTED is False). With the planner off and "
+                   "ENABLED_SOURCES unset the agent is the Phase 1 graph, which only reaches Jira, so it is not a flat "
+                   "baseline. Do not record phase2_flat.json until flat mode is on.")
         raise typer.Exit(2)
     planner_on = False if flat else (config.PLANNER_ENABLED if planner is None else planner)
     mode_label = agent_mode(key, planner_on, flat)
@@ -530,6 +534,7 @@ def main(
         grader = lambda q, rec: ask_grade()
 
     with planner_override(False if flat else planner, flat):
+        enabled = list(config.resolve_enabled_sources(planner=planner_on))
         records = run_questions(questions, run_agent, repeat, valid_ids, grader, echo=typer.echo)
     agg = aggregate(records, min_pass_rate)
     mode = "auto" if auto else ("mechanical" if no_grade else "manual")
@@ -538,7 +543,7 @@ def main(
     Path(out).write_text(json.dumps({
         "phase": phase_of(key), "today": config.TODAY, "model": config.MODELS["agent"],
         "agent": "stub" if stub else "real", "key": Path(key).name, "mode": mode,
-        "planner_enabled": planner_on, "agent_mode": mode_label,
+        "planner_enabled": planner_on, "agent_mode": mode_label, "enabled_sources": enabled,
         "repeat": repeat, "min_pass_rate": min_pass_rate,
         "environment": describe_environment(stub),
         "score": {"questions_passed": agg["questions_passed"], "questions_total": agg["questions_total"],

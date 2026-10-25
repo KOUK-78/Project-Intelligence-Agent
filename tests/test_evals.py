@@ -412,7 +412,7 @@ def test_cli_phase2_heldout_files_and_banner(monkeypatch, tmp_path):
     assert (tmp_path / "phase2_heldout_jira_only.json").exists()
 
 
-def test_flat_flag_refuses_until_flat_mode_exists(monkeypatch, tmp_path):
+def test_flat_flag_refuses_when_flat_mode_is_switched_off(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", False)
     r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--auto")
     assert r.exit_code == 2
@@ -421,17 +421,43 @@ def test_flat_flag_refuses_until_flat_mode_exists(monkeypatch, tmp_path):
 
 def test_flat_flag_writes_the_flat_file_and_sets_the_switch(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", True)
+    monkeypatch.setenv("ENABLED_SOURCES", "jira")  # a stray value must not leak into the run
     seen = []
 
     def agent(_q):
-        seen.append((config.PLANNER_ENABLED, config.FLAT_ALL_SOURCES))
+        seen.append((config.PLANNER_ENABLED, os.environ.get("ENABLED_SOURCES"),
+                     config.resolve_enabled_sources()))
         return p2result()
 
     r = run_p2(monkeypatch, tmp_path, agent, "--flat", "--auto")
     assert r.exit_code == 0, r.output
-    assert seen == [(False, True)]
-    assert json.loads((tmp_path / "phase2_flat.json").read_text())["agent_mode"] == "flat"
-    assert config.FLAT_ALL_SOURCES is False
+    assert seen == [(False, "all", ("jira", "notion", "email"))]
+    data = json.loads((tmp_path / "phase2_flat.json").read_text())
+    assert data["agent_mode"] == "flat" and data["enabled_sources"] == ["jira", "notion", "email"]
+    assert os.environ["ENABLED_SOURCES"] == "jira"  # restored
+
+
+def test_no_planner_run_ignores_a_stray_enabled_sources(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENABLED_SOURCES", "all")
+    seen = []
+
+    def agent(_q):
+        seen.append(config.resolve_enabled_sources())
+        return p2result()
+
+    r = run_p2(monkeypatch, tmp_path, agent, "--no-planner", "--auto")
+    assert r.exit_code == 0, r.output
+    assert seen == [("jira",)]
+    data = json.loads((tmp_path / "phase2_jira_only.json").read_text())
+    assert data["agent_mode"] == "phase1_jira_only" and data["enabled_sources"] == ["jira"]
+    assert os.environ["ENABLED_SOURCES"] == "all"
+
+
+def test_planner_run_records_the_enabled_sources(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENABLED_SOURCES", "jira,notion")
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--planner", "--auto")
+    assert r.exit_code == 0, r.output
+    assert json.loads((tmp_path / "phase2_planner.json").read_text())["enabled_sources"] == ["jira", "notion"]
 
 
 def test_flat_and_planner_conflict(monkeypatch, tmp_path):

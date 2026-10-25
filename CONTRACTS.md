@@ -190,13 +190,14 @@ union of every source's IDs.
 `PLANNER_ENABLED=false` the agent is the Phase 1 graph, which reaches Jira only, so it is NOT a flat baseline and its
 Phase 2 results are written as `phase2_jira_only.json` / `phase2_heldout_jira_only.json` (field `agent_mode`:
 `phase1_jira_only`). `phase2_flat.json` / `phase2_heldout_flat.json` are written only by `evals.run_evals --flat`,
-which refuses to run until `config.FLAT_MODE_IMPLEMENTED` is True; B/D flip it when flat mode exists (the runner sets
-`FLAT_ALL_SOURCES=1` for the run). Result files record `agent_mode`: `planner`, `flat`, `phase1` or `phase1_jira_only`.
+which sets planner off and `ENABLED_SOURCES=all` for the run (D's flat mode: one router, one loop over every source) and
+refuses if `config.FLAT_MODE_IMPLEMENTED` is False. `--no-planner` removes `ENABLED_SOURCES` for the run, so a value left
+in the shell cannot turn a Jira-only run into a flat one. Result files record `enabled_sources` and `agent_mode`: `planner`, `flat`, `phase1` or `phase1_jira_only`.
 
 Additions made while writing these amendments (each needs the same four approvals): `app/faults.py` and the
 `FAULT_INJECT` switch (C4), the token counter and span helpers in `app/tracing.py` (C5), and
-`data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (flat mode, not yet available; see above),
-`phase2_planner.json`, `phase2_heldout.json`, plus `phase2_heldout_flat.json` (flat mode only) so the held-out planner-on versus
+`data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (flat mode, `--flat`; see above),
+`phase2_planner.json`, `phase2_heldout.json`, plus `phase2_heldout_flat.json` (`--flat` only) so the held-out planner-on versus
 planner-off comparison is recorded the same way as the tuning key.
 
 **Sign-off** (tick when you approve the PR that merges this file; merge needs all four):
