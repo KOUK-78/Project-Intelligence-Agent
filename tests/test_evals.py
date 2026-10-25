@@ -504,13 +504,13 @@ def test_extra_source_ids_are_accepted_and_the_callers_set_is_never_modified(mon
                valid=shared, extra=({"NTN-201", "EML-301"}, []))
     assert r.exit_code == 0, r.output                       # NTN-201 is valid through the extra IDs
     assert shared == {"ATL-112"}                            # a new set was built, not the caller's mutated
-    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto",
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto", "--force",
                valid=shared, extra=(set(), []))
     assert r.exit_code == 1 and "invalid citation ['NTN-201']" in r.output
 
 
 def test_phase1_run_records_phase_1_and_planner_off(monkeypatch, tmp_path):
-    r, out = run_cli(monkeypatch, tmp_path, [q()], lambda _q: result(["ATL-112"]), "--auto")
+    r, out = run_cli(monkeypatch, tmp_path, [q()], lambda _q: result(["ATL-112"]), "--auto", "--force")
     data = json.loads(out.read_text())
     assert r.exit_code == 0 and data["phase"] == 1 and data["planner_enabled"] is False
 
@@ -520,3 +520,17 @@ def test_must_mention_matches_whole_tokens_only():
     assert not ev.mentions("due in 2025", "25") and not ev.mentions("250 tickets", "25") and not ev.mentions("v25a", "25")
     assert ev.mentions("ga is 2026-09-15 for all", "2026-09-15") and ev.mentions("sept 15", "SEPT   15")
     assert not ev.mentions("anything", "") and not ev.mentions("", "x")
+
+
+def test_an_existing_results_file_is_not_overwritten_without_force(monkeypatch, tmp_path):
+    recorded = tmp_path / "phase1_baseline.json"
+    recorded.write_text('{"recorded": true}')
+    key = tmp_path / "k.json"
+    key.write_text(json.dumps([q()]))
+    monkeypatch.setattr(ev, "get_run_agent", lambda use_stub=False: (lambda _q: result(["ATL-112"])))
+    monkeypatch.setattr(ev, "load_valid_ids", lambda *a, **k: VALID)
+    r = CliRunner().invoke(ev.cli, ["--key", str(key), "--out", str(recorded), "--auto"])
+    assert r.exit_code == 2 and "already exists" in r.output and "_rerun.json" in r.output
+    assert recorded.read_text() == '{"recorded": true}'
+    r = CliRunner().invoke(ev.cli, ["--key", str(key), "--out", str(recorded), "--auto", "--force"])
+    assert r.exit_code == 0 and json.loads(recorded.read_text())["key"] == "k.json"

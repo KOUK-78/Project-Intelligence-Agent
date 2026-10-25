@@ -162,7 +162,8 @@ def add_usage(job: str, prompt_tokens, completion_tokens) -> None:
     counter["completion_tokens"] += c
     counter["total_tokens"] += p + c
     counter["calls"] += 1
-    per = counter["by_job"].setdefault(job, {"prompt_tokens": 0, "completion_tokens": 0})
+    per = counter["by_job"].setdefault(job, {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0})
+    per["calls"] += 1
     per["prompt_tokens"] += p
     per["completion_tokens"] += c
 
@@ -285,7 +286,7 @@ def observe_run(question: str, fn) -> dict:
         result["latency_ms"] = result.get("latency_ms") or int((time.perf_counter() - t0) * 1000)
         counted = _usage.get()
         if result.get("token_usage") is None and counted and counted["calls"]:
-            result["token_usage"] = {k: counted[k] for k in ("prompt_tokens", "completion_tokens", "total_tokens", "by_job")}
+            result["token_usage"] = {k: counted[k] for k in ("prompt_tokens", "completion_tokens", "total_tokens", "calls", "by_job")}
         if span is not None and result.get("token_usage"):
             _set_attrs(span, {"llm.token_count.total": result["token_usage"].get("total_tokens")})
         if span is not None:

@@ -59,10 +59,12 @@ $env:PHOENIX_WORKING_DIR = "$PWD\.phoenix"; phoenix serve     # second terminal
 python -m evals.run_evals --phase2 --flat --auto --repeat 3 --require-trace   # planner off, ENABLED_SOURCES=all
 python -m evals.run_evals --phase2 --planner    --auto --repeat 3 --require-trace
 python -m evals.compare evals/results/phase2_flat.json evals/results/phase2_planner.json
-python -m evals.run_evals --auto --repeat 3 --planner --require-trace   # Phase 1 regression, planner on
+python -m evals.run_evals --auto --repeat 3 --no-planner --require-trace --out evals/results/phase1_baseline_rerun.json   # rule 2 gate
+python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_rerun.json
+python -m evals.run_evals --auto --repeat 3 --planner --require-trace   # Phase 1 with planner on: reported separately, not the gate
 python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_planner.json
 ```
-Close other GPU apps first, keep `NUM_CTX = 8192`, and do not change `config.py` between the paired runs. The held-out key (`--phase2 --heldout`) is run only at M4, once, and never used to tune anything. `compare` warns if two files differ in machine, model digest or repeat count; do not publish a comparison that warns.
+The runner refuses to overwrite an existing result file; use `--out` (as above) or `--force` on purpose. Close other GPU apps first, keep `NUM_CTX = 8192`, and do not change `config.py` between the paired runs. The held-out key (`--phase2 --heldout`) is run only at M4, once, and never used to tune anything. `compare` warns if two files differ in machine, model digest or repeat count; do not publish a comparison that warns.
 
 ## Choosing sources (`ENABLED_SOURCES`)
 ```powershell

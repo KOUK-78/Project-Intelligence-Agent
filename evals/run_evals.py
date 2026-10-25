@@ -483,6 +483,7 @@ def main(
     flat: bool = typer.Option(False, "--flat", help="Flat baseline: one retrieval loop over ALL sources, no planner "
                               "(planner off, ENABLED_SOURCES=all: one loop over every source)"),
     out: Path = typer.Option(None, help="Results file (default depends on --key and agent mode; stub adds .stub)"),
+    force: bool = typer.Option(False, "--force", help="Overwrite an existing results file (refused by default)"),
     stub: bool = typer.Option(False, "--stub", help="Use the TEST-ONLY stub agent"),
     auto: bool = typer.Option(False, "--auto", help="No prompts; exit 1 if any question fails"),
     no_grade: bool = typer.Option(False, "--no-grade", help="Record mechanical checks only"),
@@ -509,6 +510,11 @@ def main(
     mode_label = agent_mode(key, planner_on, flat)
     questions = load_key(key)
     out = out or default_out_path(key, stub, planner_on, flat)
+    if not stub and Path(out).exists() and not force:
+        typer.echo(f"error: {out} already exists and is a recorded result. Re-run into another file "
+                   f"(--out {Path(out).with_name(Path(out).stem + '_rerun.json')}) and compare it with the recorded one, "
+                   "or pass --force to overwrite it on purpose.")
+        raise typer.Exit(2)
     if mode_label == "phase1_jira_only":
         typer.echo("(!) Planner is off and there is no flat mode: this runs the Phase 1 graph, which only reaches Jira. "
                    "The result is written as *_jira_only.json and is NOT a flat baseline for the planner.")

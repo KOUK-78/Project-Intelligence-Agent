@@ -75,8 +75,8 @@ Question -> Planner (validated JSON sub-questions, each tagged with a source)
 |---|---|
 | `PLANNER_ENABLED=false` reproduces Phase 1 exactly | `config.PLANNER_ENABLED` (default off); `--no-planner` runs; Phase 1 regression gate below |
 | IDs are `ATL-` (Jira), `NTN-` (Notion), `EML-` (email) | `CONTRACTS.md` section 10, `config.SOURCE_ID_PREFIXES` |
-| A failed source does not stop the run | `FAULT_INJECT` tests; `AgentResult.sources` |
-| Hard caps everywhere | `MAX_AGENT_STEPS=5` per sub-question, `MAX_TOTAL_STEPS=15`, `MAX_SUBQUESTIONS=4` |
+| A failed source does not stop the run | `tests/test_fault_hooks.py` and `tests/test_fault_end_to_end.py` (real servers, `FAULT_INJECT`); `AgentResult.sources` |
+| Hard caps everywhere | `MAX_AGENT_STEPS=5` per sub-question, `MAX_TOTAL_STEPS=12`, `MAX_SUBQUESTIONS=4` |
 | No data, titles, names or key wording in prompts | `tests/test_prompt_hygiene.py` (all three sources) |
 | The Phase 2 held-out key is measurement-only | `CONTRACTS.md` section 7; tests never quote its wording |
 
@@ -119,12 +119,23 @@ Official runs are recorded at M2 and M4 on one machine with one model version an
 
 ### Phase 1 regression table
 
-With the planner **off** the Phase 1 numbers must hold. These are the recorded Phase 1 results (the reference) and the floor `compare` enforces.
+Rule 2 is "with the planner **off**, Phase 1 numbers hold". The gate for it is a planner-off re-run compared with the recorded baseline; the planner-on re-run is a separate report. The runner refuses to overwrite a recorded result (`--force` overrides on purpose), so a re-run goes to its own file:
 
-| Key | Recorded (planner off) | Recorded range | Floor (exit 1 below) | Planner-on re-run |
-|---|---|---|---|---|
-| Original (`answer_key.json`) | 23 of 30 runs, 7 of 10 questions | 22 to 24 of 30 | 22 of 30 | *not recorded* |
-| Held-out (`heldout_key.json`) | 18 of 30 runs, 6 of 10 questions | 15 to 18 of 30 | 15 of 30 | *not recorded* |
+```bash
+# Gate (rule 2): planner off, re-run and compare with the recorded files; exit 1 below the floor
+python -m evals.run_evals --auto --repeat 3 --no-planner --out evals/results/phase1_baseline_rerun.json
+python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_rerun.json
+python -m evals.run_evals --heldout --auto --repeat 3 --no-planner --out evals/results/phase1_heldout_rerun.json
+python -m evals.compare evals/results/phase1_heldout.json evals/results/phase1_heldout_rerun.json
+# Report (not the gate): planner on, on the same keys
+python -m evals.run_evals --auto --repeat 3 --planner      # -> phase1_baseline_planner.json
+python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_planner.json
+```
+
+| Key | Recorded (planner off) | Recorded range | Floor (exit 1 below) | Planner-off re-run (gate) | Planner-on re-run (report) |
+|---|---|---|---|---|---|
+| Original (`answer_key.json`) | 23 of 30 runs, 7 of 10 questions | 22 to 24 of 30 | 22 of 30 | *not recorded* | *not recorded* |
+| Held-out (`heldout_key.json`) | 18 of 30 runs, 6 of 10 questions | 15 to 18 of 30 | 15 of 30 | *not recorded* | *not recorded* |
 
 ### Limitations (Phase 2)
 

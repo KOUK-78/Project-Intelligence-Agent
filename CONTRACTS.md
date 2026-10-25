@@ -155,11 +155,14 @@ Reserved fixtures (prompt-injection and PII items, for later phases) are listed 
 ## 11) Tracing, token accounting and fault injection (agreed between B, C and D)
 - **Run wrapper:** C's `app/runtime.py` wraps `run_agent` through `tracing.observe_run` (trace id, total latency,
   `logs/runs.jsonl`). B does NOT decorate `run_agent`. The wrapper also attaches `token_usage` from the run's
-  token counter when the result has none.
+  token counter when the result has none, in the section 4 shape (`prompt_tokens`, `completion_tokens`,
+  `total_tokens`, `calls`, and `by_job` with `prompt_tokens`, `completion_tokens` and `calls` per job).
 - **Per node:** B decorates each node function with `@node_span("name")` from `app.tracing`.
-- **Planner and evidence check:** B wraps each planner call in `tracing.stage_span("planner", ...)` and each
-  evidence check in `tracing.stage_span("evidence_check", subquestion_index=..., subquestion=..., source=...)`.
-  `tracing.annotate(**attrs)` adds attributes to the current span (e.g. the final outcome).
+- **Planner and evidence check:** these are graph nodes, so they are traced by the same `@node_span("planner")`,
+  `@node_span("retrieve")` and `@node_span("evidence_check")` wrappers as every other node (`app/graph.py`);
+  `node_span` adds the stage attributes (sub-question index, source, outcome) for those three nodes.
+  `tracing.stage_span(name, **attrs)` is available for a step that is not a node, and `tracing.annotate(**attrs)` adds
+  attributes to the current span (e.g. the final outcome).
 - **Model calls:** the agent uses the raw `ollama` client, so these are not auto-instrumented. `llm.py` wraps the
   request in `tracing.llm_span(job, model)` and reports usage with `span.set_usage(prompt_tokens, completion_tokens)`.
   The span records the counts as OpenInference token attributes and adds them to the run's token counter.
