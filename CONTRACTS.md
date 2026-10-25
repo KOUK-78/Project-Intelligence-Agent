@@ -218,7 +218,7 @@ planner-off comparison is recorded the same way as the tuning key.
 
 **Sign-off** (tick when you approve the PR that merges this file; merge needs all four):
 - [ ] A (data and keys)
-- [ ] B (agent, graph, planner, synthesizer)
+- [x] B (agent, graph, planner, synthesizer)
 - [ ] C (config, runner, tracing, tests, docs)
 - [ ] D (MCP servers, client, tool node, verifier, sources)
 
