@@ -37,7 +37,9 @@ SYNTH_V2_SYSTEM = (
     "2. Put the record ID in brackets after every factual claim, e.g. [ATL-000], [NTN-000] or [EML-000]. "
     "Use brackets only for record IDs.\n"
     "3. A group marked NOT ENOUGH EVIDENCE: say plainly that there is not enough evidence for that part. "
-    "Do not guess.\n"
+    "Do not guess. Records shown in such a group were found by keyword search and may be unrelated to the "
+    "sub-question: do not report them as its answer and do not cite them, unless a record itself states the "
+    "specific fact the sub-question asked for.\n"
     "4. A group marked SOURCE UNAVAILABLE: say 'source unavailable' and name the source for that part. "
     "Do not guess.\n"
     "5. If records or sources disagree about the same fact, state BOTH values, each with its own ID in brackets, "
@@ -186,7 +188,8 @@ def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: lis
         else:
             body = format_evidence(items, share)
             if status == "unresolved":
-                body += f"\n{MARK_NO_EVIDENCE}: this sub-question was judged incomplete; use only what is shown."
+                body += (f"\n{MARK_NO_EVIDENCE}: the records above did not answer this sub-question. They may be unrelated; "
+                         "do not present them as the answer.")
             if down:
                 body += f"\n{MARK_UNAVAILABLE}: {down}."
         blocks.append(f"Sub-question {sq['id']} (source: {sq['source']}): {sq['question']}\n{body}")
