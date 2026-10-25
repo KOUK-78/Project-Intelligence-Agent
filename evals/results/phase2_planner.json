@@ -1,0 +1,2804 @@
+{
+  "phase": 2,
+  "today": "2026-06-30",
+  "model": "qwen3:8b",
+  "agent": "real",
+  "key": "phase2_key.json",
+  "mode": "auto",
+  "planner_enabled": true,
+  "agent_mode": "planner",
+  "enabled_sources": [
+    "jira",
+    "notion",
+    "email"
+  ],
+  "key_sha256": "c9e9bbffdae00e7b8afbbb1166800658610da314a4dfcf54c60f44bb68910267",
+  "repeat": 3,
+  "min_pass_rate": 1.0,
+  "environment": {
+    "machine": {
+      "node": "LYNX-4761",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "python": "3.14.8"
+    },
+    "models": {
+      "agent": "qwen3:8b",
+      "synthesizer": "qwen3:8b",
+      "planner": "qwen3:8b",
+      "evidence_check": "qwen3:8b"
+    },
+    "model_fingerprint": {
+      "name": "qwen3:8b",
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "size": 5225388164
+    },
+    "git_commit": "74f5ecba87fd6553964b3d7eb63557e806536fe5",
+    "settings": {
+      "MAX_AGENT_STEPS": 5,
+      "MAX_TOTAL_STEPS": 12,
+      "MAX_SUBQUESTIONS": 4,
+      "NUM_CTX": 8192,
+      "TEMPERATURE": 0.1
+    },
+    "faults": {}
+  },
+  "score": {
+    "questions_passed": 5,
+    "questions_total": 14,
+    "runs_passed": 18,
+    "runs_total": 42,
+    "overall_pass_rate": 0.429
+  },
+  "latency_ms": {
+    "median": 23652,
+    "worst": 49016
+  },
+  "runs_missing_trace_id": 0,
+  "totals": {
+    "tokens": {
+      "runs_reporting": 42,
+      "total": 520344,
+      "median_per_run": 12305
+    },
+    "steps": {
+      "runs_reporting": 42,
+      "total": 291,
+      "median_per_run": 6
+    },
+    "tool_calls": {
+      "runs_reporting": 42,
+      "total": 299,
+      "median_per_run": 8
+    },
+    "planner": {
+      "runs": 42,
+      "invalid": 0,
+      "fallback": 0,
+      "median_subquestions": 2.0
+    },
+    "source_checks": {
+      "runs_with_required_sources": 39,
+      "runs_covering_them": 20,
+      "runs_with_must_mention": 39,
+      "runs_mentioning_all": 20
+    }
+  },
+  "per_question": [
+    {
+      "id": "P1",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 25670,
+      "worst_latency_ms": 29639,
+      "trace_ids": [
+        "c91caa1f3c177fdac40b30477247540e",
+        "a17acd7cadd174d04d833103953b41f4",
+        "9406978dd29aac34151da111108e6ecb"
+      ]
+    },
+    {
+      "id": "P2",
+      "runs": 3,
+      "passes": 1,
+      "ungraded": 0,
+      "pass_rate": 0.333,
+      "passed": false,
+      "median_latency_ms": 33536,
+      "worst_latency_ms": 38487,
+      "trace_ids": [
+        "7985cc05e010dd9e41356904c82356f3",
+        "7cf8b11f1201bafd0efe374a07fe199d",
+        "1f213dadc6e5d6223a1b6602c7c005af"
+      ]
+    },
+    {
+      "id": "P3",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 20264,
+      "worst_latency_ms": 31162,
+      "trace_ids": [
+        "7139c04d75078ad2179578dce60429be",
+        "9124aaeed669f68d4c936cba1262bbee",
+        "efbb71d35867774c6b6604c4a0860989"
+      ]
+    },
+    {
+      "id": "P4",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 18767,
+      "worst_latency_ms": 19794,
+      "trace_ids": [
+        "f9ad2c5b7724d7df06b239551fc97fea",
+        "8dd0d904720d61cf2d14134ef357b1af",
+        "d21c49c5043ce2eef5032488d7b35f76"
+      ]
+    },
+    {
+      "id": "P5",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 37788,
+      "worst_latency_ms": 49016,
+      "trace_ids": [
+        "80ee96f533cb931890c52cfce7bd32c3",
+        "59e399d2cbd18b96136c6add4d152e26",
+        "dab8d5d611853daf929d29b89a874364"
+      ]
+    },
+    {
+      "id": "P6",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 43353,
+      "worst_latency_ms": 47244,
+      "trace_ids": [
+        "5544fc8871bebdeb821e88fc60ce60c1",
+        "ed849735f7b01ce4ea77c8e704fc422c",
+        "0ecb11b97316257926c80255c6a9389f"
+      ]
+    },
+    {
+      "id": "P7",
+      "runs": 3,
+      "passes": 2,
+      "ungraded": 0,
+      "pass_rate": 0.667,
+      "passed": false,
+      "median_latency_ms": 27679,
+      "worst_latency_ms": 27734,
+      "trace_ids": [
+        "2a307f8700914ecd41e9913b0235150e",
+        "83c151069e7e7b22ed29f024307372f6",
+        "9c114a5a4445c307643dda014e648338"
+      ]
+    },
+    {
+      "id": "P8",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 8949,
+      "worst_latency_ms": 9366,
+      "trace_ids": [
+        "1b477660a27c257f16cf5be5fa42809e",
+        "6ed5b82b432f85e34704d1bb1268f797",
+        "0539fbddbd4cb461853bdcf576190a63"
+      ]
+    },
+    {
+      "id": "P9",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 13865,
+      "worst_latency_ms": 23033,
+      "trace_ids": [
+        "d2057d5cc738c15dbedb81208d3a308b",
+        "5619e89db6096344c015d3d73ec06a5a",
+        "efb2e10de3c96e564404e18c92e40dc3"
+      ]
+    },
+    {
+      "id": "P10",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 23230,
+      "worst_latency_ms": 33781,
+      "trace_ids": [
+        "5ca9c6edacc817e0a98eb2ffaf7d6604",
+        "ca09a2ae39dd5a34fc018326baffbacb",
+        "9f2ef54b4d8e19ccad127f6ee76f2618"
+      ]
+    },
+    {
+      "id": "P11",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 23685,
+      "worst_latency_ms": 28773,
+      "trace_ids": [
+        "d05c6da33e6b2eee8193d8f37a76626f",
+        "e98f0a1865053cbd195f51931b318edd",
+        "6cdc193b4939831a13f3635c6ad737ea"
+      ]
+    },
+    {
+      "id": "P12",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 13096,
+      "worst_latency_ms": 18268,
+      "trace_ids": [
+        "ec86ddebbf3ab1c0c81f1cd1ed5f861d",
+        "99533b4ad7834f7ade9ab9372ff4030c",
+        "d02780f0530e865bb1648f0f6e3fd754"
+      ]
+    },
+    {
+      "id": "P13",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 19604,
+      "worst_latency_ms": 19651,
+      "trace_ids": [
+        "1cdaf5c08c30ef4106725adbfd7076d1",
+        "7da8ad3f57c201dd79e555926eecdb42",
+        "1477e3f412e542ba9f906b10b13a4ad5"
+      ]
+    },
+    {
+      "id": "P14",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 40363,
+      "worst_latency_ms": 41594,
+      "trace_ids": [
+        "8326537959982caa063eb87c7eb9fbdf",
+        "ee444adb2dee1f99d939bffd326a69cf",
+        "8c0891bafabc26595deb4ea17cdb0b18"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "id": "P2",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap"
+      ]
+    },
+    {
+      "id": "P2",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap"
+      ]
+    },
+    {
+      "id": "P3",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "answer missing required text ['20 business days']"
+      ]
+    },
+    {
+      "id": "P3",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['20 business days']"
+      ]
+    },
+    {
+      "id": "P3",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['20 business days']"
+      ]
+    },
+    {
+      "id": "P5",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['fee']"
+      ]
+    },
+    {
+      "id": "P5",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['fee']"
+      ]
+    },
+    {
+      "id": "P5",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['fee']"
+      ]
+    },
+    {
+      "id": "P6",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']"
+      ]
+    },
+    {
+      "id": "P6",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']"
+      ]
+    },
+    {
+      "id": "P6",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']"
+      ]
+    },
+    {
+      "id": "P7",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "answer missing required text ['Complete']"
+      ]
+    },
+    {
+      "id": "P8",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira']",
+        "answer missing required text ['2026-09-15']"
+      ]
+    },
+    {
+      "id": "P8",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira']",
+        "answer missing required text ['2026-09-15']"
+      ]
+    },
+    {
+      "id": "P8",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira']",
+        "answer missing required text ['2026-09-15']"
+      ]
+    },
+    {
+      "id": "P11",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "status=loop_cap",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['declined']"
+      ]
+    },
+    {
+      "id": "P11",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['declined']"
+      ]
+    },
+    {
+      "id": "P11",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "answer missing required text ['declined']"
+      ]
+    },
+    {
+      "id": "P12",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['2026-07-20']"
+      ]
+    },
+    {
+      "id": "P12",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['email']",
+        "answer missing required text ['2026-07-20']"
+      ]
+    },
+    {
+      "id": "P12",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira', 'email']",
+        "answer missing required text ['2026-07-20']"
+      ]
+    },
+    {
+      "id": "P14",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira']",
+        "answer missing required text ['separate']"
+      ]
+    },
+    {
+      "id": "P14",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira']",
+        "answer missing required text ['separate']"
+      ]
+    },
+    {
+      "id": "P14",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation",
+        "required source not cited ['jira']",
+        "answer missing required text ['separate']"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "P1",
+      "run": 1,
+      "question": "Why was recurring billing taken out of the Atlas launch scope?",
+      "status": "ok",
+      "answer": "Recurring billing was taken out of the Atlas launch scope because it was removed from the Atlas GA scope and moved to Atlas 1.1, planned for Q4 2026 [NTN-105]. The initial launch scope, as defined in the Atlas Launch Spec v2, did not include recurring billing [NTN-103]. Not enough evidence for: Were there any discussions about removing recurring billing from the Atlas launch scope?; Was recurring billing mentioned in any work tickets related to the Atlas launch?.",
+      "citations": [
+        "NTN-105",
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "NTN-105"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "Atlas 1.1"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 2,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 9022,
+      "completion_tokens": 697,
+      "total_tokens": 9719,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 25670,
+      "trace_id": "c91caa1f3c177fdac40b30477247540e",
+      "correct": true
+    },
+    {
+      "id": "P1",
+      "run": 2,
+      "question": "Why was recurring billing taken out of the Atlas launch scope?",
+      "status": "ok",
+      "answer": "Recurring billing was taken out of the Atlas launch scope because it was decided to remove it from the Atlas GA scope and move it to Atlas 1.1, planned for Q4 2026. [NTN-105] Not enough evidence for: Were there any discussions about recurring billing in the context of the Atlas launch?.",
+      "citations": [
+        "NTN-105"
+      ],
+      "expected_citations": [
+        "NTN-105"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "Atlas 1.1"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 3,
+      "tool_call_count": 3,
+      "prompt_tokens": 6805,
+      "completion_tokens": 511,
+      "total_tokens": 7316,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 16652,
+      "trace_id": "a17acd7cadd174d04d833103953b41f4",
+      "correct": true
+    },
+    {
+      "id": "P1",
+      "run": 3,
+      "question": "Why was recurring billing taken out of the Atlas launch scope?",
+      "status": "ok",
+      "answer": "Recurring billing was taken out of the Atlas launch scope because it was decided to remove it from the Atlas GA scope and move it to Atlas 1.1, planned for Q4 2026. [NTN-105] Not enough evidence for: Were there any discussions about recurring billing in the context of the Atlas launch?; Did any work tickets mention the removal of recurring billing from the Atlas launch?.",
+      "citations": [
+        "NTN-105"
+      ],
+      "expected_citations": [
+        "NTN-105"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "Atlas 1.1"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 2,
+      "steps_total": 11,
+      "tool_call_count": 11,
+      "prompt_tokens": 15954,
+      "completion_tokens": 893,
+      "total_tokens": 16847,
+      "sources_returning_records": [
+        "notion",
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 29639,
+      "trace_id": "9406978dd29aac34151da111108e6ecb",
+      "correct": true
+    },
+    {
+      "id": "P2",
+      "run": 1,
+      "question": "Which card-entry approach did the team choose for checkout, and who made the decision?",
+      "status": "loop_cap",
+      "answer": "The team chose to use PayGate hosted card fields for the card-entry approach for checkout, as decided in the Decision Log entry [NTN-106]. The decision was made by the team, but the specific individual who made the decision is not mentioned in the provided evidence. Not enough evidence for: Did any email messages mention the decision regarding the card-entry approach for checkout?.",
+      "citations": [
+        "NTN-106"
+      ],
+      "expected_citations": [
+        "NTN-106"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "hosted"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 1,
+      "steps_total": 12,
+      "tool_call_count": 12,
+      "prompt_tokens": 18087,
+      "completion_tokens": 829,
+      "total_tokens": 18916,
+      "sources_returning_records": [
+        "notion",
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 30123,
+      "trace_id": "7985cc05e010dd9e41356904c82356f3",
+      "correct": false
+    },
+    {
+      "id": "P2",
+      "run": 2,
+      "question": "Which card-entry approach did the team choose for checkout, and who made the decision?",
+      "status": "ok",
+      "answer": "The team chose to use PayGate hosted card fields for the card-entry approach, and the decision was made by the team responsible for the decision log entry [NTN-106]. Not enough evidence for: What documentation pages discuss the card-entry approach for checkout?; Which team member was responsible for the decision on the card-entry approach?.",
+      "citations": [
+        "NTN-106"
+      ],
+      "expected_citations": [
+        "NTN-106"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "hosted"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 2,
+      "steps_total": 11,
+      "tool_call_count": 11,
+      "prompt_tokens": 15721,
+      "completion_tokens": 1129,
+      "total_tokens": 16850,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 38487,
+      "trace_id": "7cf8b11f1201bafd0efe374a07fe199d",
+      "correct": true
+    },
+    {
+      "id": "P2",
+      "run": 3,
+      "question": "Which card-entry approach did the team choose for checkout, and who made the decision?",
+      "status": "loop_cap",
+      "answer": "The team chose to use PayGate hosted card fields for the card-entry approach for checkout. The decision was made by the team involved in the decision log entry, as indicated in the record [NTN-106]. Not enough evidence for: What documentation pages discuss the card-entry approach for checkout?; Who was the decision-maker for the card-entry approach for checkout?.",
+      "citations": [
+        "NTN-106"
+      ],
+      "expected_citations": [
+        "NTN-106"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "hosted"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 2,
+      "steps_total": 12,
+      "tool_call_count": 12,
+      "prompt_tokens": 16023,
+      "completion_tokens": 971,
+      "total_tokens": 16994,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 33536,
+      "trace_id": "1f213dadc6e5d6223a1b6602c7c005af",
+      "correct": false
+    },
+    {
+      "id": "P3",
+      "run": 1,
+      "question": "How long does PayGate say sandbox provisioning takes once the amendment is signed?",
+      "status": "ok",
+      "answer": "PayGate says sandbox provisioning takes until 2026-07-15 once the amendment is signed. This is mentioned in an email from Lukas Brandt, where he states that provisioning runs through a fixed queue and the security review is mandatory, with 2026-07-15 as the deadline [EML-117].",
+      "citations": [
+        "EML-117"
+      ],
+      "expected_citations": [
+        "EML-111"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "20 business days"
+      ],
+      "must_mention_missing": [
+        "20 business days"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 0,
+      "steps_total": 11,
+      "tool_call_count": 11,
+      "prompt_tokens": 16898,
+      "completion_tokens": 911,
+      "total_tokens": 17809,
+      "sources_returning_records": [
+        "notion",
+        "jira",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 31162,
+      "trace_id": "7139c04d75078ad2179578dce60429be",
+      "correct": false
+    },
+    {
+      "id": "P3",
+      "run": 2,
+      "question": "How long does PayGate say sandbox provisioning takes once the amendment is signed?",
+      "status": "ok",
+      "answer": "PayGate says sandbox provisioning takes until mid-July once the amendment is signed. This is based on the comment that 'Still no sandbox access. PayGate's new ETA is mid-July.' [ATL-112].",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "EML-111"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "20 business days"
+      ],
+      "must_mention_missing": [
+        "20 business days"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 8,
+      "tool_call_count": 8,
+      "prompt_tokens": 10273,
+      "completion_tokens": 479,
+      "total_tokens": 10752,
+      "sources_returning_records": [
+        "notion",
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 19194,
+      "trace_id": "9124aaeed669f68d4c936cba1262bbee",
+      "correct": false
+    },
+    {
+      "id": "P3",
+      "run": 3,
+      "question": "How long does PayGate say sandbox provisioning takes once the amendment is signed?",
+      "status": "ok",
+      "answer": "PayGate mentions that sandbox provisioning is scheduled to be delivered by 2026-06-10 according to the Payments Integration Plan [NTN-104]. Not enough evidence for: Are there any comments or additional details about the sandbox provisioning time frame in PayGate?.",
+      "citations": [
+        "NTN-104"
+      ],
+      "expected_citations": [
+        "EML-111"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "20 business days"
+      ],
+      "must_mention_missing": [
+        "20 business days"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 12,
+      "tool_call_count": 12,
+      "prompt_tokens": 11640,
+      "completion_tokens": 568,
+      "total_tokens": 12208,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 20264,
+      "trace_id": "efbb71d35867774c6b6604c4a0860989",
+      "correct": false
+    },
+    {
+      "id": "P4",
+      "run": 1,
+      "question": "What is the current beta program kickoff date, and was it changed?",
+      "status": "ok",
+      "answer": "The beta program kickoff date was changed from 2026-08-03 to 2026-08-17 [EML-124]. Not enough evidence for: What is the current beta program kickoff date?.",
+      "citations": [
+        "EML-124"
+      ],
+      "expected_citations": [
+        "EML-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-08-17"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 5,
+      "tool_call_count": 5,
+      "prompt_tokens": 9981,
+      "completion_tokens": 580,
+      "total_tokens": 10561,
+      "sources_returning_records": [
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 19794,
+      "trace_id": "f9ad2c5b7724d7df06b239551fc97fea",
+      "correct": true
+    },
+    {
+      "id": "P4",
+      "run": 2,
+      "question": "What is the current beta program kickoff date, and was it changed?",
+      "status": "ok",
+      "answer": "The beta program kickoff date was changed from 2026-08-03 to 2026-08-17 [EML-124]. Not enough evidence for: What is the current beta program kickoff date?.",
+      "citations": [
+        "EML-124"
+      ],
+      "expected_citations": [
+        "EML-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-08-17"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 9288,
+      "completion_tokens": 555,
+      "total_tokens": 9843,
+      "sources_returning_records": [
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 18300,
+      "trace_id": "8dd0d904720d61cf2d14134ef357b1af",
+      "correct": true
+    },
+    {
+      "id": "P4",
+      "run": 3,
+      "question": "What is the current beta program kickoff date, and was it changed?",
+      "status": "ok",
+      "answer": "The beta program kickoff date was changed from 2026-08-03 to 2026-08-17 [EML-124]. Not enough evidence for: What is the current beta program kickoff date?.",
+      "citations": [
+        "EML-124"
+      ],
+      "expected_citations": [
+        "EML-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-08-17"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 5,
+      "tool_call_count": 5,
+      "prompt_tokens": 9963,
+      "completion_tokens": 562,
+      "total_tokens": 10525,
+      "sources_returning_records": [
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 18767,
+      "trace_id": "d21c49c5043ce2eef5032488d7b35f76",
+      "correct": true
+    },
+    {
+      "id": "P5",
+      "run": 1,
+      "question": "Why is the payments API v2 delivery (ATL-112) late? I want the underlying reason, not just that it is blocked.",
+      "status": "ok",
+      "answer": "The payments API v2 delivery ([ATL-112]) is late because the vendor PayGate has not delivered sandbox credentials for v2, and the contract amendment is still pending. The new ETA is mid-July. This issue is blocking all payment-dependent Atlas work (jira).",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "EML-103"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "fee"
+      ],
+      "must_mention_missing": [
+        "fee"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 0,
+      "steps_total": 6,
+      "tool_call_count": 6,
+      "prompt_tokens": 12858,
+      "completion_tokens": 1190,
+      "total_tokens": 14048,
+      "sources_returning_records": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 37788,
+      "trace_id": "80ee96f533cb931890c52cfce7bd32c3",
+      "correct": false
+    },
+    {
+      "id": "P5",
+      "run": 2,
+      "question": "Why is the payments API v2 delivery (ATL-112) late? I want the underlying reason, not just that it is blocked.",
+      "status": "ok",
+      "answer": "The payments API v2 delivery ([ATL-112]) is late because the vendor PayGate has not delivered sandbox credentials for v2, and the contract amendment is still pending. This has caused a blockage, with PayGate's new ETA being mid-July. All payment-dependent Atlas work is blocked until this lands (jira).",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "EML-103"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "fee"
+      ],
+      "must_mention_missing": [
+        "fee"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 0,
+      "steps_total": 6,
+      "tool_call_count": 6,
+      "prompt_tokens": 12619,
+      "completion_tokens": 1086,
+      "total_tokens": 13705,
+      "sources_returning_records": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 35100,
+      "trace_id": "59e399d2cbd18b96136c6add4d152e26",
+      "correct": false
+    },
+    {
+      "id": "P5",
+      "run": 3,
+      "question": "Why is the payments API v2 delivery (ATL-112) late? I want the underlying reason, not just that it is blocked.",
+      "status": "ok",
+      "answer": "The payments API v2 delivery ([ATL-112]) is late because Vendor PayGate has not delivered sandbox credentials for v2; the contract amendment is still pending (jira-ATL-112). Additionally, PayGate's new ETA is mid-July, which has caused all payment-dependent Atlas work to be blocked until this lands (jira-ATL-112).",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "EML-103"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "fee"
+      ],
+      "must_mention_missing": [
+        "fee"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 0,
+      "steps_total": 12,
+      "tool_call_count": 12,
+      "prompt_tokens": 20783,
+      "completion_tokens": 1447,
+      "total_tokens": 22230,
+      "sources_returning_records": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 49016,
+      "trace_id": "dab8d5d611853daf929d29b89a874364",
+      "correct": false
+    },
+    {
+      "id": "P6",
+      "run": 1,
+      "question": "How has the expected payments sandbox delivery changed since the original plan, and why?",
+      "status": "ok",
+      "answer": "The original plan for the expected payments sandbox delivery was for PayGate to deliver the sandbox by 2026-06-10, followed by integration work by the checkout, refund, billing, and test teams [NTN-104]. However, the sandbox delivery has been delayed, with a new ETA of mid-July due to PayGate not delivering sandbox credentials for v2, and the contract amendment still pending [ATL-112]. This delay has caused all payment-dependent work, including checkout, refund, billing, and payment tests, to be on hold [NTN-108]. Not enough evidence for: Are there any comments or discussions about the changes in the expected payments sandbox delivery?.",
+      "citations": [
+        "NTN-104",
+        "ATL-112",
+        "NTN-108"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "NTN-104",
+        "EML-111"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-06-10",
+        "mid-July"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 1,
+      "steps_total": 12,
+      "tool_call_count": 12,
+      "prompt_tokens": 19409,
+      "completion_tokens": 1350,
+      "total_tokens": 20759,
+      "sources_returning_records": [
+        "notion",
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 47244,
+      "trace_id": "5544fc8871bebdeb821e88fc60ce60c1",
+      "correct": false
+    },
+    {
+      "id": "P6",
+      "run": 2,
+      "question": "How has the expected payments sandbox delivery changed since the original plan, and why?",
+      "status": "ok",
+      "answer": "The original plan for the expected payments sandbox delivery was to have it by 2026-06-10, followed by integration work by the checkout, refund, billing, and test teams [NTN-104]. The expected payments sandbox delivery has been changed to mid-July due to the vendor PayGate not providing sandbox credentials for v2, and the contract amendment being pending [ATL-112]. Not enough evidence for: Are there any comments or discussions about the changes in the expected payments sandbox delivery?.",
+      "citations": [
+        "NTN-104",
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "NTN-104",
+        "EML-111"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-06-10",
+        "mid-July"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 1,
+      "steps_total": 10,
+      "tool_call_count": 10,
+      "prompt_tokens": 18173,
+      "completion_tokens": 1290,
+      "total_tokens": 19463,
+      "sources_returning_records": [
+        "notion",
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 43353,
+      "trace_id": "ed849735f7b01ce4ea77c8e704fc422c",
+      "correct": false
+    },
+    {
+      "id": "P6",
+      "run": 3,
+      "question": "How has the expected payments sandbox delivery changed since the original plan, and why?",
+      "status": "ok",
+      "answer": "The original plan for the expected payments sandbox delivery was to have it by 2026-06-10, followed by integration work by the checkout, refund, billing, and test teams [NTN-104]. The expected payments sandbox delivery has been changed to mid-July due to the vendor PayGate not providing sandbox credentials for v2, and the contract amendment is still pending [ATL-112]. Not enough evidence for: Are there any comments or discussions about the changes in the expected payments sandbox delivery?.",
+      "citations": [
+        "NTN-104",
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "NTN-104",
+        "EML-111"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-06-10",
+        "mid-July"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 1,
+      "steps_total": 11,
+      "tool_call_count": 11,
+      "prompt_tokens": 18940,
+      "completion_tokens": 1299,
+      "total_tokens": 20239,
+      "sources_returning_records": [
+        "notion",
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 42699,
+      "trace_id": "0ecb11b97316257926c80255c6a9389f",
+      "correct": false
+    },
+    {
+      "id": "P7",
+      "run": 1,
+      "question": "Is the refund workflow complete?",
+      "status": "ok",
+      "answer": "The refund workflow is marked as 'Blocked' in the Jira system [ATL-121], but there is a documentation page indicating that the refund workflow implementation is 'Complete' and ready for release [NTN-107]. Not enough evidence for: Have there been any recent communications about the refund workflow?.",
+      "citations": [
+        "ATL-121",
+        "NTN-107"
+      ],
+      "expected_citations": [
+        "ATL-121",
+        "NTN-107"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "Complete",
+        "Blocked"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 1,
+      "steps_total": 6,
+      "tool_call_count": 8,
+      "prompt_tokens": 10114,
+      "completion_tokens": 884,
+      "total_tokens": 10998,
+      "sources_returning_records": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 27679,
+      "trace_id": "2a307f8700914ecd41e9913b0235150e",
+      "correct": true
+    },
+    {
+      "id": "P7",
+      "run": 2,
+      "question": "Is the refund workflow complete?",
+      "status": "ok",
+      "answer": "The refund workflow is marked as 'Blocked' in the Jira system [ATL-121], but the documentation page in Notion indicates that the refund workflow implementation is signed off and ready for release [NTN-107].",
+      "citations": [
+        "ATL-121",
+        "NTN-107"
+      ],
+      "expected_citations": [
+        "ATL-121",
+        "NTN-107"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "Complete",
+        "Blocked"
+      ],
+      "must_mention_missing": [
+        "Complete"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 0,
+      "steps_total": 6,
+      "tool_call_count": 8,
+      "prompt_tokens": 11826,
+      "completion_tokens": 865,
+      "total_tokens": 12691,
+      "sources_returning_records": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 27734,
+      "trace_id": "83c151069e7e7b22ed29f024307372f6",
+      "correct": false
+    },
+    {
+      "id": "P7",
+      "run": 3,
+      "question": "Is the refund workflow complete?",
+      "status": "ok",
+      "answer": "The refund workflow is marked as 'Blocked' in the Jira system [ATL-121], but there is a documentation page indicating that the refund workflow implementation is 'Complete' and ready for release [NTN-107]. Not enough evidence for: Have there been any recent communications about the refund workflow?.",
+      "citations": [
+        "ATL-121",
+        "NTN-107"
+      ],
+      "expected_citations": [
+        "ATL-121",
+        "NTN-107"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "Complete",
+        "Blocked"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 1,
+      "steps_total": 6,
+      "tool_call_count": 8,
+      "prompt_tokens": 10114,
+      "completion_tokens": 876,
+      "total_tokens": 10990,
+      "sources_returning_records": [
+        "jira",
+        "notion",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 27294,
+      "trace_id": "9c114a5a4445c307643dda014e648338",
+      "correct": true
+    },
+    {
+      "id": "P8",
+      "run": 1,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "The Atlas public launch is planned for 2026-10-06, aligned with the press agency embargo. This date is mentioned in the Atlas Launch Spec v2 (marketing revision) [NTN-103].",
+      "citations": [
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139",
+        "NTN-102",
+        "NTN-103"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion"
+      ],
+      "sources_missing": [
+        "jira"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-09-15",
+        "2026-10-06"
+      ],
+      "must_mention_missing": [
+        "2026-09-15"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 0,
+      "steps_total": 2,
+      "tool_call_count": 2,
+      "prompt_tokens": 3986,
+      "completion_tokens": 255,
+      "total_tokens": 4241,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 9366,
+      "trace_id": "1b477660a27c257f16cf5be5fa42809e",
+      "correct": false
+    },
+    {
+      "id": "P8",
+      "run": 2,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "The Atlas public launch is planned for 2026-10-06, aligned with the press agency embargo. This date is mentioned in the Atlas Launch Spec v2 (marketing revision) [NTN-103].",
+      "citations": [
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139",
+        "NTN-102",
+        "NTN-103"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion"
+      ],
+      "sources_missing": [
+        "jira"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-09-15",
+        "2026-10-06"
+      ],
+      "must_mention_missing": [
+        "2026-09-15"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 0,
+      "steps_total": 2,
+      "tool_call_count": 2,
+      "prompt_tokens": 3986,
+      "completion_tokens": 245,
+      "total_tokens": 4231,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 8753,
+      "trace_id": "6ed5b82b432f85e34704d1bb1268f797",
+      "correct": false
+    },
+    {
+      "id": "P8",
+      "run": 3,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "The Atlas public launch is planned for 2026-10-06, aligned with the press agency embargo. This date is mentioned in the Atlas Launch Spec v2 (marketing revision) [NTN-103].",
+      "citations": [
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139",
+        "NTN-102",
+        "NTN-103"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "jira",
+        "notion"
+      ],
+      "sources_missing": [
+        "jira"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-09-15",
+        "2026-10-06"
+      ],
+      "must_mention_missing": [
+        "2026-09-15"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 0,
+      "steps_total": 2,
+      "tool_call_count": 2,
+      "prompt_tokens": 3986,
+      "completion_tokens": 254,
+      "total_tokens": 4240,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 8949,
+      "trace_id": "0539fbddbd4cb461853bdcf576190a63",
+      "correct": false
+    },
+    {
+      "id": "P9",
+      "run": 1,
+      "question": "Do the two Atlas launch spec versions agree on the launch date?",
+      "status": "ok",
+      "answer": "The two Atlas launch spec versions do not agree on the launch date. Version 1 specifies a target public GA date of 2026-09-15 [NTN-102], while Version 2 mentions a public launch date of 2026-10-06 [NTN-103].",
+      "citations": [
+        "NTN-102",
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "NTN-102",
+        "NTN-103"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-09-15",
+        "2026-10-06"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 7263,
+      "completion_tokens": 405,
+      "total_tokens": 7668,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 23033,
+      "trace_id": "d2057d5cc738c15dbedb81208d3a308b",
+      "correct": true
+    },
+    {
+      "id": "P9",
+      "run": 2,
+      "question": "Do the two Atlas launch spec versions agree on the launch date?",
+      "status": "ok",
+      "answer": "The two Atlas launch spec versions do not agree on the launch date. Version 1 specifies a target public GA date of 2026-09-15 [NTN-102], while Version 2 mentions a public launch date of 2026-10-06 [NTN-103].",
+      "citations": [
+        "NTN-102",
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "NTN-102",
+        "NTN-103"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-09-15",
+        "2026-10-06"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 7263,
+      "completion_tokens": 405,
+      "total_tokens": 7668,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 13865,
+      "trace_id": "5619e89db6096344c015d3d73ec06a5a",
+      "correct": true
+    },
+    {
+      "id": "P9",
+      "run": 3,
+      "question": "Do the two Atlas launch spec versions agree on the launch date?",
+      "status": "ok",
+      "answer": "The two Atlas launch spec versions do not agree on the launch date. Version 1 specifies a target public GA date of 2026-09-15 [NTN-102], while Version 2 mentions a public launch date of 2026-10-06 [NTN-103].",
+      "citations": [
+        "NTN-102",
+        "NTN-103"
+      ],
+      "expected_citations": [
+        "NTN-102",
+        "NTN-103"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "notion"
+      ],
+      "sources_required": [
+        "notion"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-09-15",
+        "2026-10-06"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 7263,
+      "completion_tokens": 405,
+      "total_tokens": 7668,
+      "sources_returning_records": [
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 13825,
+      "trace_id": "efb2e10de3c96e564404e18c92e40dc3",
+      "correct": true
+    },
+    {
+      "id": "P10",
+      "run": 1,
+      "question": "What is the disagreement in the email discussion about the launch date?",
+      "status": "ok",
+      "answer": "The disagreement in the email discussion is about the Atlas launch date. Aisha Khan claims that marketing has locked the public launch for 2026-10-06 with the press agency, while Priya Nair states that the steering committee confirmed the public GA on 2026-09-15, and the press date cannot be after GA. Aisha argues that changing the contract date is costly, and Priya mentions that they disagree and will take the issue to the 2026-07-02 steering meeting. [EML-119], [EML-120], [EML-121], [EML-122], [EML-123]",
+      "citations": [
+        "EML-119",
+        "EML-120",
+        "EML-121",
+        "EML-122",
+        "EML-123"
+      ],
+      "expected_citations": [
+        "EML-119",
+        "EML-120"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-10-06",
+        "2026-09-15"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 0,
+      "steps_total": 2,
+      "tool_call_count": 2,
+      "prompt_tokens": 7559,
+      "completion_tokens": 609,
+      "total_tokens": 8168,
+      "sources_returning_records": [
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 23230,
+      "trace_id": "5ca9c6edacc817e0a98eb2ffaf7d6604",
+      "correct": true
+    },
+    {
+      "id": "P10",
+      "run": 2,
+      "question": "What is the disagreement in the email discussion about the launch date?",
+      "status": "ok",
+      "answer": "The disagreement in the email discussion about the launch date is between Aisha Khan, who claims that marketing has locked the public launch for 2026-10-06 with the press agency, and Priya Nair, who states that the steering committee confirmed the public GA on 2026-09-15 and the press date cannot be after GA. [EML-119], [EML-120]",
+      "citations": [
+        "EML-119",
+        "EML-120"
+      ],
+      "expected_citations": [
+        "EML-119",
+        "EML-120"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-10-06",
+        "2026-09-15"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 14466,
+      "completion_tokens": 878,
+      "total_tokens": 15344,
+      "sources_returning_records": [
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 33781,
+      "trace_id": "ca09a2ae39dd5a34fc018326baffbacb",
+      "correct": true
+    },
+    {
+      "id": "P10",
+      "run": 3,
+      "question": "What is the disagreement in the email discussion about the launch date?",
+      "status": "ok",
+      "answer": "The disagreement in the email discussion is about the Atlas launch date. Aisha Khan claims that marketing has locked the public launch for 2026-10-06 with the press agency, while Priya Nair states that the steering committee confirmed the public GA on 2026-09-15, and the press date cannot be after GA. Aisha argues that changing the contract date is costly, and Priya mentions that they disagree and will take the issue to the 2026-07-02 steering meeting. [EML-119], [EML-120], [EML-121], [EML-122]",
+      "citations": [
+        "EML-119",
+        "EML-120",
+        "EML-121",
+        "EML-122"
+      ],
+      "expected_citations": [
+        "EML-119",
+        "EML-120"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "2026-10-06",
+        "2026-09-15"
+      ],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 0,
+      "steps_total": 2,
+      "tool_call_count": 2,
+      "prompt_tokens": 7559,
+      "completion_tokens": 562,
+      "total_tokens": 8121,
+      "sources_returning_records": [
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 19103,
+      "trace_id": "9f2ef54b4d8e19ccad127f6ee76f2618",
+      "correct": true
+    },
+    {
+      "id": "P11",
+      "run": 1,
+      "question": "What happened after the payments delay was escalated to vendor management on 2026-06-22?",
+      "status": "loop_cap",
+      "answer": "After the payments delay was escalated to vendor management on 2026-06-22, the status of the ticket was updated to 'Blocked', and it was noted that downstream tickets affected include [ATL-118], [ATL-121], [ATL-127], and [ATL-133]. [ATL-103] Not enough evidence for: What decisions or plans were made regarding the payments delay after the escalation on 2026-06-22?; Were there any email communications related to the payments delay escalation on 2026-06-22?.",
+      "citations": [
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133",
+        "ATL-103"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "EML-117"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "declined"
+      ],
+      "must_mention_missing": [
+        "declined"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 2,
+      "steps_total": 12,
+      "tool_call_count": 12,
+      "prompt_tokens": 14230,
+      "completion_tokens": 777,
+      "total_tokens": 15007,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 28773,
+      "trace_id": "d05c6da33e6b2eee8193d8f37a76626f",
+      "correct": false
+    },
+    {
+      "id": "P11",
+      "run": 2,
+      "question": "What happened after the payments delay was escalated to vendor management on 2026-06-22?",
+      "status": "ok",
+      "answer": "After the payments delay was escalated to vendor management on 2026-06-22, Priya Nair mentioned in a comment that downstream tickets affected were [ATL-118], [ATL-121], [ATL-127], and [ATL-133]. The escalation was done to ask PayGate to expedite the v2 sandbox. [ATL-103] Not enough evidence for: What actions were taken by vendor management regarding the payments delay after the escalation on 2026-06-22?.",
+      "citations": [
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133",
+        "ATL-103"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "EML-117"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "declined"
+      ],
+      "must_mention_missing": [
+        "declined"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 10,
+      "tool_call_count": 10,
+      "prompt_tokens": 14393,
+      "completion_tokens": 693,
+      "total_tokens": 15086,
+      "sources_returning_records": [
+        "jira",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 23620,
+      "trace_id": "e98f0a1865053cbd195f51931b318edd",
+      "correct": false
+    },
+    {
+      "id": "P11",
+      "run": 3,
+      "question": "What happened after the payments delay was escalated to vendor management on 2026-06-22?",
+      "status": "ok",
+      "answer": "After the payments delay was escalated to vendor management on 2026-06-22, Priya Nair mentioned in an email that downstream tickets affected were [ATL-118], [ATL-121], [ATL-127], and [ATL-133]. The email was sent by Priya Nair to Owen, requesting that PayGate be asked to expedite the v2 sandbox. [EML-115] Not enough evidence for: What actions were taken by vendor management regarding the payments delay after the escalation on 2026-06-22?.",
+      "citations": [
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133",
+        "EML-115"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "EML-117"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira",
+        "email"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [
+        "declined"
+      ],
+      "must_mention_missing": [
+        "declined"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 1,
+      "steps_total": 10,
+      "tool_call_count": 10,
+      "prompt_tokens": 14393,
+      "completion_tokens": 711,
+      "total_tokens": 15104,
+      "sources_returning_records": [
+        "jira",
+        "email"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 23685,
+      "trace_id": "6cdc193b4939831a13f3635c6ad737ea",
+      "correct": false
+    },
+    {
+      "id": "P12",
+      "run": 1,
+      "question": "Who is handling the penetration test, and when can the vendor start testing?",
+      "status": "ok",
+      "answer": "Daniel Okafor is handling the penetration test, and the vendor can start testing once the external vendor's availability is confirmed. The due date for the penetration test is 2026-07-10 [ATL-136].",
+      "citations": [
+        "ATL-136"
+      ],
+      "expected_citations": [
+        "ATL-136",
+        "EML-128"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-07-20"
+      ],
+      "must_mention_missing": [
+        "2026-07-20"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 6124,
+      "completion_tokens": 359,
+      "total_tokens": 6483,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 13096,
+      "trace_id": "ec86ddebbf3ab1c0c81f1cd1ed5f861d",
+      "correct": false
+    },
+    {
+      "id": "P12",
+      "run": 2,
+      "question": "Who is handling the penetration test, and when can the vendor start testing?",
+      "status": "ok",
+      "answer": "Daniel Okafor is handling the penetration test, and the vendor can start testing once the external vendor's availability is confirmed. The due date for the penetration test is 2026-07-10 [ATL-136].",
+      "citations": [
+        "ATL-136"
+      ],
+      "expected_citations": [
+        "ATL-136",
+        "EML-128"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-07-20"
+      ],
+      "must_mention_missing": [
+        "2026-07-20"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 2,
+      "subquestions_unresolved": 0,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 6124,
+      "completion_tokens": 359,
+      "total_tokens": 6483,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 12657,
+      "trace_id": "99533b4ad7834f7ade9ab9372ff4030c",
+      "correct": false
+    },
+    {
+      "id": "P12",
+      "run": 3,
+      "question": "Who is handling the penetration test, and when can the vendor start testing?",
+      "status": "ok",
+      "answer": "Daniel Okafor is handling the penetration test, and the due date for the test is 2026-07-10. However, there is not enough evidence to determine when the vendor can start testing.",
+      "citations": [],
+      "expected_citations": [
+        "ATL-136",
+        "EML-128"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "jira",
+        "email"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "2026-07-20"
+      ],
+      "must_mention_missing": [
+        "2026-07-20"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 3,
+      "subquestions_unresolved": 1,
+      "steps_total": 4,
+      "tool_call_count": 4,
+      "prompt_tokens": 8781,
+      "completion_tokens": 534,
+      "total_tokens": 9315,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 18268,
+      "trace_id": "d02780f0530e865bb1648f0f6e3fd754",
+      "correct": false
+    },
+    {
+      "id": "P13",
+      "run": 1,
+      "question": "What is the status of the Zendesk helpdesk integration?",
+      "status": "ok",
+      "answer": "The status of the Zendesk helpdesk integration is not directly mentioned in the provided evidence. However, there are several integration-related tickets, but none specifically mention the Zendesk helpdesk integration. Not enough evidence for: What is the current status of the Zendesk helpdesk integration?.",
+      "citations": [],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-135",
+        "NTN-116"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 1,
+      "steps_total": 9,
+      "tool_call_count": 9,
+      "prompt_tokens": 11852,
+      "completion_tokens": 551,
+      "total_tokens": 12403,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 19651,
+      "trace_id": "1cdaf5c08c30ef4106725adbfd7076d1",
+      "correct": true
+    },
+    {
+      "id": "P13",
+      "run": 2,
+      "question": "What is the status of the Zendesk helpdesk integration?",
+      "status": "ok",
+      "answer": "The status of the Zendesk helpdesk integration is not directly mentioned in the provided evidence. However, there are several integration-related tickets, but none specifically mention the Zendesk helpdesk integration. Not enough evidence for: What is the current status of the Zendesk helpdesk integration?.",
+      "citations": [],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-135",
+        "NTN-116"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 1,
+      "steps_total": 9,
+      "tool_call_count": 9,
+      "prompt_tokens": 11852,
+      "completion_tokens": 564,
+      "total_tokens": 12416,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 19604,
+      "trace_id": "7da8ad3f57c201dd79e555926eecdb42",
+      "correct": true
+    },
+    {
+      "id": "P13",
+      "run": 3,
+      "question": "What is the status of the Zendesk helpdesk integration?",
+      "status": "ok",
+      "answer": "There is not enough evidence to determine the status of the Zendesk helpdesk integration.",
+      "citations": [],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-135",
+        "NTN-116"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 1,
+      "subquestions_unresolved": 1,
+      "steps_total": 6,
+      "tool_call_count": 8,
+      "prompt_tokens": 8780,
+      "completion_tokens": 498,
+      "total_tokens": 9278,
+      "sources_returning_records": [
+        "jira"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 16877,
+      "trace_id": "1477e3f412e542ba9f906b10b13a4ad5",
+      "correct": true
+    },
+    {
+      "id": "P14",
+      "run": 1,
+      "question": "Was the privacy policy ticket delayed by the PayGate contract dispute?",
+      "status": "ok",
+      "answer": "The privacy policy ticket was not delayed by the PayGate contract dispute. The ticket's comment states that it is still waiting on Legal review of the revised data-retention paragraph, and this is not related to the payments work [EML-118]. Not enough evidence for: Are there any process notes or decisions related to the PayGate contract dispute?.",
+      "citations": [
+        "EML-118"
+      ],
+      "expected_citations": [
+        "ATL-109",
+        "EML-133"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "EML-101"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "jira"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "separate"
+      ],
+      "must_mention_missing": [
+        "separate"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 1,
+      "steps_total": 8,
+      "tool_call_count": 8,
+      "prompt_tokens": 14792,
+      "completion_tokens": 1143,
+      "total_tokens": 15935,
+      "sources_returning_records": [
+        "jira",
+        "email",
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 40363,
+      "trace_id": "8326537959982caa063eb87c7eb9fbdf",
+      "correct": false
+    },
+    {
+      "id": "P14",
+      "run": 2,
+      "question": "Was the privacy policy ticket delayed by the PayGate contract dispute?",
+      "status": "ok",
+      "answer": "The privacy policy ticket was not delayed by the PayGate contract dispute. The ticket's comment states that it is still waiting on Legal review of the revised data-retention paragraph, and this is not related to the payments work [EML-118]. Not enough evidence for: Are there any process notes or decisions related to the PayGate contract dispute?.",
+      "citations": [
+        "EML-118"
+      ],
+      "expected_citations": [
+        "ATL-109",
+        "EML-133"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "EML-101"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "jira"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "separate"
+      ],
+      "must_mention_missing": [
+        "separate"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 1,
+      "steps_total": 8,
+      "tool_call_count": 8,
+      "prompt_tokens": 14792,
+      "completion_tokens": 1256,
+      "total_tokens": 16048,
+      "sources_returning_records": [
+        "jira",
+        "email",
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 41594,
+      "trace_id": "ee444adb2dee1f99d939bffd326a69cf",
+      "correct": false
+    },
+    {
+      "id": "P14",
+      "run": 3,
+      "question": "Was the privacy policy ticket delayed by the PayGate contract dispute?",
+      "status": "ok",
+      "answer": "The privacy policy ticket was not delayed by the PayGate contract dispute. The ticket's comment states that it is still waiting on Legal review of the revised data-retention paragraph, and this is not related to the payments work [EML-118]. Not enough evidence for: Are there any process notes or decisions related to the PayGate contract dispute?.",
+      "citations": [
+        "EML-118"
+      ],
+      "expected_citations": [
+        "ATL-109",
+        "EML-133"
+      ],
+      "forbidden_citations": [
+        "ATL-112",
+        "EML-101"
+      ],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "email"
+      ],
+      "sources_required": [
+        "jira",
+        "email"
+      ],
+      "sources_missing": [
+        "jira"
+      ],
+      "all_sources_covered": false,
+      "must_mention": [
+        "separate"
+      ],
+      "must_mention_missing": [
+        "separate"
+      ],
+      "all_must_mention_found": false,
+      "planner_used": true,
+      "planner_valid": true,
+      "planner_fallback": false,
+      "subquestion_count": 4,
+      "subquestions_unresolved": 1,
+      "steps_total": 8,
+      "tool_call_count": 8,
+      "prompt_tokens": 14792,
+      "completion_tokens": 1182,
+      "total_tokens": 15974,
+      "sources_returning_records": [
+        "jira",
+        "email",
+        "notion"
+      ],
+      "sources_unavailable": [],
+      "latency_ms": 40219,
+      "trace_id": "8c0891bafabc26595deb4ea17cdb0b18",
+      "correct": false
+    }
+  ]
+}
