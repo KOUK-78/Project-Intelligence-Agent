@@ -155,11 +155,14 @@ Reserved fixtures (prompt-injection and PII items, for later phases) are listed 
 ## 11) Tracing, token accounting and fault injection (agreed between B, C and D)
 - **Run wrapper:** C's `app/runtime.py` wraps `run_agent` through `tracing.observe_run` (trace id, total latency,
   `logs/runs.jsonl`). B does NOT decorate `run_agent`. The wrapper also attaches `token_usage` from the run's
-  token counter when the result has none.
+  token counter when the result has none, in the section 4 shape (`prompt_tokens`, `completion_tokens`,
+  `total_tokens`, `calls`, and `by_job` with `prompt_tokens`, `completion_tokens` and `calls` per job).
 - **Per node:** B decorates each node function with `@node_span("name")` from `app.tracing`.
-- **Planner and evidence check:** B wraps each planner call in `tracing.stage_span("planner", ...)` and each
-  evidence check in `tracing.stage_span("evidence_check", subquestion_index=..., subquestion=..., source=...)`.
-  `tracing.annotate(**attrs)` adds attributes to the current span (e.g. the final outcome).
+- **Planner and evidence check:** these are graph nodes, so they are traced by the same `@node_span("planner")`,
+  `@node_span("retrieve")` and `@node_span("evidence_check")` wrappers as every other node (`app/graph.py`);
+  `node_span` adds the stage attributes (sub-question index, source, outcome) for those three nodes.
+  `tracing.stage_span(name, **attrs)` is available for a step that is not a node, and `tracing.annotate(**attrs)` adds
+  attributes to the current span (e.g. the final outcome).
 - **Model calls:** the agent uses the raw `ollama` client, so these are not auto-instrumented. `llm.py` wraps the
   request in `tracing.llm_span(job, model)` and reports usage with `span.set_usage(prompt_tokens, completion_tokens)`.
   The span records the counts as OpenInference token attributes and adds them to the run's token counter.
@@ -190,13 +193,14 @@ union of every source's IDs.
 `PLANNER_ENABLED=false` the agent is the Phase 1 graph, which reaches Jira only, so it is NOT a flat baseline and its
 Phase 2 results are written as `phase2_jira_only.json` / `phase2_heldout_jira_only.json` (field `agent_mode`:
 `phase1_jira_only`). `phase2_flat.json` / `phase2_heldout_flat.json` are written only by `evals.run_evals --flat`,
-which refuses to run until `config.FLAT_MODE_IMPLEMENTED` is True; B/D flip it when flat mode exists (the runner sets
-`FLAT_ALL_SOURCES=1` for the run). Result files record `agent_mode`: `planner`, `flat`, `phase1` or `phase1_jira_only`.
+which sets planner off and `ENABLED_SOURCES=all` for the run (D's flat mode: one router, one loop over every source) and
+refuses if `config.FLAT_MODE_IMPLEMENTED` is False. `--no-planner` removes `ENABLED_SOURCES` for the run, so a value left
+in the shell cannot turn a Jira-only run into a flat one. Result files record `enabled_sources` and `agent_mode`: `planner`, `flat`, `phase1` or `phase1_jira_only`.
 
 Additions made while writing these amendments (each needs the same four approvals): `app/faults.py` and the
 `FAULT_INJECT` switch (C4), the token counter and span helpers in `app/tracing.py` (C5), and
-`data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (flat mode, not yet available; see above),
-`phase2_planner.json`, `phase2_heldout.json`, plus `phase2_heldout_flat.json` (flat mode only) so the held-out planner-on versus
+`data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (flat mode, `--flat`; see above),
+`phase2_planner.json`, `phase2_heldout.json`, plus `phase2_heldout_flat.json` (`--flat` only) so the held-out planner-on versus
 planner-off comparison is recorded the same way as the tuning key.
 
 **Sign-off** (tick when you approve the PR that merges this file; merge needs all four):

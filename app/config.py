@@ -44,12 +44,11 @@ GRAPH_RECURSION_LIMIT = 40         # LangGraph backstop only; MAX_AGENT_STEPS is
 # --- Phase 2: planner + scoped retrieval. PLANNER_ENABLED=false reproduces Phase 1 exactly.
 PLANNER_ENABLED = (os.getenv("PLANNER_ENABLED") or "0").lower() not in ("0", "false", "no")
 # MAX_AGENT_STEPS (above) is now the cap PER SUB-QUESTION ATTEMPT. These two bound the whole run.
-# "Flat" = ONE retrieval loop over ALL sources with NO planner: the fair baseline for the planner. With the planner
-# off, the graph is the Phase 1 graph, which only reaches Jira, so it cannot answer Notion or email questions and is
-# NOT a flat baseline. Whoever builds flat mode (B/D) reads FLAT_ALL_SOURCES and then sets FLAT_MODE_IMPLEMENTED = True;
-# until then `evals.run_evals --flat` refuses to run so no result can be mislabelled "flat".
-FLAT_MODE_IMPLEMENTED = False
-FLAT_ALL_SOURCES = (os.getenv("FLAT_ALL_SOURCES") or "0").lower() not in ("0", "false", "no")
+# "Flat" = ONE retrieval loop over ALL sources with NO planner: the fair baseline for the planner. D built it: it is
+# the planner-off run with ENABLED_SOURCES=all (see resolve_enabled_sources below); `evals.run_evals --flat` sets that
+# for the run. With the planner off and ENABLED_SOURCES unset the agent is the Phase 1 graph (Jira only), which is
+# NOT a flat baseline. Set this False to make `--flat` refuse to run, so nothing can be mislabelled "flat".
+FLAT_MODE_IMPLEMENTED = True
 MAX_SUBQUESTIONS = 4               # the planner's plan is cut to this many sub-questions
 MAX_TOTAL_STEPS = 12               # tool rounds across ALL sub-questions and rewrites
 MAX_REWRITES_PER_SUBQUESTION = 1   # "rewrite the query once"; 0 turns rewriting off

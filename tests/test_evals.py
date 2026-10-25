@@ -412,7 +412,7 @@ def test_cli_phase2_heldout_files_and_banner(monkeypatch, tmp_path):
     assert (tmp_path / "phase2_heldout_jira_only.json").exists()
 
 
-def test_flat_flag_refuses_until_flat_mode_exists(monkeypatch, tmp_path):
+def test_flat_flag_refuses_when_flat_mode_is_switched_off(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", False)
     r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--auto")
     assert r.exit_code == 2
@@ -421,17 +421,43 @@ def test_flat_flag_refuses_until_flat_mode_exists(monkeypatch, tmp_path):
 
 def test_flat_flag_writes_the_flat_file_and_sets_the_switch(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "FLAT_MODE_IMPLEMENTED", True)
+    monkeypatch.setenv("ENABLED_SOURCES", "jira")  # a stray value must not leak into the run
     seen = []
 
     def agent(_q):
-        seen.append((config.PLANNER_ENABLED, config.FLAT_ALL_SOURCES))
+        seen.append((config.PLANNER_ENABLED, os.environ.get("ENABLED_SOURCES"),
+                     config.resolve_enabled_sources()))
         return p2result()
 
     r = run_p2(monkeypatch, tmp_path, agent, "--flat", "--auto")
     assert r.exit_code == 0, r.output
-    assert seen == [(False, True)]
-    assert json.loads((tmp_path / "phase2_flat.json").read_text())["agent_mode"] == "flat"
-    assert config.FLAT_ALL_SOURCES is False
+    assert seen == [(False, "all", ("jira", "notion", "email"))]
+    data = json.loads((tmp_path / "phase2_flat.json").read_text())
+    assert data["agent_mode"] == "flat" and data["enabled_sources"] == ["jira", "notion", "email"]
+    assert os.environ["ENABLED_SOURCES"] == "jira"  # restored
+
+
+def test_no_planner_run_ignores_a_stray_enabled_sources(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENABLED_SOURCES", "all")
+    seen = []
+
+    def agent(_q):
+        seen.append(config.resolve_enabled_sources())
+        return p2result()
+
+    r = run_p2(monkeypatch, tmp_path, agent, "--no-planner", "--auto")
+    assert r.exit_code == 0, r.output
+    assert seen == [("jira",)]
+    data = json.loads((tmp_path / "phase2_jira_only.json").read_text())
+    assert data["agent_mode"] == "phase1_jira_only" and data["enabled_sources"] == ["jira"]
+    assert os.environ["ENABLED_SOURCES"] == "all"
+
+
+def test_planner_run_records_the_enabled_sources(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENABLED_SOURCES", "jira,notion")
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--planner", "--auto")
+    assert r.exit_code == 0, r.output
+    assert json.loads((tmp_path / "phase2_planner.json").read_text())["enabled_sources"] == ["jira", "notion"]
 
 
 def test_flat_and_planner_conflict(monkeypatch, tmp_path):
@@ -478,13 +504,13 @@ def test_extra_source_ids_are_accepted_and_the_callers_set_is_never_modified(mon
                valid=shared, extra=({"NTN-201", "EML-301"}, []))
     assert r.exit_code == 0, r.output                       # NTN-201 is valid through the extra IDs
     assert shared == {"ATL-112"}                            # a new set was built, not the caller's mutated
-    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto",
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto", "--force",
                valid=shared, extra=(set(), []))
     assert r.exit_code == 1 and "invalid citation ['NTN-201']" in r.output
 
 
 def test_phase1_run_records_phase_1_and_planner_off(monkeypatch, tmp_path):
-    r, out = run_cli(monkeypatch, tmp_path, [q()], lambda _q: result(["ATL-112"]), "--auto")
+    r, out = run_cli(monkeypatch, tmp_path, [q()], lambda _q: result(["ATL-112"]), "--auto", "--force")
     data = json.loads(out.read_text())
     assert r.exit_code == 0 and data["phase"] == 1 and data["planner_enabled"] is False
 
@@ -494,3 +520,28 @@ def test_must_mention_matches_whole_tokens_only():
     assert not ev.mentions("due in 2025", "25") and not ev.mentions("250 tickets", "25") and not ev.mentions("v25a", "25")
     assert ev.mentions("ga is 2026-09-15 for all", "2026-09-15") and ev.mentions("sept 15", "SEPT   15")
     assert not ev.mentions("anything", "") and not ev.mentions("", "x")
+
+
+def test_an_existing_results_file_is_not_overwritten_without_force(monkeypatch, tmp_path):
+    recorded = tmp_path / "phase1_baseline.json"
+    recorded.write_text('{"recorded": true}')
+    key = tmp_path / "k.json"
+    key.write_text(json.dumps([q()]))
+    monkeypatch.setattr(ev, "get_run_agent", lambda use_stub=False: (lambda _q: result(["ATL-112"])))
+    monkeypatch.setattr(ev, "load_valid_ids", lambda *a, **k: VALID)
+    r = CliRunner().invoke(ev.cli, ["--key", str(key), "--out", str(recorded), "--auto"])
+    assert r.exit_code == 2 and "already exists" in r.output and "_rerun.json" in r.output
+    assert recorded.read_text() == '{"recorded": true}'
+    r = CliRunner().invoke(ev.cli, ["--key", str(key), "--out", str(recorded), "--auto", "--force"])
+    assert r.exit_code == 0 and json.loads(recorded.read_text())["key"] == "k.json"
+
+
+def test_planner_off_with_enabled_sources_all_in_the_shell_and_no_flag_is_refused(monkeypatch, tmp_path):
+    monkeypatch.setenv("ENABLED_SOURCES", "all")
+    r = run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--auto")        # planner default off, no mode flag
+    assert r.exit_code == 2 and "--flat" in r.output and "--no-planner" in r.output
+    assert not [p for p in tmp_path.glob("phase2_*.json") if "key" not in p.name]
+    assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--no-planner", "--auto").exit_code == 0
+    assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--flat", "--auto").exit_code == 0
+    monkeypatch.setenv("ENABLED_SOURCES", "jira")
+    assert run_p2(monkeypatch, tmp_path, lambda _q: p2result(), "--auto", "--force").exit_code == 0

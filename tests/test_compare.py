@@ -169,6 +169,15 @@ def test_matching_environments_give_no_warning():
     assert warnings_for({"environment": ENV}, {"environment": ENV}) == []
 
 
+def test_different_enabled_sources_are_flagged_only_within_one_agent_mode():
+    old = {"environment": ENV, "agent_mode": "planner", "enabled_sources": ["jira", "notion", "email"]}
+    new = {"environment": ENV, "agent_mode": "planner", "enabled_sources": ["jira", "notion"]}
+    assert any("enabled sources differ" in w for w in warnings_for(old, new))
+    other_mode = {**new, "agent_mode": "flat"}
+    w = warnings_for(old, other_mode)
+    assert any("agent mode differs" in x for x in w) and not any("enabled sources differ" in x for x in w)
+
+
 def test_files_without_an_environment_record_are_called_out():
     w = warnings_for({}, {"environment": ENV})
     assert len(w) == 1 and w[0].startswith("OLD has no environment record")

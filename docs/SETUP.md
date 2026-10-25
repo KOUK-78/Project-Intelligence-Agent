@@ -49,20 +49,30 @@ Works without Ollama or Phoenix. You should see an answer, citations, status, la
 ```powershell
 python data/generate_jira.py          # Jira tickets -> data/synthetic/jira_tickets.json
 ```
-Phase 2 adds Notion pages and emails. Their generators, output files and schema are owned by A and described in `data/WORLD.md`; run them from the repo root the same way. The paths the code reads are `NOTION_DATA_PATH` and `EMAIL_DATA_PATH` in `app/config.py` (defaults `data/synthetic/notion_pages.json` and `data/synthetic/emails.json`; set the environment variables to point elsewhere). Until those files exist, Phase 2 citations count as invalid in the runner and the policing tests for those sources simply have nothing to check.
+Phase 2 adds Notion pages and emails. Their generators, output files and schema are owned by A and described in `data/WORLD.md`; run them from the repo root the same way. The paths the code reads are `NOTION_DATA_PATH` and `EMAIL_DATA_PATH` in `app/config.py` (defaults `data/synthetic/notion_pages.json` and `data/synthetic/email_messages.json`; set the environment variables to point elsewhere). Until those files exist, Phase 2 citations count as invalid in the runner and the policing tests for those sources simply have nothing to check.
 
 ## 8. Official measurement runs
 Result files recorded for the README (milestones M2 and M4) must come from ONE machine, ONE model version, with Phoenix on:
 ```powershell
 ollama show qwen3:8b            # note the digest; the runner also records it
 $env:PHOENIX_WORKING_DIR = "$PWD\.phoenix"; phoenix serve     # second terminal
-python -m evals.run_evals --phase2 --flat --auto --repeat 3 --require-trace   # only once flat mode exists; it refuses otherwise
+python -m evals.run_evals --phase2 --flat --auto --repeat 3 --require-trace   # planner off, ENABLED_SOURCES=all
 python -m evals.run_evals --phase2 --planner    --auto --repeat 3 --require-trace
 python -m evals.compare evals/results/phase2_flat.json evals/results/phase2_planner.json
-python -m evals.run_evals --auto --repeat 3 --planner --require-trace   # Phase 1 regression, planner on
+python -m evals.run_evals --auto --repeat 3 --no-planner --require-trace --out evals/results/phase1_baseline_rerun.json   # rule 2 gate
+python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_rerun.json
+python -m evals.run_evals --auto --repeat 3 --planner --require-trace   # Phase 1 with planner on: reported separately, not the gate
 python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_baseline_planner.json
 ```
-Close other GPU apps first, keep `NUM_CTX = 8192`, and do not change `config.py` between the paired runs. The held-out key (`--phase2 --heldout`) is run only at M4, once, and never used to tune anything. `compare` warns if two files differ in machine, model digest or repeat count; do not publish a comparison that warns.
+The runner refuses to overwrite an existing result file; use `--out` (as above) or `--force` on purpose. Close other GPU apps first, keep `NUM_CTX = 8192`, and do not change `config.py` between the paired runs. The held-out key (`--phase2 --heldout`) is run only at M4, once, and never used to tune anything. `compare` warns if two files differ in machine, model digest or repeat count; do not publish a comparison that warns.
+
+## Choosing sources (`ENABLED_SOURCES`)
+```powershell
+$env:ENABLED_SOURCES = "all"          # every source; with PLANNER_ENABLED=0 this is FLAT mode (one loop over all tools)
+$env:ENABLED_SOURCES = "jira,notion"  # any subset, with or without the planner
+Remove-Item Env:ENABLED_SOURCES       # planner off: Jira only (Phase 1); planner on: every source
+```
+Do not set it by hand for official runs: `python -m evals.run_evals` sets and restores it per run (`--flat` = `all`, `--no-planner` = unset) and writes `enabled_sources` into the result file. A value other than `all` or a list of `jira`, `notion`, `email` stops the run with an error.
 
 ## Fault injection
 Make a source fail or hang to test the "source unavailable" path (used by tests now and by the Phase 4 tool-failure evals later):

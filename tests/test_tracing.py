@@ -88,7 +88,7 @@ def test_llm_span_records_counts_on_the_span_and_in_the_counter(tracer):
     assert tracer.spans[0].name == "llm:planner" and a["llm.model_name"] == "qwen3:8b"
     assert (a["llm.token_count.prompt"], a["llm.token_count.completion"], a["llm.token_count.total"]) == (100, 20, 120)
     assert c["total_tokens"] == 175 and c["calls"] == 2
-    assert c["by_job"]["planner"] == {"prompt_tokens": 100, "completion_tokens": 20}
+    assert c["by_job"]["planner"] == {"prompt_tokens": 100, "completion_tokens": 20, "calls": 1}
 
 
 def test_counts_still_accumulate_with_tracing_off(monkeypatch):
@@ -175,7 +175,7 @@ def test_ollama_llm_reports_token_counts_from_the_response(monkeypatch, tracer):
     finally:
         tracing._usage.reset(tok)
     assert out.content == "hi"
-    assert used["by_job"]["planner"] == {"prompt_tokens": 321, "completion_tokens": 45}
+    assert used["by_job"]["planner"] == {"prompt_tokens": 321, "completion_tokens": 45, "calls": 1}
     assert tracer.spans[0].name == "llm:planner" and tracer.spans[0].attrs["llm.token_count.total"] == 366
 
 
