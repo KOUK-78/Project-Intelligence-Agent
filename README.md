@@ -110,10 +110,12 @@ Names are `jira`, `notion`, `email`; a bad value stops the run with an error. `e
 
 | Run | File | Questions passing | Runs passing | Median / worst latency | Median tokens per run | Trace IDs |
 |---|---|---|---|---|---|---|
-| Flat (one loop over all sources, no planner) | `phase2_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
-| Planner on | `phase2_planner.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
+| Flat (one loop over all sources, no planner) | `phase2_flat.json` | 3 of 14 | 9 of 42 | 8.3 s / 19.3 s | 6,646 | 42 of 42 runs have one (in the file) |
+| Planner on | `phase2_planner.json` | 5 of 14 | 18 of 42 | 23.7 s / 49.0 s | 12,305 | 42 of 42 runs have one (in the file) |
 | Held-out, planner on | `phase2_heldout.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
 | Held-out, flat | `phase2_heldout_flat.json` | *not recorded* | *not recorded* | *not recorded* | *not recorded* | *not recorded* |
+
+**M2 result (tuning key, 14 questions, 3 repeats, one machine, `qwen3:8b` digest `500a1f067a9f`, Phoenix on):** the planner passes 18 of 42 runs against 9 of 42 for flat, and 5 of 14 questions against 3 of 14. It fixes P1 and P4 (0/3 to 3/3), improves P2 and P7, and regresses no question. It costs about 2.8 times the median latency and 1.9 times the tokens per run, and 9 of 14 questions still fail. P2 (1/3) and P7 (2/3) are within run-to-run noise. The largest remaining failure is a required source not cited: email on P3, P5, P6, P11 and P12 in both modes, and Jira on P8 and P14 under the planner. This is a tuning-key result; the held-out comparison (M4) is not recorded yet.
 
 Official runs are recorded at M2 and M4 on one machine with one model version and Phoenix on, then this table is filled from the result files (and `compare` output pasted beside it). With the planner off the agent is the Phase 1 graph, which reaches only Jira, so it is **not** a flat baseline: those runs are recorded as `phase2_jira_only.json` and must not be presented as the planner's before/after. `phase2_flat.json` is the real baseline: `--flat` runs the planner off with `ENABLED_SOURCES=all`, one retrieval loop over all three sources. A planner that does not beat flat on the tuning key, or that regresses the held-out comparison, is reported as such.
 
@@ -134,12 +136,14 @@ python -m evals.compare evals/results/phase1_baseline.json evals/results/phase1_
 
 | Key | Recorded (planner off) | Recorded range | Floor (exit 1 below) | Planner-off re-run (gate) | Planner-on re-run (report) |
 |---|---|---|---|---|---|
-| Original (`answer_key.json`) | 23 of 30 runs, 7 of 10 questions | 22 to 24 of 30 | 22 of 30 | *not recorded* | *not recorded* |
-| Held-out (`heldout_key.json`) | 18 of 30 runs, 6 of 10 questions | 15 to 18 of 30 | 15 of 30 | *not recorded* | *not recorded* |
+| Original (`answer_key.json`) | 23 of 30 runs, 7 of 10 questions | 22 to 24 of 30 | 22 of 30 | 24 of 30 runs, 8 of 10 questions: passes | 17 of 30 runs, 5 of 10 questions: **below the floor** |
+| Held-out (`heldout_key.json`) | 18 of 30 runs, 6 of 10 questions | 15 to 18 of 30 | 15 of 30 | 18 of 30 runs, 6 of 10 questions: passes | 6 of 30 runs, 1 of 10 questions: **below the floor** |
+
+With the planner off, Phase 1 reproduces: the same questions fail as in the recorded baselines on both keys (the old baseline files were recorded before environment records existed, so `compare` can check the floor but not the machine). With the planner **on**, the Phase 1 keys regress (Q4 and Q8 on the original key, five questions on the held-out key) and cost about three times the latency and four times the tokens. This is reported, not hidden; the held-out result was not used to change any code or prompt.
 
 ### Limitations (Phase 2)
 
-- **Nothing about Phase 2 accuracy is claimed yet.** The tables above are empty on purpose.
+- **Only the M2 tuning-key numbers are recorded.** The held-out Phase 2 comparison (M4) is not recorded yet, and the planner regresses the Phase 1 keys, so no claim that the planner is better is made beyond the tuning key.
 - **Run-to-run variance.** The 8B model varies between runs (73% to 80% on the original key in Phase 1). Differences of a few runs between flat and planner are noise; read per-question deltas, not just totals.
 - **Citation-level scoring.** `--auto` checks citations, required sources and `must_mention` strings. It does not judge whether the answer is *right*. A `must_mention` check can miss a paraphrase and cannot catch a correct string used wrongly. LLM judging is Phase 4.
 - **Small and synthetic.** Three fictional sources, a few dozen items, a small number of questions.
