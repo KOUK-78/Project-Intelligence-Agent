@@ -54,6 +54,8 @@ SYNTH_V2_SYSTEM = (
     'Reply as JSON: {"answer": "...", "citations": ["<ID from the evidence>"]}. '
     '"citations" lists every record ID you cited in "answer".'
 )
+CITE_NUDGE = ("Your answer cites no record IDs. Rewrite it so every factual claim has the ID of the record it comes "
+              "from in brackets, using only IDs shown in the evidence. Keep the same facts.")
 RETRY_NUDGE = 'That was not valid. Reply again with ONLY a JSON object: {"answer": "...", "citations": ["ID"]}'
 NO_EVIDENCE_ANSWER = "I could not find any ticket evidence to answer that, so I can't answer it."
 NO_EVIDENCE_V2_ANSWER = "There is not enough evidence to answer that."
@@ -170,13 +172,62 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None, unchecked_prefix
 
 # ---------------------------------------------------------------- v2: grouped by sub-question
 
+def render_thread(data: dict[str, Any]) -> str | None:
+    """A get_thread result as plain text, one line per email: the IDs and the words, without JSON overhead."""
+    emails = data.get("emails")
+    if not isinstance(emails, list) or not emails:
+        return None
+    lines = [f"thread {data.get('thread_id', '')}:"]
+    for m in emails:
+        if isinstance(m, dict) and m.get("id"):
+            lines.append(f"[{m['id']}] {m.get('date', '')} from {m.get('from', '')}: {m.get('subject', '')} - "
+                         f"{' '.join(str(m.get('body', '')).split())}")
+    return "\n".join(lines) if len(lines) > 1 else None
+
+
+def format_group_evidence(items: list[dict[str, Any]], total_chars: int) -> str:
+    """One sub-question's evidence for the synthesizer: full records (get_*) first, then search listings, so a long
+    listing cannot push the records that hold the answer out of the budget. Threads are shown as text."""
+    ordered = sorted(items, key=lambda e: not str(e.get("tool", "")).startswith("get_"))  # stable
+    lines: list[str] = []
+    used = 0
+    for i, e in enumerate(ordered):
+        args = compact_json(e["args"], 200)
+        if not e["ok"]:
+            body = f"FAILED: {e['error']}"
+        else:
+            text = render_thread(e["data"]) if isinstance(e["data"], dict) else None
+            body = text[: config.EVIDENCE_ITEM_CHARS] if text else compact_json(e["data"], config.EVIDENCE_ITEM_CHARS)
+        line = f"- {e['tool']}({args}) -> {body}"
+        if used + len(line) > total_chars:
+            lines.append(f"- ({len(ordered) - i} further tool results omitted for length)")
+            break
+        lines.append(line)
+        used += len(line)
+    return "\n".join(lines)
+
+
+def group_shares(sizes: list[int], total: int) -> list[int]:
+    """Split `total` characters over groups by need: a group that needs less than an equal share keeps only what it
+    needs and the rest is shared by the others (so one long group cannot starve a short one, and vice versa)."""
+    shares = [0] * len(sizes)
+    pending = sorted(range(len(sizes)), key=lambda i: sizes[i])
+    left = total
+    for n, i in enumerate(pending):
+        fair = left // (len(pending) - n)
+        shares[i] = min(sizes[i], fair) if sizes[i] <= fair else fair
+        left -= shares[i]
+    return shares
+
+
 def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: list[dict[str, Any]]) -> str:
     """Evidence grouped by sub-question. A group the code knows is empty or unavailable says so in capitals, so the
     model is told, not left to infer it from silence."""
     by_id = {r["id"]: r for r in results}
-    share = config.EVIDENCE_TOTAL_CHARS // max(len(plan), 1)
+    full = [len(format_evidence(evidence_for(evidence, sq["id"]), 10**9)) for sq in plan]
+    shares = group_shares(full, config.EVIDENCE_TOTAL_CHARS_PLANNED)
     blocks: list[str] = []
-    for sq in plan:
+    for sq, share in zip(plan, shares):
         res = by_id.get(sq["id"], {})
         status = res.get("status", "unresolved")
         down = ", ".join(res.get("unavailable") or [])
@@ -186,7 +237,7 @@ def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: lis
         elif not evidence_ids([e for e in items if e.get("ok")]):
             body = f"{MARK_NO_EVIDENCE}: nothing relevant was found for this sub-question."
         else:
-            body = format_evidence(items, share)
+            body = format_group_evidence(items, share)
             if status == "unresolved":
                 body += (f"\n{MARK_NO_EVIDENCE}: the records above may only partly answer this sub-question, or be unrelated. "
                          "Use and cite a record only if it states something the sub-question asked for, and say what "
@@ -195,6 +246,12 @@ def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: lis
                 body += f"\n{MARK_UNAVAILABLE}: {down}."
         blocks.append(f"Sub-question {sq['id']} (source: {sq['source']}): {sq['question']}\n{body}")
     return "\n\n".join(blocks)
+
+
+def resolved_with_records(plan: list[dict], results: list[dict], evidence: list[dict[str, Any]]) -> bool:
+    """True if some sub-question was judged resolved and returned at least one record."""
+    done = {r["id"] for r in results if r.get("status") == "resolved"}
+    return any(evidence_ids([e for e in evidence_for(evidence, sq["id"]) if e.get("ok")]) for sq in plan if sq["id"] in done)
 
 
 def gaps_of(results: list[dict]) -> tuple[list[str], list[str], bool]:
@@ -250,14 +307,29 @@ def make_synthesizer_v2_node(llm: LLM, known_ids: set[str] | None, unchecked_pre
             return failure
         assert output is not None
 
-        answer, citations, warnings = verify_citations(
-            _cleanup(output.answer),
-            output.citations,
-            known_ids=known_ids,
-            ev_ids=evidence_ids(evidence),
-            mentioned=set(mentioned_ids(evidence)),
-            unchecked_prefixes=unchecked_prefixes,
-        )
+        def verified(out: SynthOutput):
+            return verify_citations(
+                _cleanup(out.answer),
+                out.citations,
+                known_ids=known_ids,
+                ev_ids=evidence_ids(evidence),
+                mentioned=set(mentioned_ids(evidence)),
+                unchecked_prefixes=unchecked_prefixes,
+            )
+
+        answer, citations, warnings = verified(output)
+        if not citations and resolved_with_records(plan, results, evidence):
+            # A sub-question found records and the answer cites none: ask once for the IDs (never changes the facts).
+            retry, retry_errors, retry_failure = await generate(llm, [
+                *messages,
+                {"role": "assistant", "content": output.model_dump_json()},
+                {"role": "user", "content": CITE_NUDGE},
+            ])
+            if retry_failure is None and retry is not None:
+                again = verified(retry)
+                if again[1]:
+                    answer, citations, warnings = again
+                    errors = errors + retry_errors
         return {
             "route": "end",
             "status": status,
