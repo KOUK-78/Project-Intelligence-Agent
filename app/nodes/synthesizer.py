@@ -34,7 +34,7 @@ SYNTH_V2_SYSTEM = (
     "The evidence is grouped by sub-question, and each group names its source.\n"
     "Rules:\n"
     "1. Answer ONLY from the evidence given. Never use outside knowledge.\n"
-    "2. Put the record ID in brackets after every factual claim, e.g. [ATL-000], [NTN-000] or [EML-000]. "
+    "2. Put the record ID in brackets after every factual claim, using the exact ID printed in the evidence. Never write a made-up or example ID. "
     "Use brackets only for record IDs.\n"
     "3. A group marked NOT ENOUGH EVIDENCE: say plainly that there is not enough evidence for that part. "
     "Do not guess. Records shown in such a group were found by keyword search and may be unrelated to the "
@@ -51,7 +51,7 @@ SYNTH_V2_SYSTEM = (
     "8. Include the specific facts: names, dates, counts, and the reason given in the record text.\n"
     "9. If nothing in the evidence answers the question, say that in one sentence with no IDs.\n"
     f"Today's date is {config.TODAY}.\n"
-    'Reply as JSON: {"answer": "...", "citations": ["ATL-000"]}. '
+    'Reply as JSON: {"answer": "...", "citations": ["<ID from the evidence>"]}. '
     '"citations" lists every record ID you cited in "answer".'
 )
 RETRY_NUDGE = 'That was not valid. Reply again with ONLY a JSON object: {"answer": "...", "citations": ["ID"]}'
@@ -188,8 +188,9 @@ def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: lis
         else:
             body = format_evidence(items, share)
             if status == "unresolved":
-                body += (f"\n{MARK_NO_EVIDENCE}: the records above did not answer this sub-question. They may be unrelated; "
-                         "do not present them as the answer.")
+                body += (f"\n{MARK_NO_EVIDENCE}: the records above may only partly answer this sub-question, or be unrelated. "
+                         "Use and cite a record only if it states something the sub-question asked for, and say what "
+                         "is still missing; do not present an unrelated record as the answer.")
             if down:
                 body += f"\n{MARK_UNAVAILABLE}: {down}."
         blocks.append(f"Sub-question {sq['id']} (source: {sq['source']}): {sq['question']}\n{body}")
