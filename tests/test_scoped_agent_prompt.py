@@ -18,9 +18,15 @@ def first_messages(tools, question="Q?", evidence=None, replies=None):
     return llm.calls["agent"][0]
 
 
-def test_ticket_scopes_keep_the_phase1_prompt_exactly():
+def test_a_ticket_only_scope_keeps_the_phase1_prompt_exactly():
     assert first_messages(JIRA)[0]["content"] == AGENT_SYSTEM
-    assert first_messages(ALL_TOOLS)[0]["content"] == AGENT_SYSTEM  # flat mode and the all-sources scope too
+
+
+def test_a_scope_with_several_sources_gets_the_same_neutral_prompt_as_a_single_other_source():
+    """Flat mode (every source, no planner) must not be handicapped by the ticket-only prompt (C's fairness rule)."""
+    flat = first_messages(ALL_TOOLS)[0]["content"]
+    assert flat != AGENT_SYSTEM and "ticket" not in flat.lower()
+    assert flat == first_messages(EMAIL)[0]["content"]
 
 
 def test_a_scope_without_ticket_tools_gets_a_prompt_that_does_not_talk_about_tickets():
@@ -44,3 +50,16 @@ def test_the_ticket_detail_nudge_is_unchanged():
              "nudged": True, "steps": 1, "step_cap": 5}
     out = asyncio.run(make_agent_node(FakeLLM(agent=[text_reply()]), JIRA)(state))
     assert out["messages"][-1]["content"] == DETAIL_NUDGE
+
+
+def test_planner_off_without_other_sources_still_uses_the_phase1_prompt_end_to_end(monkeypatch):
+    """The Phase 1 reproduction gate: planner off + ENABLED_SOURCES unset reaches Jira only, with the Phase 1 prompt."""
+    from app import config
+    from app.agent import arun_agent
+    from tests.phase2_fakes import FakeMcp
+    monkeypatch.setattr(config, "PLANNER_ENABLED", False)
+    monkeypatch.delenv("ENABLED_SOURCES", raising=False)
+    monkeypatch.setattr("app.agent.McpToolClient", lambda *a, **k: FakeMcp(tools=list(JIRA)))
+    llm = FakeLLM(agent=[text_reply()], synthesizer=[text_reply("{}")])
+    asyncio.run(arun_agent("Q?", llm=llm))
+    assert llm.calls["agent"][0][0]["content"] == AGENT_SYSTEM

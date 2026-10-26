@@ -31,8 +31,10 @@ AGENT_SYSTEM = (
     "When you have enough evidence, stop calling tools and reply with the single word DONE."
 )
 
-# Scopes with no ticket tools (a planned run over one non-ticket source) get this prompt instead of AGENT_SYSTEM, whose
-# text describes ticket tools the model does not have there. Scopes with ticket tools keep AGENT_SYSTEM unchanged.
+# The ticket tools AGENT_SYSTEM describes. A scope made only of these keeps AGENT_SYSTEM unchanged (Phase 1, and the
+# planner's ticket scope). Any scope that includes another source's tools (one non-ticket source, or every source in
+# flat mode and the all-sources fallback) gets this prompt instead: AGENT_SYSTEM describes ticket tools only.
+TICKET_TOOLS = frozenset({"search_tickets", "get_ticket", "list_overdue"})
 RECORD_AGENT_SYSTEM = (
     "You answer questions by calling tools that read records.\n"
     "Look facts up with tools; never answer from memory.\n"
@@ -182,8 +184,8 @@ def extract_calls(reply: LLMReply) -> list[dict[str, Any]]:
 def make_agent_node(llm: LLM, tool_specs: list[dict[str, Any]]):
     tools = to_ollama_tools(tool_specs)
     schemas = {t["name"]: t["input_schema"] for t in tool_specs}
-    # A scope without ticket tools (one non-ticket source in a planned run) is told about its own tools.
-    records_only = "search_tickets" not in schemas and "get_ticket" not in schemas
+    # Only a scope made purely of ticket tools gets the ticket prompt; any other scope is told about its own tools.
+    records_only = not set(schemas) <= TICKET_TOOLS
     detail_tools = [n for n in schemas if n.startswith("get_")] if records_only else ["get_ticket"]
     system = RECORD_AGENT_SYSTEM if records_only else AGENT_SYSTEM
     detail_nudge = record_detail_nudge(detail_tools) if records_only and detail_tools else DETAIL_NUDGE

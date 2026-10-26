@@ -251,3 +251,15 @@ def test_no_citation_nudge_when_nothing_resolved_or_the_retry_still_cites_nothin
     llm = FakeLLM(synthesizer=[synth_reply("Owen escalated it.", [])])
     out = asyncio.run(make_synthesizer_v2_node(llm, {"EML-001"})(_resolved_state("resolved")))
     assert llm.count("synthesizer") == 2 and out["answer"].startswith("Owen escalated it.") and out["citations"] == []
+
+
+def test_full_records_come_before_search_listings_and_threads_are_plain_text():
+    from app.nodes.synthesizer import format_group_evidence
+    listing = {"tool": "search_emails", "args": {}, "ok": True, "error": None,
+               "data": {"results": [{"id": "EML-001", "snippet": "x" * 1500}]}}
+    thread = {"tool": "get_thread", "args": {"thread_id": "THR-1"}, "ok": True, "error": None,
+              "data": {"thread_id": "THR-1", "count": 1,
+                       "emails": [{"id": "EML-002", "date": "d", "from": "a", "subject": "s", "body": "the fee applies"}]}}
+    text = format_group_evidence([listing, thread], 400)
+    assert "get_thread" in text and "omitted for length" in text  # the long listing is what gets cut, not the thread
+    assert "[EML-002]" in text and "the fee applies" in text and '"emails"' not in text

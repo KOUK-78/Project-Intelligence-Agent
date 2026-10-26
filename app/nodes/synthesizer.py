@@ -172,6 +172,41 @@ def make_synthesizer_node(llm: LLM, known_ids: set[str] | None, unchecked_prefix
 
 # ---------------------------------------------------------------- v2: grouped by sub-question
 
+def render_thread(data: dict[str, Any]) -> str | None:
+    """A get_thread result as plain text, one line per email: the IDs and the words, without JSON overhead."""
+    emails = data.get("emails")
+    if not isinstance(emails, list) or not emails:
+        return None
+    lines = [f"thread {data.get('thread_id', '')}:"]
+    for m in emails:
+        if isinstance(m, dict) and m.get("id"):
+            lines.append(f"[{m['id']}] {m.get('date', '')} from {m.get('from', '')}: {m.get('subject', '')} - "
+                         f"{' '.join(str(m.get('body', '')).split())}")
+    return "\n".join(lines) if len(lines) > 1 else None
+
+
+def format_group_evidence(items: list[dict[str, Any]], total_chars: int) -> str:
+    """One sub-question's evidence for the synthesizer: full records (get_*) first, then search listings, so a long
+    listing cannot push the records that hold the answer out of the budget. Threads are shown as text."""
+    ordered = sorted(items, key=lambda e: not str(e.get("tool", "")).startswith("get_"))  # stable
+    lines: list[str] = []
+    used = 0
+    for i, e in enumerate(ordered):
+        args = compact_json(e["args"], 200)
+        if not e["ok"]:
+            body = f"FAILED: {e['error']}"
+        else:
+            text = render_thread(e["data"]) if isinstance(e["data"], dict) else None
+            body = text[: config.EVIDENCE_ITEM_CHARS] if text else compact_json(e["data"], config.EVIDENCE_ITEM_CHARS)
+        line = f"- {e['tool']}({args}) -> {body}"
+        if used + len(line) > total_chars:
+            lines.append(f"- ({len(ordered) - i} further tool results omitted for length)")
+            break
+        lines.append(line)
+        used += len(line)
+    return "\n".join(lines)
+
+
 def group_shares(sizes: list[int], total: int) -> list[int]:
     """Split `total` characters over groups by need: a group that needs less than an equal share keeps only what it
     needs and the rest is shared by the others (so one long group cannot starve a short one, and vice versa)."""
@@ -202,7 +237,7 @@ def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: lis
         elif not evidence_ids([e for e in items if e.get("ok")]):
             body = f"{MARK_NO_EVIDENCE}: nothing relevant was found for this sub-question."
         else:
-            body = format_evidence(items, share)
+            body = format_group_evidence(items, share)
             if status == "unresolved":
                 body += (f"\n{MARK_NO_EVIDENCE}: the records above may only partly answer this sub-question, or be unrelated. "
                          "Use and cite a record only if it states something the sub-question asked for, and say what "
