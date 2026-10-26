@@ -99,9 +99,11 @@ def test_blank_sub_question_is_invalid():
 
 
 def test_too_many_sub_questions_are_cut_to_the_cap_without_a_retry():
+    from app.nodes.scope import Source
     n = config.MAX_SUBQUESTIONS + 3
-    llm = FakeLLM(planner=[plan_reply(*[("jira", f"question {i}") for i in range(n)])])
-    out = run_planner(llm)
+    many = [Source(f"s{i}", "records", ("search_x",)) for i in range(n)]
+    llm = FakeLLM(planner=[plan_reply(*[(f"s{i}", f"question {i}") for i in range(n)])])
+    out = run_planner(llm, sources=many)
     assert len(out["plan"]) == config.MAX_SUBQUESTIONS and llm.count("planner") == 1
     assert [p["id"] for p in out["plan"]] == [f"sq{i}" for i in range(1, config.MAX_SUBQUESTIONS + 1)]
     assert out["plan"][0]["question"] == "question 0"  # the first ones are kept
@@ -148,3 +150,11 @@ def test_the_prompt_tells_the_model_sub_questions_run_independently_and_sources_
     low = PLANNER_SYSTEM.lower()
     assert "cannot see the other sub-questions" in low and "at most once" in low
     assert "earlier sub-question can help" not in low
+
+
+def test_questions_for_the_same_source_are_merged_into_the_first_one():
+    """P5/P6/P14 planner-on: two sub-questions per source ran twice over the same records and starved the others."""
+    llm = FakeLLM(planner=[plan_reply(("jira", "status of it"), ("notion", "docs"), ("jira", "comments on it"))])
+    plan = run_planner(llm)["plan"]
+    assert [(p["id"], p["source"]) for p in plan] == [("sq1", "jira"), ("sq2", "notion")]
+    assert plan[0]["question"] == "status of it Also: comments on it" and plan[1]["question"] == "docs"

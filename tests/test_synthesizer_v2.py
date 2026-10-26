@@ -263,3 +263,18 @@ def test_full_records_come_before_search_listings_and_threads_are_plain_text():
     text = format_group_evidence([listing, thread], 400)
     assert "get_thread" in text and "omitted for length" in text  # the long listing is what gets cut, not the thread
     assert "[EML-002]" in text and "the fee applies" in text and '"emails"' not in text
+
+
+def test_a_source_the_answer_used_but_never_cited_is_asked_for_once():
+    """P5 planner-on: the answer used the email facts but cited only the ticket."""
+    from app.nodes.state import tag_evidence
+    state = _resolved_state("resolved")
+    state["plan"] = [{"id": "sq0", "question": "T?", "source": "jira", "reason": "r"}, *state["plan"]]
+    state["sq_results"] = [{**state["sq_results"][0], "id": "sq0"}, *state["sq_results"]]
+    state["evidence"] = tag_evidence([{"tool": "get_ticket", "args": {}, "ok": True, "data": {"id": "ATL-001"},
+                                       "error": None}], "sq0", "jira") + state["evidence"]
+    llm = FakeLLM(synthesizer=[synth_reply("Late [ATL-001]; the fee is open.", ["ATL-001"]),
+                               synth_reply("Late [ATL-001]; the fee is open [EML-001].", ["ATL-001", "EML-001"])])
+    out = asyncio.run(make_synthesizer_v2_node(llm, {"ATL-001", "EML-001"})(state))
+    assert llm.count("synthesizer") == 2 and out["citations"] == ["ATL-001", "EML-001"]
+    assert "email" in llm.calls["synthesizer"][1][-1]["content"]

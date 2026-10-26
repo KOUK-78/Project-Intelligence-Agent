@@ -84,6 +84,21 @@ def _tidy(text: str, limit: int) -> str:
     return " ".join(text.split())[:limit]
 
 
+def merge_same_source(plan: list[dict[str, str]]) -> list[dict[str, str]]:
+    """One sub-question per source. A source asked twice would run two loops over the same records and spend the step
+    budget that the other sources need, so its questions are joined into the first one (which keeps its position)."""
+    merged: list[dict[str, str]] = []
+    for item in plan:
+        first = next((m for m in merged if m["source"] == item["source"]), None)
+        if first is None:
+            merged.append(dict(item))
+        else:
+            first["question"] = _tidy(f"{first['question']} Also: {item['question']}", config.SUBQUESTION_CHARS)
+    for n, item in enumerate(merged, 1):
+        item["id"] = f"sq{n}"
+    return merged
+
+
 def validate_plan(content: str, source_names: Sequence[str]) -> tuple[list[dict[str, str]], int | None]:
     """Model reply -> (plan, original_length_if_cut). Raises PlanError.
 
@@ -116,6 +131,7 @@ def validate_plan(content: str, source_names: Sequence[str]) -> tuple[list[dict[
         })
     if not plan:
         raise PlanError("empty_plan", "the plan has no sub-questions")
+    plan = merge_same_source(plan)
     total = len(plan)
     if total > config.MAX_SUBQUESTIONS:
         return plan[: config.MAX_SUBQUESTIONS], total
