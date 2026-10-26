@@ -116,6 +116,7 @@ ENV_PROBE_TIMEOUT_S = 3            # git / Ollama probes that describe the machi
 MAX_TOOL_CHARS = 2500              # one tool result fed back to the agent
 EVIDENCE_ITEM_CHARS = 2000         # one tool result shown to the synthesizer
 EVIDENCE_TOTAL_CHARS = 9000        # all evidence shown to the synthesizer
+EVIDENCE_TOTAL_CHARS_PLANNED = 12000   # same, for the planned run's grouped evidence (several sources share it)
 ERROR_TEXT_CHARS = 300             # error text kept in results and logs
 SNIPPET_CHARS = 120                # short excerpt of a bad model/tool output
 SPAN_TEXT_CHARS = 200              # longest text value stored as a trace span attribute

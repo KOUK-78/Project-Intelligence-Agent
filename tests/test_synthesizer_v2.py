@@ -73,7 +73,7 @@ def test_a_resolved_group_with_a_source_down_still_carries_the_notice():
 
 
 def test_each_group_gets_a_share_of_the_evidence_budget(monkeypatch):
-    monkeypatch.setattr(config, "EVIDENCE_TOTAL_CHARS", 600)
+    monkeypatch.setattr(config, "EVIDENCE_TOTAL_CHARS_PLANNED", 600)
     big = {"id": "ATL-001", "blob": "x" * 5000}
     ev = [item(p["id"], p["source"], "ATL-001", data=big) for p in PLAN for _ in range(3)]
     text = format_grouped_evidence(PLAN, ALL_OK, ev)
@@ -218,3 +218,36 @@ def test_records_of_an_unresolved_sub_question_are_marked_as_possibly_unrelated(
     text = format_grouped_evidence(plan, results, evidence)
     assert "NOT ENOUGH EVIDENCE" in text and "unrelated" in text and "ATL-001" in text
     assert "do not cite them" in SYNTH_V2_SYSTEM
+
+
+def test_a_short_group_donates_its_unused_share_to_a_long_one():
+    from app.nodes.synthesizer import group_shares
+    assert group_shares([100, 5000, 5000], 3000) == [100, 1450, 1450]
+    assert group_shares([5000, 5000], 3000) == [1500, 1500]
+    assert group_shares([10, 20], 3000) == [10, 20]  # nobody gets more than it needs
+    assert sum(group_shares([900, 4000, 4000, 50], 6000)) <= 6000
+
+
+def _resolved_state(status):
+    from app.nodes.state import tag_evidence
+    plan = [{"id": "sq1", "question": "Q?", "source": "email", "reason": "r"}]
+    results = [{"id": "sq1", "status": status, "reason": "model", "unavailable": [], "steps": 1, "attempts": 1,
+                "rewritten": None, "capped": False, "question": "Q?"}]
+    ev = tag_evidence([{"tool": "get_thread", "args": {}, "ok": True,
+                        "data": {"emails": [{"id": "EML-001"}]}, "error": None}], "sq1", "email")
+    return {"question": "Q?", "plan": plan, "sq_results": results, "evidence": ev}
+
+
+def test_an_answer_that_cites_nothing_is_asked_once_for_its_ids_when_a_sub_question_resolved():
+    llm = FakeLLM(synthesizer=[synth_reply("Owen escalated it.", []), synth_reply("Owen escalated it [EML-001].", ["EML-001"])])
+    out = asyncio.run(make_synthesizer_v2_node(llm, {"EML-001"})(_resolved_state("resolved")))
+    assert llm.count("synthesizer") == 2 and out["citations"] == ["EML-001"]
+
+
+def test_no_citation_nudge_when_nothing_resolved_or_the_retry_still_cites_nothing():
+    llm = FakeLLM(synthesizer=[synth_reply("Not found.", [])])
+    out = asyncio.run(make_synthesizer_v2_node(llm, {"EML-001"})(_resolved_state("unresolved")))
+    assert llm.count("synthesizer") == 1 and out["citations"] == []
+    llm = FakeLLM(synthesizer=[synth_reply("Owen escalated it.", [])])
+    out = asyncio.run(make_synthesizer_v2_node(llm, {"EML-001"})(_resolved_state("resolved")))
+    assert llm.count("synthesizer") == 2 and out["answer"].startswith("Owen escalated it.") and out["citations"] == []
