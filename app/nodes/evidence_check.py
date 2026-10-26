@@ -18,7 +18,8 @@ from app.nodes.verify import evidence_ids
 
 CHECK_SYSTEM = (
     "You judge whether the evidence is enough to answer one sub-question.\n"
-    "Say sufficient=true only if the evidence itself contains what the sub-question asks for.\n"
+    "Say sufficient=true if the evidence itself contains records that state what the sub-question asks for, "
+    "even if the picture is not complete.\n"
     "Say sufficient=false if the evidence is empty, only loosely related, or about something other than what "
     "was asked.\n"
     "Use only the evidence shown. Never use outside knowledge and do not answer the sub-question.\n"

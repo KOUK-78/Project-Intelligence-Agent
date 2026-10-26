@@ -38,9 +38,11 @@ def synth(llm, results=ALL_OK, evidence=EVIDENCE, plan=PLAN, known=None, questio
 # ---------------------------------------------------------------- the prompt
 
 def test_prompt_is_source_neutral_and_carries_the_rules():
-    for needle in ("[ATL-000]", "[NTN-000]", "[EML-000]", "BOTH values", "NOT ENOUGH EVIDENCE", "SOURCE UNAVAILABLE"):
+    for needle in ("in brackets", "exact ID printed in the evidence", "BOTH values", "NOT ENOUGH EVIDENCE", "SOURCE UNAVAILABLE"):
         assert needle in SYNTH_V2_SYSTEM, needle
     assert "JSON" in SYNTH_V2_SYSTEM and config.TODAY in SYNTH_V2_SYSTEM
+    for placeholder in ("ATL-000", "NTN-000", "EML-000"):  # a model copies example IDs into its answer
+        assert placeholder not in SYNTH_V2_SYSTEM
 
 
 def test_evidence_is_grouped_by_sub_question_with_source_and_question():
