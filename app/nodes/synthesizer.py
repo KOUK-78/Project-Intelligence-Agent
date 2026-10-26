@@ -54,6 +54,8 @@ SYNTH_V2_SYSTEM = (
     'Reply as JSON: {"answer": "...", "citations": ["<ID from the evidence>"]}. '
     '"citations" lists every record ID you cited in "answer".'
 )
+COVER_NUDGE = ("Records from these sources were found but you cited none of them: {sources}. If your answer uses "
+               "anything from them, put the record ID in brackets after that fact. Do not add new facts.")
 CITE_NUDGE = ("Your answer cites no record IDs. Rewrite it so every factual claim has the ID of the record it comes "
               "from in brackets, using only IDs shown in the evidence. Keep the same facts.")
 RETRY_NUDGE = 'That was not valid. Reply again with ONLY a JSON object: {"answer": "...", "citations": ["ID"]}'
@@ -248,10 +250,15 @@ def format_grouped_evidence(plan: list[dict], results: list[dict], evidence: lis
     return "\n\n".join(blocks)
 
 
-def resolved_with_records(plan: list[dict], results: list[dict], evidence: list[dict[str, Any]]) -> bool:
-    """True if some sub-question was judged resolved and returned at least one record."""
+def uncited_groups(plan: list[dict], results: list[dict], evidence: list[dict[str, Any]], cited: list[str]) -> list[dict]:
+    """Sub-questions judged resolved that returned records, none of which the answer cites."""
     done = {r["id"] for r in results if r.get("status") == "resolved"}
-    return any(evidence_ids([e for e in evidence_for(evidence, sq["id"]) if e.get("ok")]) for sq in plan if sq["id"] in done)
+    out = []
+    for sq in plan:
+        ids = evidence_ids([e for e in evidence_for(evidence, sq["id"]) if e.get("ok")])
+        if sq["id"] in done and ids and not (set(ids) & set(cited)):
+            out.append(sq)
+    return out
 
 
 def gaps_of(results: list[dict]) -> tuple[list[str], list[str], bool]:
@@ -318,16 +325,19 @@ def make_synthesizer_v2_node(llm: LLM, known_ids: set[str] | None, unchecked_pre
             )
 
         answer, citations, warnings = verified(output)
-        if not citations and resolved_with_records(plan, results, evidence):
-            # A sub-question found records and the answer cites none: ask once for the IDs (never changes the facts).
+        uncited = uncited_groups(plan, results, evidence, citations)
+        if uncited:
+            # A resolved sub-question found records and the answer cites none of them (or cites nothing at all): ask
+            # once for the IDs. Never changes the facts; kept only if it cites more of the sub-questions.
+            nudge = CITE_NUDGE if not citations else COVER_NUDGE.format(sources=", ".join(sq["source"] for sq in uncited))
             retry, retry_errors, retry_failure = await generate(llm, [
                 *messages,
                 {"role": "assistant", "content": output.model_dump_json()},
-                {"role": "user", "content": CITE_NUDGE},
+                {"role": "user", "content": nudge},
             ])
             if retry_failure is None and retry is not None:
                 again = verified(retry)
-                if again[1]:
+                if again[1] and len(uncited_groups(plan, results, evidence, again[1])) < len(uncited):
                     answer, citations, warnings = again
                     errors = errors + retry_errors
         return {
