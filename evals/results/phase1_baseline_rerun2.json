@@ -1,0 +1,1704 @@
+{
+  "phase": 1,
+  "today": "2026-06-30",
+  "model": "qwen3:8b",
+  "agent": "real",
+  "key": "answer_key.json",
+  "mode": "auto",
+  "planner_enabled": false,
+  "agent_mode": "phase1",
+  "enabled_sources": [
+    "jira"
+  ],
+  "key_sha256": "d39b907a9a346ffeaab4e178cdc7303ca470a518dfb7def6cdaca9a672059cbf",
+  "repeat": 3,
+  "min_pass_rate": 1.0,
+  "environment": {
+    "machine": {
+      "node": "LYNX-4761",
+      "platform": "Windows-11-10.0.26300-SP0",
+      "python": "3.14.8"
+    },
+    "models": {
+      "agent": "qwen3:8b",
+      "synthesizer": "qwen3:8b",
+      "planner": "qwen3:8b",
+      "evidence_check": "qwen3:8b"
+    },
+    "model_fingerprint": {
+      "name": "qwen3:8b",
+      "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+      "size": 5225388164
+    },
+    "git_commit": "1ffdcc5a4ff7895b92a3637f1a5a96ad7ead5676",
+    "settings": {
+      "MAX_AGENT_STEPS": 5,
+      "MAX_TOTAL_STEPS": 12,
+      "MAX_SUBQUESTIONS": 4,
+      "NUM_CTX": 8192,
+      "TEMPERATURE": 0.1
+    },
+    "faults": {}
+  },
+  "score": {
+    "questions_passed": 8,
+    "questions_total": 10,
+    "runs_passed": 24,
+    "runs_total": 30,
+    "overall_pass_rate": 0.8
+  },
+  "latency_ms": {
+    "median": 7323,
+    "worst": 16008
+  },
+  "runs_missing_trace_id": 0,
+  "totals": {
+    "tokens": {
+      "runs_reporting": 30,
+      "total": 115245,
+      "median_per_run": 3029
+    },
+    "steps": {
+      "runs_reporting": 0,
+      "total": 0,
+      "median_per_run": null
+    },
+    "tool_calls": {
+      "runs_reporting": 30,
+      "total": 69,
+      "median_per_run": 2
+    },
+    "planner": {
+      "runs": 0,
+      "invalid": 0,
+      "fallback": 0,
+      "median_subquestions": null
+    },
+    "source_checks": {
+      "runs_with_required_sources": 0,
+      "runs_covering_them": 0,
+      "runs_with_must_mention": 0,
+      "runs_mentioning_all": 0
+    }
+  },
+  "per_question": [
+    {
+      "id": "Q1",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 4496,
+      "worst_latency_ms": 9311,
+      "trace_ids": [
+        "089546eae2a98eb88ae4f91644143175",
+        "b2b35e86c044f21689a69194d0b12c01",
+        "554608525b8ae068ef41350625b927e0"
+      ]
+    },
+    {
+      "id": "Q2",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 9861,
+      "worst_latency_ms": 9979,
+      "trace_ids": [
+        "0485c571761efefb5eabf8744007da58",
+        "27cae9b230524f9befb8af17ae7d4266",
+        "e93affb7506ac7c2dfb7c8efeb857fdb"
+      ]
+    },
+    {
+      "id": "Q3",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 6247,
+      "worst_latency_ms": 6507,
+      "trace_ids": [
+        "5eb8739f5c2305eabea07b4204380125",
+        "07ed94b2d859403ff65f2e0fd2665801",
+        "61d5fae85b2660bb3c7f9b6359d71665"
+      ]
+    },
+    {
+      "id": "Q4",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 11970,
+      "worst_latency_ms": 12301,
+      "trace_ids": [
+        "bd5f65a3f474ec992fc756fd7030015b",
+        "b98ddc99c76c2b9cab90848e7b6e22f3",
+        "3f474dc71a8fd1b2bfc92e85bc7d18d3"
+      ]
+    },
+    {
+      "id": "Q5",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 7005,
+      "worst_latency_ms": 7106,
+      "trace_ids": [
+        "0de78dcdf738aadadc4fd09e3c5271bc",
+        "88e092c9f1054743cea224812a45561d",
+        "cf39250b25b13c0209c1b6e83a1e95f3"
+      ]
+    },
+    {
+      "id": "Q6",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 5285,
+      "worst_latency_ms": 5641,
+      "trace_ids": [
+        "26b0a6e742c86035ebe31a3fcd321e25",
+        "df5b0e70d90c05ab602f99bf7b7741e9",
+        "aee951e2217aa83a7a119d9362c397fd"
+      ]
+    },
+    {
+      "id": "Q7",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 8324,
+      "worst_latency_ms": 8387,
+      "trace_ids": [
+        "02869ce42cddb5802b3eaa29526dbb02",
+        "c3d93fa49106ca3aeab25c273cd5507d",
+        "6a3effa3d5cfa19066072221bc504b8f"
+      ]
+    },
+    {
+      "id": "Q8",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 7344,
+      "worst_latency_ms": 7423,
+      "trace_ids": [
+        "644d0cac4a5cf8d97e30b8c9957a5dce",
+        "4f96515c33162546a98dbb4dba918759",
+        "f56eb29c9917678ed85a1fa1ba1e42fb"
+      ]
+    },
+    {
+      "id": "Q9",
+      "runs": 3,
+      "passes": 0,
+      "ungraded": 0,
+      "pass_rate": 0.0,
+      "passed": false,
+      "median_latency_ms": 15930,
+      "worst_latency_ms": 16008,
+      "trace_ids": [
+        "430ec5e051e3e6c1419598775ca3c38f",
+        "41b7c1d3dc7f7547a61518e75736b428",
+        "5f133fbbe4c07dfae55c2ad2a0311042"
+      ]
+    },
+    {
+      "id": "Q10",
+      "runs": 3,
+      "passes": 3,
+      "ungraded": 0,
+      "pass_rate": 1.0,
+      "passed": true,
+      "median_latency_ms": 4889,
+      "worst_latency_ms": 5285,
+      "trace_ids": [
+        "3b5f3eb43bbe280ab5fc1419ef5b020d",
+        "37293d73c2f7204d808b064625877f99",
+        "37ba1aa77619aa5994a7f3672d2991d3"
+      ]
+    }
+  ],
+  "failures": [
+    {
+      "id": "Q6",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q6",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q6",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "missing expected citation"
+      ]
+    },
+    {
+      "id": "Q9",
+      "run": 1,
+      "reasons": [
+        "marked wrong",
+        "forbidden citation ['ATL-112']"
+      ]
+    },
+    {
+      "id": "Q9",
+      "run": 2,
+      "reasons": [
+        "marked wrong",
+        "forbidden citation ['ATL-112']"
+      ]
+    },
+    {
+      "id": "Q9",
+      "run": 3,
+      "reasons": [
+        "marked wrong",
+        "forbidden citation ['ATL-112']"
+      ]
+    }
+  ],
+  "results": [
+    {
+      "id": "Q1",
+      "run": 1,
+      "question": "Who is assigned to ATL-121 and what is its current status?",
+      "status": "ok",
+      "answer": "Tomas Alvarez is assigned to [ATL-121], and its current status is Blocked.",
+      "citations": [
+        "ATL-121"
+      ],
+      "expected_citations": [
+        "ATL-121"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 1858,
+      "completion_tokens": 83,
+      "total_tokens": 1941,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 9311,
+      "trace_id": "089546eae2a98eb88ae4f91644143175",
+      "correct": true
+    },
+    {
+      "id": "Q1",
+      "run": 2,
+      "question": "Who is assigned to ATL-121 and what is its current status?",
+      "status": "ok",
+      "answer": "Tomas Alvarez is assigned to [ATL-121], and its current status is Blocked.",
+      "citations": [
+        "ATL-121"
+      ],
+      "expected_citations": [
+        "ATL-121"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 1858,
+      "completion_tokens": 83,
+      "total_tokens": 1941,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 4111,
+      "trace_id": "b2b35e86c044f21689a69194d0b12c01",
+      "correct": true
+    },
+    {
+      "id": "Q1",
+      "run": 3,
+      "question": "Who is assigned to ATL-121 and what is its current status?",
+      "status": "ok",
+      "answer": "Tomas Alvarez is assigned to [ATL-121], and its current status is Blocked.",
+      "citations": [
+        "ATL-121"
+      ],
+      "expected_citations": [
+        "ATL-121"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 1858,
+      "completion_tokens": 83,
+      "total_tokens": 1941,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 4496,
+      "trace_id": "554608525b8ae068ef41350625b927e0",
+      "correct": true
+    },
+    {
+      "id": "Q2",
+      "run": 1,
+      "question": "Which tickets are overdue?",
+      "status": "ok",
+      "answer": "The following tickets are overdue: [ATL-112] (days_overdue: 20), [ATL-109] (days_overdue: 15), [ATL-118] (days_overdue: 10), [ATL-121] (days_overdue: 6), [ATL-127] (days_overdue: 4), and [ATL-133] (days_overdue: 3).",
+      "citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-116"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 2157,
+      "completion_tokens": 348,
+      "total_tokens": 2505,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 9979,
+      "trace_id": "0485c571761efefb5eabf8744007da58",
+      "correct": true
+    },
+    {
+      "id": "Q2",
+      "run": 2,
+      "question": "Which tickets are overdue?",
+      "status": "ok",
+      "answer": "The following tickets are overdue: [ATL-112] (days_overdue: 20), [ATL-109] (days_overdue: 15), [ATL-118] (days_overdue: 10), [ATL-121] (days_overdue: 6), [ATL-127] (days_overdue: 4), and [ATL-133] (days_overdue: 3).",
+      "citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-116"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 2157,
+      "completion_tokens": 348,
+      "total_tokens": 2505,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 9803,
+      "trace_id": "27cae9b230524f9befb8af17ae7d4266",
+      "correct": true
+    },
+    {
+      "id": "Q2",
+      "run": 3,
+      "question": "Which tickets are overdue?",
+      "status": "ok",
+      "answer": "The following tickets are overdue: [ATL-112] (days_overdue: 20), [ATL-109] (days_overdue: 15), [ATL-118] (days_overdue: 10), [ATL-121] (days_overdue: 6), [ATL-127] (days_overdue: 4), and [ATL-133] (days_overdue: 3).",
+      "citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-109",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-116"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 2157,
+      "completion_tokens": 348,
+      "total_tokens": 2505,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 9861,
+      "trace_id": "e93affb7506ac7c2dfb7c8efeb857fdb",
+      "correct": true
+    },
+    {
+      "id": "Q3",
+      "run": 1,
+      "question": "Why is the checkout card payment screen (ATL-118) late?",
+      "status": "ok",
+      "answer": "The checkout card payment screen ([ATL-118]) is late because it is waiting on the payments API ([ATL-112]) to be delivered. The deadline will slip until [ATL-112] is delivered.",
+      "citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2844,
+      "completion_tokens": 175,
+      "total_tokens": 3019,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 6507,
+      "trace_id": "5eb8739f5c2305eabea07b4204380125",
+      "correct": true
+    },
+    {
+      "id": "Q3",
+      "run": 2,
+      "question": "Why is the checkout card payment screen (ATL-118) late?",
+      "status": "ok",
+      "answer": "The checkout card payment screen ([ATL-118]) is late because it is waiting on the payments API ([ATL-112]) to be delivered. [ATL-118]",
+      "citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2844,
+      "completion_tokens": 170,
+      "total_tokens": 3014,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 6238,
+      "trace_id": "07ed94b2d859403ff65f2e0fd2665801",
+      "correct": true
+    },
+    {
+      "id": "Q3",
+      "run": 3,
+      "question": "Why is the checkout card payment screen (ATL-118) late?",
+      "status": "ok",
+      "answer": "The checkout card payment screen ([ATL-118]) is late because it is waiting on the payments API ([ATL-112]) to be delivered. [ATL-118]",
+      "citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-118",
+        "ATL-112"
+      ],
+      "forbidden_citations": [
+        "ATL-109"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2844,
+      "completion_tokens": 170,
+      "total_tokens": 3014,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 6247,
+      "trace_id": "61d5fae85b2660bb3c7f9b6359d71665",
+      "correct": true
+    },
+    {
+      "id": "Q4",
+      "run": 1,
+      "question": "What is blocking Project Atlas?",
+      "status": "ok",
+      "answer": "The Payments API v2 delivery [ATL-112] is blocking Project Atlas. The root cause is that Vendor PayGate has not delivered sandbox credentials for v2, and the contract amendment is still pending. Downstream tickets affected are [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-136"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 3,
+      "prompt_tokens": 4663,
+      "completion_tokens": 345,
+      "total_tokens": 5008,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 11109,
+      "trace_id": "bd5f65a3f474ec992fc756fd7030015b",
+      "correct": true
+    },
+    {
+      "id": "Q4",
+      "run": 2,
+      "question": "What is blocking Project Atlas?",
+      "status": "ok",
+      "answer": "Project Atlas is blocked by the ticket [ATL-112], which is titled 'Payments API v2 delivery'. The reason for the block is that Vendor PayGate has not delivered sandbox credentials for v2, and the contract amendment is still pending. Additionally, all payment-dependent Atlas work is blocked until this issue is resolved. The downstream tickets affected are [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-136"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 3,
+      "prompt_tokens": 4701,
+      "completion_tokens": 398,
+      "total_tokens": 5099,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 12301,
+      "trace_id": "b98ddc99c76c2b9cab90848e7b6e22f3",
+      "correct": true
+    },
+    {
+      "id": "Q4",
+      "run": 3,
+      "question": "What is blocking Project Atlas?",
+      "status": "ok",
+      "answer": "Project Atlas is blocked by the ticket [ATL-112], which is titled 'Payments API v2 delivery'. The reason for the block is that Vendor PayGate has not delivered sandbox credentials for v2, and the contract amendment is still pending. Additionally, all payment-dependent Atlas work is blocked until this issue is resolved. The downstream tickets affected are [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-136"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 3,
+      "prompt_tokens": 4699,
+      "completion_tokens": 393,
+      "total_tokens": 5092,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 11970,
+      "trace_id": "3f474dc71a8fd1b2bfc92e85bc7d18d3",
+      "correct": true
+    },
+    {
+      "id": "Q5",
+      "run": 1,
+      "question": "Why did the due date for load testing of checkout change?",
+      "status": "ok",
+      "answer": "The due date for the load testing of checkout changed because the staging environment upgrade will not finish before 2026-07-15, as mentioned in the comment by Elena Rossi [ATL-124].",
+      "citations": [
+        "ATL-124"
+      ],
+      "expected_citations": [
+        "ATL-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2838,
+      "completion_tokens": 202,
+      "total_tokens": 3040,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 7106,
+      "trace_id": "0de78dcdf738aadadc4fd09e3c5271bc",
+      "correct": true
+    },
+    {
+      "id": "Q5",
+      "run": 2,
+      "question": "Why did the due date for load testing of checkout change?",
+      "status": "ok",
+      "answer": "The due date for the load testing of checkout changed because the staging environment upgrade will not finish before 2026-07-15, as mentioned in the comment by Elena Rossi [ATL-124].",
+      "citations": [
+        "ATL-124"
+      ],
+      "expected_citations": [
+        "ATL-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2838,
+      "completion_tokens": 202,
+      "total_tokens": 3040,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 6934,
+      "trace_id": "88e092c9f1054743cea224812a45561d",
+      "correct": true
+    },
+    {
+      "id": "Q5",
+      "run": 3,
+      "question": "Why did the due date for load testing of checkout change?",
+      "status": "ok",
+      "answer": "The due date for the load testing of checkout changed because the staging environment upgrade will not finish before 2026-07-15, as mentioned in the comment by Elena Rossi [ATL-124].",
+      "citations": [
+        "ATL-124"
+      ],
+      "expected_citations": [
+        "ATL-124"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2838,
+      "completion_tokens": 202,
+      "total_tokens": 3040,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 7005,
+      "trace_id": "cf39250b25b13c0209c1b6e83a1e95f3",
+      "correct": true
+    },
+    {
+      "id": "Q6",
+      "run": 1,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "The Atlas public launch is planned for 2026-09-15 [ATL-103].",
+      "citations": [
+        "ATL-103"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2893,
+      "completion_tokens": 121,
+      "total_tokens": 3014,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 5641,
+      "trace_id": "26b0a6e742c86035ebe31a3fcd321e25",
+      "correct": false
+    },
+    {
+      "id": "Q6",
+      "run": 2,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "The Atlas public launch is planned for 2026-09-15 [ATL-103].",
+      "citations": [
+        "ATL-103"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2893,
+      "completion_tokens": 121,
+      "total_tokens": 3014,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 5285,
+      "trace_id": "df5b0e70d90c05ab602f99bf7b7741e9",
+      "correct": false
+    },
+    {
+      "id": "Q6",
+      "run": 3,
+      "question": "When is the Atlas public launch?",
+      "status": "ok",
+      "answer": "The Atlas public launch is planned for 2026-09-15 [ATL-103].",
+      "citations": [
+        "ATL-103"
+      ],
+      "expected_citations": [
+        "ATL-103",
+        "ATL-139"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": false,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 2893,
+      "completion_tokens": 121,
+      "total_tokens": 3014,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 5242,
+      "trace_id": "aee951e2217aa83a7a119d9362c397fd",
+      "correct": false
+    },
+    {
+      "id": "Q7",
+      "run": 1,
+      "question": "What is the status of the Salesforce CRM integration?",
+      "status": "ok",
+      "answer": "There are no tickets related to the Salesforce CRM integration. However, there are five integration-related tickets, none of which specifically mention Salesforce CRM.",
+      "citations": [],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-114"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 5,
+      "prompt_tokens": 5654,
+      "completion_tokens": 213,
+      "total_tokens": 5867,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 8387,
+      "trace_id": "02869ce42cddb5802b3eaa29526dbb02",
+      "correct": true
+    },
+    {
+      "id": "Q7",
+      "run": 2,
+      "question": "What is the status of the Salesforce CRM integration?",
+      "status": "ok",
+      "answer": "There are no tickets related to the Salesforce CRM integration. However, there are five integration-related tickets, none of which specifically mention Salesforce CRM.",
+      "citations": [],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-114"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 5,
+      "prompt_tokens": 5654,
+      "completion_tokens": 213,
+      "total_tokens": 5867,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 8324,
+      "trace_id": "c3d93fa49106ca3aeab25c273cd5507d",
+      "correct": true
+    },
+    {
+      "id": "Q7",
+      "run": 3,
+      "question": "What is the status of the Salesforce CRM integration?",
+      "status": "ok",
+      "answer": "There are no tickets related to the Salesforce CRM integration. However, there are five integration-related tickets, none of which specifically mention Salesforce CRM.",
+      "citations": [],
+      "expected_citations": [],
+      "forbidden_citations": [
+        "ATL-114"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 5,
+      "prompt_tokens": 5654,
+      "completion_tokens": 213,
+      "total_tokens": 5867,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 8246,
+      "trace_id": "6a3effa3d5cfa19066072221bc504b8f",
+      "correct": true
+    },
+    {
+      "id": "Q8",
+      "run": 1,
+      "question": "Which tickets are currently Blocked?",
+      "status": "ok",
+      "answer": "There are 3 tickets that are currently Blocked: [ATL-112], [ATL-121], and [ATL-136].",
+      "citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-118",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 1852,
+      "completion_tokens": 231,
+      "total_tokens": 2083,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 7344,
+      "trace_id": "644d0cac4a5cf8d97e30b8c9957a5dce",
+      "correct": true
+    },
+    {
+      "id": "Q8",
+      "run": 2,
+      "question": "Which tickets are currently Blocked?",
+      "status": "ok",
+      "answer": "There are 3 tickets that are currently Blocked: [ATL-112], [ATL-121], and [ATL-136].",
+      "citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-118",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 1852,
+      "completion_tokens": 230,
+      "total_tokens": 2082,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 7302,
+      "trace_id": "4f96515c33162546a98dbb4dba918759",
+      "correct": true
+    },
+    {
+      "id": "Q8",
+      "run": 3,
+      "question": "Which tickets are currently Blocked?",
+      "status": "ok",
+      "answer": "There are 3 tickets that are currently Blocked: [ATL-112], [ATL-121], and [ATL-136].",
+      "citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "expected_citations": [
+        "ATL-112",
+        "ATL-121",
+        "ATL-136"
+      ],
+      "forbidden_citations": [
+        "ATL-109",
+        "ATL-118",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 1,
+      "prompt_tokens": 1852,
+      "completion_tokens": 231,
+      "total_tokens": 2083,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 7423,
+      "trace_id": "f56eb29c9917678ed85a1fa1ba1e42fb",
+      "correct": true
+    },
+    {
+      "id": "Q9",
+      "run": 1,
+      "question": "Is the overdue privacy policy ticket late because of the payments API?",
+      "status": "ok",
+      "answer": "The overdue privacy policy ticket [ATL-109] is not late because of the payments API. The ticket is overdue by 15 days, and the comment states that it is not related to the payments work. The payments API ticket [ATL-112] is blocked due to missing sandbox credentials from the vendor, and it is affecting other tickets such as [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-109",
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 4,
+      "prompt_tokens": 7632,
+      "completion_tokens": 522,
+      "total_tokens": 8154,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 16008,
+      "trace_id": "430ec5e051e3e6c1419598775ca3c38f",
+      "correct": false
+    },
+    {
+      "id": "Q9",
+      "run": 2,
+      "question": "Is the overdue privacy policy ticket late because of the payments API?",
+      "status": "ok",
+      "answer": "The overdue privacy policy ticket [ATL-109] is not late because of the payments API. The ticket is overdue by 15 days, and the comment states that it is not related to the payments work. The payments API ticket [ATL-112] is blocked due to missing sandbox credentials from the vendor, and it is affecting other tickets such as [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-109",
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 4,
+      "prompt_tokens": 7656,
+      "completion_tokens": 530,
+      "total_tokens": 8186,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 15930,
+      "trace_id": "41b7c1d3dc7f7547a61518e75736b428",
+      "correct": false
+    },
+    {
+      "id": "Q9",
+      "run": 3,
+      "question": "Is the overdue privacy policy ticket late because of the payments API?",
+      "status": "ok",
+      "answer": "The overdue privacy policy ticket [ATL-109] is not late because of the payments API. The ticket is overdue by 15 days, and the comment states that it is not related to the payments work. The payments API ticket [ATL-112] is blocked due to missing sandbox credentials from the vendor, and it is affecting other tickets such as [ATL-118], [ATL-121], [ATL-127], and [ATL-133].",
+      "citations": [
+        "ATL-109",
+        "ATL-112",
+        "ATL-118",
+        "ATL-121",
+        "ATL-127",
+        "ATL-133"
+      ],
+      "expected_citations": [
+        "ATL-109"
+      ],
+      "forbidden_citations": [
+        "ATL-112"
+      ],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [
+        "ATL-112"
+      ],
+      "any_forbidden_citation": true,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 4,
+      "prompt_tokens": 7677,
+      "completion_tokens": 473,
+      "total_tokens": 8150,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 14483,
+      "trace_id": "5f133fbbe4c07dfae55c2ad2a0311042",
+      "correct": false
+    },
+    {
+      "id": "Q10",
+      "run": 1,
+      "question": "How many days overdue is ATL-112?",
+      "status": "ok",
+      "answer": "[ATL-112] is 20 days overdue.",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 3632,
+      "completion_tokens": 88,
+      "total_tokens": 3720,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 5285,
+      "trace_id": "3b5f3eb43bbe280ab5fc1419ef5b020d",
+      "correct": true
+    },
+    {
+      "id": "Q10",
+      "run": 2,
+      "question": "How many days overdue is ATL-112?",
+      "status": "ok",
+      "answer": "[ATL-112] is 20 days overdue.",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 3632,
+      "completion_tokens": 88,
+      "total_tokens": 3720,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 4889,
+      "trace_id": "37293d73c2f7204d808b064625877f99",
+      "correct": true
+    },
+    {
+      "id": "Q10",
+      "run": 3,
+      "question": "How many days overdue is ATL-112?",
+      "status": "ok",
+      "answer": "[ATL-112] is 20 days overdue.",
+      "citations": [
+        "ATL-112"
+      ],
+      "expected_citations": [
+        "ATL-112"
+      ],
+      "forbidden_citations": [],
+      "all_expected_citations_found": true,
+      "invalid_citations": [],
+      "any_invalid_citation": false,
+      "forbidden_citations_hit": [],
+      "any_forbidden_citation": false,
+      "sources_cited": [
+        "jira"
+      ],
+      "sources_required": [],
+      "sources_missing": [],
+      "all_sources_covered": true,
+      "must_mention": [],
+      "must_mention_missing": [],
+      "all_must_mention_found": true,
+      "planner_used": false,
+      "planner_valid": null,
+      "planner_fallback": null,
+      "subquestion_count": null,
+      "subquestions_unresolved": null,
+      "steps_total": null,
+      "tool_call_count": 2,
+      "prompt_tokens": 3632,
+      "completion_tokens": 88,
+      "total_tokens": 3720,
+      "sources_returning_records": null,
+      "sources_unavailable": null,
+      "latency_ms": 4689,
+      "trace_id": "37ba1aa77619aa5994a7f3672d2991d3",
+      "correct": true
+    }
+  ]
+}

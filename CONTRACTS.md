@@ -210,6 +210,13 @@ which sets planner off and `ENABLED_SOURCES=all` for the run (D's flat mode: one
 refuses if `config.FLAT_MODE_IMPLEMENTED` is False. `--no-planner` removes `ENABLED_SOURCES` for the run, so a value left
 in the shell cannot turn a Jira-only run into a flat one. Result files record `enabled_sources` and `agent_mode`: `planner`, `flat`, `phase1` or `phase1_jira_only`.
 
+**Flat is a fair baseline (agreed after the M2 traces).** Flat mode uses the same source-neutral, tool-describing
+agent prompt as the planner's retrieve step, with every enabled tool in scope, and has no planner, no per-sub-question
+scoping, no evidence check and no rewrite. The arms therefore differ only by what the planner adds. The Phase 1
+ticket-only prompt is used ONLY for planner off with `ENABLED_SOURCES` unset (the Phase 1 reproduction gate). The M2
+flat result (`phase2_flat.json`, recorded before this rule) used the Phase 1 prompt and is superseded by the reruns that
+follow it; compare reruns with reruns.
+
 Additions made while writing these amendments (each needs the same four approvals): `app/faults.py` and the
 `FAULT_INJECT` switch (C4), the token counter and span helpers in `app/tracing.py` (C5), and
 `data/reserved_fixtures.json` (section 10). Phase 2 result files: `phase2_flat.json` (flat mode, `--flat`; see above),
