@@ -105,8 +105,8 @@ async def test_per_sub_question_cap_stops_each_loop_and_the_next_one_starts_fres
     monkeypatch.setattr(config, "MAX_AGENT_STEPS", 2)
     monkeypatch.setattr(config, "MAX_TOTAL_STEPS", 20)
     llm = FakeLLM(
-        planner=[plan_reply(("jira", "first"), ("jira", "second"))],
-        agent=lambda n: tool_reply("search_tickets", keyword=f"k{n}"),  # never says done
+        planner=[plan_reply(("jira", "first"), ("notion", "second"))],
+        agent=lambda n: tool_reply("search_tickets" if n < 3 else "search_pages", keyword=f"k{n}"),  # never says done
         evidence_check=[check_reply(True)], synthesizer=[synth_reply("t [ATL-001]", ["ATL-001"])],
     )
     r = await run(llm)
